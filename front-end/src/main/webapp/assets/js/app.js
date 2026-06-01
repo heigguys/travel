@@ -269,10 +269,22 @@ function setupPasswordToggle(input, toggle, onInput = () => {}) {
     return sync;
 }
 
+function showPasswordMessage(message, success = false) {
+    const messageEl = $("passwordMessage");
+    messageEl.textContent = message;
+    messageEl.classList.toggle("form-error", !success);
+    messageEl.classList.toggle("form-success", success);
+    messageEl.classList.remove("hidden");
+}
+
+function hidePasswordMessage() {
+    $("passwordMessage").classList.add("hidden");
+}
+
 setupPasswordToggle($("loginForm").password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
 const passwordForm = $("passwordForm");
-const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"));
-const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"));
+const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
+const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
 
 $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -301,6 +313,7 @@ $("closeConsultBtn").onclick = async () => {
 $("myAppsBtn").onclick = openMyApps;
 $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
 $("passwordBtn").onclick = () => {
+    hidePasswordMessage();
     syncOldPasswordToggle();
     syncNewPasswordToggle();
     $("passwordDialog").showModal();
@@ -308,9 +321,15 @@ $("passwordBtn").onclick = () => {
 $("passwordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = $("passwordForm");
-    await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: form.oldPassword.value, newPassword: form.newPassword.value})});
-    $("passwordDialog").close();
-    toast("密码修改成功");
+    hidePasswordMessage();
+    try {
+        await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: form.oldPassword.value, newPassword: form.newPassword.value})});
+        showPasswordMessage("\u5bc6\u7801\u4fee\u6539\u6210\u529f", true);
+        $("passwordDialog").close();
+        toast("\u5bc6\u7801\u4fee\u6539\u6210\u529f");
+    } catch (error) {
+        showPasswordMessage(error.message || "\u5bc6\u7801\u4fee\u6539\u5931\u8d25");
+    }
 });
 $("myAppsRows").addEventListener("click", () => {});
 loadMe().catch((error) => toast(error.message));

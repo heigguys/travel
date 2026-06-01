@@ -179,6 +179,7 @@
                 <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
             </span>
         </label>
+        <p id="passwordMessage" class="form-error hidden"></p>
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>
             <button class="primary" type="submit">保存</button>

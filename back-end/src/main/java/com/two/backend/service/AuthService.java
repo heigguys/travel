@@ -48,9 +48,14 @@ public class AuthService {
     }
 
     public void changePassword(User user, PasswordRequest request) {
-        if (!user.getPasswordMd5().equals(Md5Util.md5(request.oldPassword()))) {
-            throw new BusinessException("原密码不正确");
+        String oldPasswordMd5 = Md5Util.md5(request.oldPassword());
+        String newPasswordMd5 = Md5Util.md5(request.newPassword());
+        if (!user.getPasswordMd5().equals(oldPasswordMd5)) {
+            throw new BusinessException("原密码错误");
         }
-        userMapper.updatePassword(user.getId(), Md5Util.md5(request.newPassword()));
+        if (oldPasswordMd5.equals(newPasswordMd5)) {
+            throw new BusinessException("新密码不能和旧密码相同");
+        }
+        userMapper.updatePassword(user.getId(), newPasswordMd5);
     }
 }

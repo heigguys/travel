@@ -67,6 +67,13 @@ label {
     font-weight: 600;
 }
 
+.form-success {
+    margin: -4px 0 0;
+    color: #16833a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .password-field {
     position: relative;
     display: block;
