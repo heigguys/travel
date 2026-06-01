@@ -55,6 +55,13 @@ label {
     font-weight: 600;
 }
 
+.form-error {
+    margin: -4px 0 0;
+    color: var(--danger);
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .shell {
     min-height: 100vh;
     padding: 28px;

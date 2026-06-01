@@ -244,9 +244,14 @@ document.addEventListener("click", async (event) => {
 $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
-    currentUser = await api("/auth/login", {method: "POST", body: JSON.stringify({employeeNo: form.employeeNo.value, password: form.password.value})});
-    showApp();
-    await loadPlans();
+    $("loginError").classList.add("hidden");
+    try {
+        currentUser = await api("/auth/login", {method: "POST", body: JSON.stringify({employeeNo: form.employeeNo.value, password: form.password.value})});
+        showApp();
+        await loadPlans();
+    } catch {
+        $("loginError").classList.remove("hidden");
+    }
 });
 $("logoutBtn").onclick = async () => { await api("/auth/logout", {method: "POST"}); location.reload(); };
 $("searchBtn").onclick = loadPlans;
