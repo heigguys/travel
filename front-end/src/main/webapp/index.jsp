@@ -20,7 +20,10 @@
                 <input name="employeeNo" placeholder="A001 / U001" required>
             </label>
             <label>密码
-                <input name="password" type="password" placeholder="默认 123456" required>
+                <span class="password-field">
+                    <input name="password" type="password" placeholder="默认 123456" required>
+                    <button id="loginPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
+                </span>
             </label>
             <p id="loginError" class="form-error hidden">账号或密码错误</p>
             <button class="primary" type="submit">登录</button>

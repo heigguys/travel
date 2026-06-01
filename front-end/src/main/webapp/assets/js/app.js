@@ -241,6 +241,34 @@ document.addEventListener("click", async (event) => {
     if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
 });
 
+const loginPasswordInput = $("loginForm").password;
+const loginPasswordToggle = $("loginPasswordToggle");
+
+function syncLoginPasswordToggle() {
+    const hasPassword = loginPasswordInput.value.length > 0;
+    loginPasswordToggle.classList.toggle("hidden", !hasPassword);
+    if (!hasPassword) {
+        loginPasswordInput.type = "password";
+        loginPasswordToggle.textContent = "\uD83D\uDC41\uFE0F";
+        loginPasswordToggle.setAttribute("aria-label", "show password");
+    }
+}
+
+loginPasswordInput.addEventListener("input", () => {
+    $("loginError").classList.add("hidden");
+    syncLoginPasswordToggle();
+});
+
+loginPasswordToggle.addEventListener("click", () => {
+    const showingPassword = loginPasswordInput.type === "text";
+    loginPasswordInput.type = showingPassword ? "password" : "text";
+    loginPasswordToggle.textContent = showingPassword ? "\uD83D\uDC41\uFE0F" : "\uD83D\uDE48";
+    loginPasswordToggle.setAttribute("aria-label", showingPassword ? "show password" : "hide password");
+    loginPasswordInput.focus();
+});
+
+syncLoginPasswordToggle();
+
 $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
