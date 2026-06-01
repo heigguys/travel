@@ -168,10 +168,16 @@
     <form id="passwordForm" method="dialog" class="stack">
         <h2>修改密码</h2>
         <label>原密码
-            <input name="oldPassword" type="password" required>
+            <span class="password-field">
+                <input name="oldPassword" type="password" required>
+                <button id="oldPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
+            </span>
         </label>
         <label>新密码
-            <input name="newPassword" type="password" required minlength="6">
+            <span class="password-field">
+                <input name="newPassword" type="password" required minlength="6">
+                <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
+            </span>
         </label>
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>

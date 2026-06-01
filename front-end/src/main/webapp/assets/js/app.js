@@ -241,33 +241,38 @@ document.addEventListener("click", async (event) => {
     if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
 });
 
-const loginPasswordInput = $("loginForm").password;
-const loginPasswordToggle = $("loginPasswordToggle");
+function setupPasswordToggle(input, toggle, onInput = () => {}) {
+    const sync = () => {
+        const hasPassword = input.value.length > 0;
+        toggle.classList.toggle("hidden", !hasPassword);
+        if (!hasPassword) {
+            input.type = "password";
+            toggle.textContent = "\uD83D\uDC41\uFE0F";
+            toggle.setAttribute("aria-label", "show password");
+        }
+    };
 
-function syncLoginPasswordToggle() {
-    const hasPassword = loginPasswordInput.value.length > 0;
-    loginPasswordToggle.classList.toggle("hidden", !hasPassword);
-    if (!hasPassword) {
-        loginPasswordInput.type = "password";
-        loginPasswordToggle.textContent = "\uD83D\uDC41\uFE0F";
-        loginPasswordToggle.setAttribute("aria-label", "show password");
-    }
+    input.addEventListener("input", () => {
+        onInput();
+        sync();
+    });
+
+    toggle.addEventListener("click", () => {
+        const showingPassword = input.type === "text";
+        input.type = showingPassword ? "password" : "text";
+        toggle.textContent = showingPassword ? "\uD83D\uDC41\uFE0F" : "\uD83D\uDE48";
+        toggle.setAttribute("aria-label", showingPassword ? "show password" : "hide password");
+        input.focus();
+    });
+
+    sync();
+    return sync;
 }
 
-loginPasswordInput.addEventListener("input", () => {
-    $("loginError").classList.add("hidden");
-    syncLoginPasswordToggle();
-});
-
-loginPasswordToggle.addEventListener("click", () => {
-    const showingPassword = loginPasswordInput.type === "text";
-    loginPasswordInput.type = showingPassword ? "password" : "text";
-    loginPasswordToggle.textContent = showingPassword ? "\uD83D\uDC41\uFE0F" : "\uD83D\uDE48";
-    loginPasswordToggle.setAttribute("aria-label", showingPassword ? "show password" : "hide password");
-    loginPasswordInput.focus();
-});
-
-syncLoginPasswordToggle();
+setupPasswordToggle($("loginForm").password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
+const passwordForm = $("passwordForm");
+const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"));
+const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"));
 
 $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -295,7 +300,11 @@ $("closeConsultBtn").onclick = async () => {
 };
 $("myAppsBtn").onclick = openMyApps;
 $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
-$("passwordBtn").onclick = () => $("passwordDialog").showModal();
+$("passwordBtn").onclick = () => {
+    syncOldPasswordToggle();
+    syncNewPasswordToggle();
+    $("passwordDialog").showModal();
+};
 $("passwordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = $("passwordForm");
