@@ -14,7 +14,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * PDF 导出服务，负责把当前用户的旅行申请列表渲染为 PDF 字节。
+ */
 public class PdfExportService {
+    /**
+     * 导出当前用户的申请列表 PDF。
+     *
+     * @param user 当前用户
+     * @param applications 当前用户申请列表
+     * @return PDF 文件字节
+     */
     public byte[] exportApplications(User user, List<Application> applications) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -47,6 +57,12 @@ public class PdfExportService {
         }
     }
 
+    /**
+     * 将可能为空的字符串转换为空串，避免 PDF 单元格出现 null 文本。
+     *
+     * @param value 原始文本
+     * @return 非 null 文本
+     */
     private String nullToBlank(String value) {
         return value == null ? "" : value;
     }

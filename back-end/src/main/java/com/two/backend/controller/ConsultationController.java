@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/plans/{planId}/consultations")
+/**
+ * 咨询控制器，处理用户和管理员围绕旅行计划的咨询消息。
+ */
 public class ConsultationController {
     private final AuthService authService;
     private final ConsultationService consultationService;
@@ -27,16 +30,38 @@ public class ConsultationController {
     }
 
     @GetMapping
+    /**
+     * 查询某个旅行计划下当前用户可见的咨询消息。
+     *
+     * @param planId 旅行计划 ID
+     * @param session 当前 HTTP 会话
+     * @return 咨询消息列表
+     */
     public ApiResponse<List<Consultation>> list(@PathVariable Long planId, HttpSession session) {
         return ApiResponse.ok(consultationService.list(planId, authService.currentUser(session)));
     }
 
     @PostMapping
+    /**
+     * 发送一条旅行计划咨询消息。
+     *
+     * @param planId 旅行计划 ID
+     * @param request 咨询内容
+     * @param session 当前 HTTP 会话
+     * @return 新建的咨询消息
+     */
     public ApiResponse<Consultation> send(@PathVariable Long planId, @Valid @RequestBody ConsultationRequest request, HttpSession session) {
         return ApiResponse.ok(consultationService.send(planId, authService.currentUser(session), request));
     }
 
     @PostMapping("/close")
+    /**
+     * 关闭当前用户在指定计划下的咨询对话。
+     *
+     * @param planId 旅行计划 ID
+     * @param session 当前 HTTP 会话
+     * @return 关闭成功消息
+     */
     public ApiResponse<Void> close(@PathVariable Long planId, HttpSession session) {
         consultationService.close(planId, authService.currentUser(session));
         return ApiResponse.message("对话已结束");

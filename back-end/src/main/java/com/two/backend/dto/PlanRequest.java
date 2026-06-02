@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * 管理员新增或编辑旅行计划时的核心表单数据。
+ */
 public record PlanRequest(
         @NotBlank String destination,
         @NotNull LocalDate startDate,

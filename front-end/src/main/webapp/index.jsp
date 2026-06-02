@@ -9,6 +9,7 @@
 </head>
 <body>
 <main class="shell">
+    <!-- 登录视图：未登录用户通过员工编号和密码进入系统。 -->
     <section id="loginView" class="login-panel">
         <div>
             <p class="eyebrow">Travel Management</p>
@@ -31,6 +32,7 @@
         <p class="hint">示例账号：admin A001 / user U001，密码均为 123456</p>
     </section>
 
+    <!-- 主应用视图：登录后展示计划列表、用户信息和常用操作入口。 -->
     <section id="appView" class="app hidden">
         <header class="topbar">
             <div>
@@ -44,6 +46,7 @@
             </div>
         </header>
 
+        <!-- 筛选工具栏：按关键字、状态和排序方式查询旅行计划。 -->
         <section class="toolbar">
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
@@ -62,6 +65,7 @@
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>
         </section>
 
+        <!-- 旅行计划表格：表头和行数据由 app.js 根据后端返回动态渲染。 -->
         <div class="table-wrap">
             <table>
                 <thead>
@@ -73,6 +77,7 @@
     </section>
 </main>
 
+<!-- 旅行计划弹窗：管理员新增或编辑计划，并可上传 PDF 附件。 -->
 <dialog id="planDialog">
     <form id="planForm" method="dialog" class="stack">
         <h2 id="planDialogTitle">旅行计划</h2>
@@ -109,6 +114,7 @@
     </form>
 </dialog>
 
+<!-- 申请弹窗：员工填写申请人数和备注。 -->
 <dialog id="applyDialog">
     <form id="applyForm" method="dialog" class="stack">
         <h2>申请旅行计划</h2>
@@ -126,6 +132,7 @@
     </form>
 </dialog>
 
+<!-- 随行人员弹窗：维护某条申请下的同行人员信息。 -->
 <dialog id="companionsDialog">
     <form id="companionsForm" method="dialog" class="stack">
         <h2>修改随行人员信息</h2>
@@ -139,6 +146,7 @@
     </form>
 </dialog>
 
+<!-- 咨询弹窗：展示计划咨询消息并发送新咨询。 -->
 <dialog id="consultDialog">
     <form id="consultForm" method="dialog" class="stack">
         <h2>咨询管理</h2>
@@ -153,6 +161,7 @@
     </form>
 </dialog>
 
+<!-- 我的申请弹窗：展示当前用户所有申请，并提供导出和取消入口。 -->
 <dialog id="myAppsDialog">
     <div class="stack">
         <h2>我的申请</h2>
@@ -164,6 +173,7 @@
     </div>
 </dialog>
 
+<!-- 修改密码弹窗：当前用户输入原密码和新密码完成密码变更。 -->
 <dialog id="passwordDialog">
     <form id="passwordForm" method="dialog" class="stack">
         <h2>修改密码</h2>
@@ -187,6 +197,7 @@
     </form>
 </dialog>
 
+<!-- Toast 提示容器：用于显示保存、删除、取消等操作反馈。 -->
 <div id="toast" class="toast hidden"></div>
 <script src="assets/js/app.js"></script>
 </body>

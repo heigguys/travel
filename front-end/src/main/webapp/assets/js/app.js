@@ -1,9 +1,12 @@
 const API_BASE = window.API_BASE || "http://localhost:8080/api";
+// 当前登录用户和计划列表缓存，供页面渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
 
+// 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
 
+// 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
     const response = await fetch(API_BASE + path, {
         credentials: "include",
@@ -20,12 +23,14 @@ async function api(path, options = {}) {
     return response;
 }
 
+// 显示短暂的全局提示消息。
 function toast(message) {
     $("toast").textContent = message;
     $("toast").classList.remove("hidden");
     setTimeout(() => $("toast").classList.add("hidden"), 2600);
 }
 
+// 切换到登录后的主应用视图，并按用户角色控制管理员按钮显示。
 function showApp() {
     $("loginView").classList.add("hidden");
     $("appView").classList.remove("hidden");
@@ -33,6 +38,7 @@ function showApp() {
     $("newPlanBtn").classList.toggle("hidden", currentUser.role !== "ADMIN");
 }
 
+// 初始化时尝试读取当前登录用户；未登录则停留在登录视图。
 async function loadMe() {
     try {
         currentUser = await api("/auth/me");
@@ -44,6 +50,7 @@ async function loadMe() {
     }
 }
 
+// 根据筛选条件加载旅行计划列表。
 async function loadPlans() {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
@@ -53,6 +60,7 @@ async function loadPlans() {
     renderPlans();
 }
 
+// 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
     const admin = currentUser.role === "ADMIN";
     const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
@@ -86,6 +94,7 @@ function renderPlans() {
     }).join("");
 }
 
+// 打开新增或编辑旅行计划弹窗，并把已有计划数据回填到表单。
 function openPlanDialog(plan = null) {
     $("planDialogTitle").textContent = plan ? "编辑旅行计划" : "添加旅行计划";
     const form = $("planForm");
@@ -100,6 +109,7 @@ function openPlanDialog(plan = null) {
     $("planDialog").showModal();
 }
 
+// 保存旅行计划表单；有 id 时编辑，没有 id 时新增。
 async function savePlan(event) {
     event.preventDefault();
     const form = $("planForm");
@@ -112,12 +122,14 @@ async function savePlan(event) {
     await loadPlans();
 }
 
+// 打开申请弹窗，并记录当前要申请的计划 ID。
 function openApplyDialog(planId) {
     $("applyForm").reset();
     $("applyForm").planId.value = planId;
     $("applyDialog").showModal();
 }
 
+// 保存旅行申请，成功后刷新列表并继续维护随行人员。
 async function saveApply(event) {
     event.preventDefault();
     const form = $("applyForm");
@@ -134,6 +146,7 @@ async function saveApply(event) {
     openCompanionsDialog(app.id, Number(form.applicantCount.value));
 }
 
+// 打开随行人员弹窗；没有历史数据时按申请人数生成空行。
 async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsForm").applicationId.value = applicationId;
     const rows = await api(`/applications/${applicationId}/companions`);
@@ -143,6 +156,7 @@ async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsDialog").showModal();
 }
 
+// 动态新增一行随行人员输入项。
 function addCompanionRow(row = {}) {
     const div = document.createElement("div");
     div.className = "companion-row";
@@ -156,6 +170,7 @@ function addCompanionRow(row = {}) {
     $("companionsRows").appendChild(div);
 }
 
+// 收集随行人员表单行并覆盖保存到后端。
 async function saveCompanions(event) {
     event.preventDefault();
     const rows = Array.from($("companionsRows").querySelectorAll(".companion-row")).map((row) => {
@@ -167,6 +182,7 @@ async function saveCompanions(event) {
     toast("随行人员已保存");
 }
 
+// 打开咨询弹窗并加载当前计划的历史消息。
 async function openConsultDialog(planId) {
     $("consultForm").reset();
     $("consultForm").planId.value = planId;
@@ -174,6 +190,7 @@ async function openConsultDialog(planId) {
     $("consultDialog").showModal();
 }
 
+// 渲染咨询消息列表，并对消息正文做 HTML 转义。
 async function renderMessages(planId) {
     const messages = await api(`/plans/${planId}/consultations`);
     $("messages").innerHTML = messages.map((msg) => `
@@ -185,6 +202,7 @@ async function renderMessages(planId) {
     `).join("") || "<p class='muted'>暂无咨询内容</p>";
 }
 
+// 发送咨询消息，成功后清空输入框并刷新消息列表。
 async function sendConsult(event) {
     event.preventDefault();
     const form = $("consultForm");
@@ -193,6 +211,7 @@ async function sendConsult(event) {
     await renderMessages(form.planId.value);
 }
 
+// 删除旅行计划前先加载申请人预览，提示确认后再执行删除。
 async function deletePlan(planId) {
     const applicants = await api(`/plans/${planId}/delete-preview`);
     const suffix = applicants.length
@@ -204,6 +223,7 @@ async function deletePlan(planId) {
     await loadPlans();
 }
 
+// 打开“我的申请”弹窗，展示当前用户申请及可执行操作。
 async function openMyApps() {
     const apps = await api("/my-applications");
     $("myAppsRows").innerHTML = apps.map((app) => `
@@ -216,6 +236,7 @@ async function openMyApps() {
     $("myAppsDialog").showModal();
 }
 
+// 取消指定申请，并刷新我的申请和计划列表。
 async function cancelApplication(id) {
     await api(`/applications/${id}/cancel`, {method: "POST"});
     toast("申请已取消");
@@ -223,10 +244,12 @@ async function cancelApplication(id) {
     await loadPlans();
 }
 
+// 转义用户输入内容，避免咨询消息中的 HTML 被浏览器执行。
 function escapeHtml(text) {
     return String(text).replace(/[&<>"']/g, (char) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
 }
 
+// 全局点击委托：统一处理动态生成按钮的编辑、删除、申请、咨询等动作。
 document.addEventListener("click", async (event) => {
     const button = event.target.closest("button");
     if (!button) return;
@@ -241,6 +264,7 @@ document.addEventListener("click", async (event) => {
     if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
 });
 
+// 绑定密码输入框的显示/隐藏按钮，并在输入为空时自动恢复隐藏状态。
 function setupPasswordToggle(input, toggle, onInput = () => {}) {
     const sync = () => {
         const hasPassword = input.value.length > 0;
@@ -269,6 +293,7 @@ function setupPasswordToggle(input, toggle, onInput = () => {}) {
     return sync;
 }
 
+// 显示修改密码弹窗内的成功或失败提示。
 function showPasswordMessage(message, success = false) {
     const messageEl = $("passwordMessage");
     messageEl.textContent = message;
@@ -277,15 +302,18 @@ function showPasswordMessage(message, success = false) {
     messageEl.classList.remove("hidden");
 }
 
+// 隐藏修改密码提示信息。
 function hidePasswordMessage() {
     $("passwordMessage").classList.add("hidden");
 }
 
+// 初始化登录和修改密码表单中的密码显隐按钮。
 setupPasswordToggle($("loginForm").password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
 const passwordForm = $("passwordForm");
 const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
 const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
 
+// 登录表单提交：成功后进入主应用并加载计划列表，失败则显示错误提示。
 $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -298,6 +326,8 @@ $("loginForm").addEventListener("submit", async (event) => {
         $("loginError").classList.remove("hidden");
     }
 });
+
+// 顶部工具栏和各业务弹窗的事件绑定。
 $("logoutBtn").onclick = async () => { await api("/auth/logout", {method: "POST"}); location.reload(); };
 $("searchBtn").onclick = loadPlans;
 $("newPlanBtn").onclick = () => openPlanDialog();
@@ -318,6 +348,8 @@ $("passwordBtn").onclick = () => {
     syncNewPasswordToggle();
     $("passwordDialog").showModal();
 };
+
+// 修改密码表单提交：后端校验原密码并保存新密码。
 $("passwordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = $("passwordForm");
@@ -331,5 +363,9 @@ $("passwordForm").addEventListener("submit", async (event) => {
         showPasswordMessage(error.message || "\u5bc6\u7801\u4fee\u6539\u5931\u8d25");
     }
 });
+
+// 保留的容器点击监听位，当前业务按钮通过全局点击委托处理。
 $("myAppsRows").addEventListener("click", () => {});
+
+// 页面入口：尝试恢复登录态并加载初始数据。
 loadMe().catch((error) => toast(error.message));

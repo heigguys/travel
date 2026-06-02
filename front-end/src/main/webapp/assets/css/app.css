@@ -1,3 +1,4 @@
+/* 全局主题变量：统一控制主色、文字、边框和危险操作颜色。 */
 :root {
     --blue: #1f6feb;
     --line: #d8dee9;
@@ -7,10 +8,12 @@
     --danger: #d92d20;
 }
 
+/* 基础盒模型，避免宽度计算受 padding 和 border 影响。 */
 * {
     box-sizing: border-box;
 }
 
+/* 页面基础排版和中文字体设置。 */
 body {
     margin: 0;
     font-family: Arial, "Microsoft YaHei", sans-serif;
@@ -18,10 +21,12 @@ body {
     background: var(--bg);
 }
 
+/* 表单控件继承页面字体，保持输入和按钮视觉一致。 */
 button, input, select, textarea {
     font: inherit;
 }
 
+/* 通用按钮样式。 */
 button {
     border: 1px solid var(--line);
     background: #fff;
@@ -30,17 +35,20 @@ button {
     cursor: pointer;
 }
 
+/* 主操作按钮。 */
 button.primary {
     border-color: var(--blue);
     background: var(--blue);
     color: #fff;
 }
 
+/* 危险操作按钮，例如删除和取消。 */
 button.danger {
     border-color: var(--danger);
     color: var(--danger);
 }
 
+/* 输入类控件的统一边框、圆角和内边距。 */
 input, select, textarea {
     width: 100%;
     border: 1px solid var(--line);
@@ -49,17 +57,20 @@ input, select, textarea {
     background: #fff;
 }
 
+/* 隐藏浏览器自带密码 reveal 按钮，统一使用页面内的显隐按钮。 */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
     display: none;
 }
 
+/* 表单标签使用栅格布局，便于标签文字和输入框上下排列。 */
 label {
     display: grid;
     gap: 6px;
     font-weight: 600;
 }
 
+/* 表单错误提示。 */
 .form-error {
     margin: -4px 0 0;
     color: var(--danger);
@@ -67,6 +78,7 @@ label {
     font-weight: 600;
 }
 
+/* 表单成功提示。 */
 .form-success {
     margin: -4px 0 0;
     color: #16833a;
@@ -74,6 +86,7 @@ label {
     font-weight: 600;
 }
 
+/* 密码输入框容器，用于定位右侧显隐按钮。 */
 .password-field {
     position: relative;
     display: block;
@@ -96,11 +109,13 @@ label {
     line-height: 1;
 }
 
+/* 页面外壳，提供全屏高度和边距。 */
 .shell {
     min-height: 100vh;
     padding: 28px;
 }
 
+/* 登录面板样式。 */
 .login-panel {
     width: min(420px, 100%);
     margin: 8vh auto;
@@ -113,21 +128,25 @@ label {
     box-shadow: 0 16px 38px rgba(31, 41, 55, .08);
 }
 
+/* 登录页英文小标题。 */
 .eyebrow {
     color: var(--blue);
     font-weight: 700;
     margin: 0 0 8px;
 }
 
+/* 次要文字和提示文字。 */
 .muted, .hint {
     color: var(--muted);
 }
 
+/* 登录后的主应用布局。 */
 .app {
     display: grid;
     gap: 16px;
 }
 
+/* 顶部栏和筛选工具栏的弹性布局。 */
 .topbar, .toolbar {
     display: flex;
     align-items: center;
@@ -136,6 +155,7 @@ label {
     flex-wrap: wrap;
 }
 
+/* 操作按钮组和弹窗底部按钮组。 */
 .actions, .dialog-actions {
     display: flex;
     gap: 8px;
@@ -144,6 +164,7 @@ label {
     flex-wrap: wrap;
 }
 
+/* 筛选工具栏靠左排列。 */
 .toolbar {
     justify-content: flex-start;
 }
@@ -156,6 +177,7 @@ label {
     max-width: 160px;
 }
 
+/* 表格外层容器，提供滚动、边框和白色背景。 */
 .table-wrap {
     overflow: auto;
     background: #fff;
@@ -163,6 +185,7 @@ label {
     border-radius: 8px;
 }
 
+/* 旅行计划表格基础样式。 */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -184,6 +207,7 @@ a {
     color: var(--blue);
 }
 
+/* 弹窗基础尺寸和边框。 */
 dialog {
     width: min(760px, calc(100vw - 32px));
     border: 1px solid var(--line);
@@ -191,21 +215,25 @@ dialog {
     padding: 22px;
 }
 
+/* 弹窗打开时的背景遮罩。 */
 dialog::backdrop {
     background: rgba(15, 23, 42, .42);
 }
 
+/* 表单和弹窗内的纵向间距布局。 */
 .stack {
     display: grid;
     gap: 14px;
 }
 
+/* 两列表单布局。 */
 .grid2 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
+/* 行内复选框布局。 */
 .inline {
     display: flex;
     align-items: center;
@@ -216,6 +244,7 @@ dialog::backdrop {
     width: auto;
 }
 
+/* 咨询消息滚动区域。 */
 .messages {
     max-height: 320px;
     overflow: auto;
@@ -225,6 +254,7 @@ dialog::backdrop {
     background: #fbfcff;
 }
 
+/* 单条消息卡片。 */
 .message {
     margin: 0 0 10px;
     padding: 8px 10px;
@@ -233,11 +263,13 @@ dialog::backdrop {
     border: 1px solid var(--line);
 }
 
+/* 管理员消息右偏展示，便于和普通员工消息区分。 */
 .message.admin {
     margin-left: 18%;
     background: #eef5ff;
 }
 
+/* 随行人员编辑行的多列表单布局。 */
 .companion-row {
     display: grid;
     grid-template-columns: 1fr 120px 1.4fr 120px auto;
@@ -245,6 +277,7 @@ dialog::backdrop {
     align-items: center;
 }
 
+/* 全局 Toast 提示。 */
 .toast {
     position: fixed;
     right: 18px;
@@ -256,10 +289,12 @@ dialog::backdrop {
     max-width: 360px;
 }
 
+/* 通用隐藏类。 */
 .hidden {
     display: none !important;
 }
 
+/* 小屏幕下压缩页面边距，并把多列表单改为单列。 */
 @media (max-width: 700px) {
     .shell {
         padding: 16px;

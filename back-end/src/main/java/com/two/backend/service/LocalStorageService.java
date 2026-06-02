@@ -12,6 +12,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+/**
+ * 本地文件存储实现，负责保存和读取旅行计划 PDF 附件。
+ */
 public class LocalStorageService implements StorageService {
     private final Path root;
 
@@ -21,6 +24,12 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
+    /**
+     * 保存上传的 PDF 附件，并返回系统内部存储文件名和原始文件名。
+     *
+     * @param file 上传文件
+     * @return 存储文件信息；未上传文件时返回 null
+     */
     public StoredFile store(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             return null;
@@ -39,6 +48,12 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
+    /**
+     * 根据存储路径读取本地附件资源。
+     *
+     * @param path 系统内部存储文件名
+     * @return 可由 Spring 返回给浏览器的资源
+     */
     public Resource load(String path) {
         try {
             Path file = root.resolve(path).normalize();
@@ -52,6 +67,11 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
+    /**
+     * 返回本地附件存储根目录。
+     *
+     * @return 存储根目录
+     */
     public Path root() {
         return root;
     }
