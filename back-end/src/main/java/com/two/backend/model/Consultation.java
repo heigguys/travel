@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
+/**
+ * 旅行咨询实体，记录员工和管理员围绕某个旅行计划的沟通内容。
+ */
 public class Consultation {
     private Long id;
     private Long planId;

@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
+/**
+ * 旅行计划实体，包含计划基础信息、附件信息以及申请人数统计字段。
+ */
 public class TravelPlan {
     private Long id;
     private String planNo;

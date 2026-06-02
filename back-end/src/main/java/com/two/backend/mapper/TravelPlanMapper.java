@@ -11,7 +11,13 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 @Mapper
+/**
+ * 旅行计划 Mapper，负责 travel_plans 表的查询、插入、更新和删除。
+ */
 public interface TravelPlanMapper {
+    /**
+     * 按角色、关键字、状态和排序条件查询计划，并计算申请人数统计字段。
+     */
     @Select("""
             <script>
             select p.*,
@@ -36,9 +42,15 @@ public interface TravelPlanMapper {
     List<TravelPlan> list(@Param("admin") boolean admin, @Param("userId") Long userId, @Param("keyword") String keyword,
                           @Param("status") String status, @Param("sort") String sort);
 
+    /**
+     * 根据 ID 查询旅行计划。
+     */
     @Select("select * from travel_plans where id = #{id}")
     TravelPlan findById(Long id);
 
+    /**
+     * 插入旅行计划，并回填自增 ID。
+     */
     @Insert("""
             insert into travel_plans(plan_no, destination, start_date, end_date, price, capacity, published, file_path, file_name, status)
             values(#{planNo}, #{destination}, #{startDate}, #{endDate}, #{price}, #{capacity}, #{published}, #{filePath}, #{fileName}, #{status})
@@ -46,6 +58,9 @@ public interface TravelPlanMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(TravelPlan plan);
 
+    /**
+     * 更新旅行计划基础信息、附件信息、状态和更新时间。
+     */
     @Update("""
             update travel_plans
             set destination = #{destination}, start_date = #{startDate}, end_date = #{endDate}, price = #{price},
@@ -55,6 +70,9 @@ public interface TravelPlanMapper {
             """)
     int update(TravelPlan plan);
 
+    /**
+     * 删除指定旅行计划。
+     */
     @Delete("delete from travel_plans where id = #{id}")
     int delete(Long id);
 }
