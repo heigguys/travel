@@ -1,5 +1,5 @@
 const API_BASE = window.API_BASE || "http://localhost:8080/api";
-// 当前登录用户和计划列表缓存，供页面渲染与事件处理复用。
+// 当前登录用户和计划列表缓存，供计划页渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
 
@@ -25,29 +25,22 @@ async function api(path, options = {}) {
 
 // 显示短暂的全局提示消息。
 function toast(message) {
-    $("toast").textContent = message;
-    $("toast").classList.remove("hidden");
-    setTimeout(() => $("toast").classList.add("hidden"), 2600);
+    const toastEl = $("toast");
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.classList.remove("hidden");
+    setTimeout(() => toastEl.classList.add("hidden"), 2600);
 }
 
-// 切换到登录后的主应用视图，并按用户角色控制管理员按钮显示。
-function showApp() {
-    $("loginView").classList.add("hidden");
-    $("appView").classList.remove("hidden");
+// 跳转到指定 JSP 页面。
+function go(page) {
+    window.location.href = page;
+}
+
+// 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
+function showPlansPage() {
     $("userInfo").textContent = `${currentUser.name}（${currentUser.employeeNo} / ${currentUser.role}）`;
     $("newPlanBtn").classList.toggle("hidden", currentUser.role !== "ADMIN");
-}
-
-// 初始化时尝试读取当前登录用户；未登录则停留在登录视图。
-async function loadMe() {
-    try {
-        currentUser = await api("/auth/me");
-        showApp();
-        await loadPlans();
-    } catch {
-        $("loginView").classList.remove("hidden");
-        $("appView").classList.add("hidden");
-    }
 }
 
 // 根据筛选条件加载旅行计划列表。
@@ -249,23 +242,9 @@ function escapeHtml(text) {
     return String(text).replace(/[&<>"']/g, (char) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
 }
 
-// 全局点击委托：统一处理动态生成按钮的编辑、删除、申请、咨询等动作。
-document.addEventListener("click", async (event) => {
-    const button = event.target.closest("button");
-    if (!button) return;
-    if (button.dataset.close !== undefined) button.closest("dialog").close();
-    const action = button.dataset.action;
-    const id = Number(button.dataset.id);
-    if (action === "edit") openPlanDialog(plans.find((plan) => plan.id === id));
-    if (action === "delete") await deletePlan(id);
-    if (action === "apply") openApplyDialog(id);
-    if (action === "consult") await openConsultDialog(id);
-    if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
-    if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
-});
-
 // 绑定密码输入框的显示/隐藏按钮，并在输入为空时自动恢复隐藏状态。
 function setupPasswordToggle(input, toggle, onInput = () => {}) {
+    if (!input || !toggle) return () => {};
     const sync = () => {
         const hasPassword = input.value.length > 0;
         toggle.classList.toggle("hidden", !hasPassword);
@@ -307,65 +286,108 @@ function hidePasswordMessage() {
     $("passwordMessage").classList.add("hidden");
 }
 
-// 初始化登录和修改密码表单中的密码显隐按钮。
-setupPasswordToggle($("loginForm").password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
-const passwordForm = $("passwordForm");
-const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
-const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
+// 初始化登录页：已登录自动进入计划页，登录成功后跳转 plans.jsp。
+async function initLoginPage() {
+    const loginForm = $("loginForm");
+    if (!loginForm) return false;
 
-// 登录表单提交：成功后进入主应用并加载计划列表，失败则显示错误提示。
-$("loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    $("loginError").classList.add("hidden");
+    setupPasswordToggle(loginForm.password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        $("loginError").classList.add("hidden");
+        try {
+            currentUser = await api("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({employeeNo: loginForm.employeeNo.value, password: loginForm.password.value})
+            });
+            go("plans.jsp");
+        } catch {
+            $("loginError").classList.remove("hidden");
+        }
+    });
+
     try {
-        currentUser = await api("/auth/login", {method: "POST", body: JSON.stringify({employeeNo: form.employeeNo.value, password: form.password.value})});
-        showApp();
+        currentUser = await api("/auth/me");
+        go("plans.jsp");
+    } catch {
+        return true;
+    }
+    return true;
+}
+
+// 绑定计划页按钮、弹窗和表单事件。
+function bindPlansPageEvents() {
+    document.addEventListener("click", async (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.dataset.close !== undefined) button.closest("dialog").close();
+        const action = button.dataset.action;
+        const id = Number(button.dataset.id);
+        if (action === "edit") openPlanDialog(plans.find((plan) => plan.id === id));
+        if (action === "delete") await deletePlan(id);
+        if (action === "apply") openApplyDialog(id);
+        if (action === "consult") await openConsultDialog(id);
+        if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
+        if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
+    });
+
+    const passwordForm = $("passwordForm");
+    const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
+    const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
+
+    $("logoutBtn").onclick = async () => {
+        await api("/auth/logout", {method: "POST"});
+        go("index.jsp");
+    };
+    $("searchBtn").onclick = loadPlans;
+    $("newPlanBtn").onclick = () => openPlanDialog();
+    $("planForm").addEventListener("submit", savePlan);
+    $("applyForm").addEventListener("submit", saveApply);
+    $("addCompanionBtn").onclick = () => addCompanionRow();
+    $("companionsForm").addEventListener("submit", saveCompanions);
+    $("consultForm").addEventListener("submit", sendConsult);
+    $("closeConsultBtn").onclick = async () => {
+        await api(`/plans/${$("consultForm").planId.value}/consultations/close`, {method: "POST"});
+        toast("对话已结束");
+    };
+    $("myAppsBtn").onclick = openMyApps;
+    $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
+    $("passwordBtn").onclick = () => {
+        hidePasswordMessage();
+        syncOldPasswordToggle();
+        syncNewPasswordToggle();
+        $("passwordDialog").showModal();
+    };
+    passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        hidePasswordMessage();
+        try {
+            await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: passwordForm.oldPassword.value, newPassword: passwordForm.newPassword.value})});
+            showPasswordMessage("密码修改成功", true);
+            $("passwordDialog").close();
+            toast("密码修改成功");
+        } catch (error) {
+            showPasswordMessage(error.message || "密码修改失败");
+        }
+    });
+    $("myAppsRows").addEventListener("click", () => {});
+}
+
+// 初始化计划页：未登录跳回登录页，已登录则加载用户信息和计划列表。
+async function initPlansPage() {
+    if (!$("appView")) return false;
+    bindPlansPageEvents();
+    try {
+        currentUser = await api("/auth/me");
+        showPlansPage();
         await loadPlans();
     } catch {
-        $("loginError").classList.remove("hidden");
+        go("index.jsp");
     }
-});
+    return true;
+}
 
-// 顶部工具栏和各业务弹窗的事件绑定。
-$("logoutBtn").onclick = async () => { await api("/auth/logout", {method: "POST"}); location.reload(); };
-$("searchBtn").onclick = loadPlans;
-$("newPlanBtn").onclick = () => openPlanDialog();
-$("planForm").addEventListener("submit", savePlan);
-$("applyForm").addEventListener("submit", saveApply);
-$("addCompanionBtn").onclick = () => addCompanionRow();
-$("companionsForm").addEventListener("submit", saveCompanions);
-$("consultForm").addEventListener("submit", sendConsult);
-$("closeConsultBtn").onclick = async () => {
-    await api(`/plans/${$("consultForm").planId.value}/consultations/close`, {method: "POST"});
-    toast("对话已结束");
-};
-$("myAppsBtn").onclick = openMyApps;
-$("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
-$("passwordBtn").onclick = () => {
-    hidePasswordMessage();
-    syncOldPasswordToggle();
-    syncNewPasswordToggle();
-    $("passwordDialog").showModal();
-};
-
-// 修改密码表单提交：后端校验原密码并保存新密码。
-$("passwordForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = $("passwordForm");
-    hidePasswordMessage();
-    try {
-        await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: form.oldPassword.value, newPassword: form.newPassword.value})});
-        showPasswordMessage("\u5bc6\u7801\u4fee\u6539\u6210\u529f", true);
-        $("passwordDialog").close();
-        toast("\u5bc6\u7801\u4fee\u6539\u6210\u529f");
-    } catch (error) {
-        showPasswordMessage(error.message || "\u5bc6\u7801\u4fee\u6539\u5931\u8d25");
-    }
-});
-
-// 保留的容器点击监听位，当前业务按钮通过全局点击委托处理。
-$("myAppsRows").addEventListener("click", () => {});
-
-// 页面入口：尝试恢复登录态并加载初始数据。
-loadMe().catch((error) => toast(error.message));
+// 页面入口：根据当前 JSP 上存在的根元素选择对应初始化流程。
+initLoginPage().then((startedLogin) => {
+    if (!startedLogin) initPlansPage();
+}).catch((error) => toast(error.message));
