@@ -96,9 +96,9 @@
     <form id="applyForm" method="dialog" class="stack">
         <h2>申请旅行计划</h2>
         <input type="hidden" name="planId">
-        <label>申请人数 *
-            <input name="applicantCount" type="number" min="1" required>
-        </label>
+        <input type="hidden" name="applicationId">
+        <div id="applyCompanionsRows" class="stack"></div>
+        <button id="addApplyCompanionBtn" type="button">新增随行人员</button>
         <label>选项 / 备注
             <textarea name="optionText" rows="3" placeholder="如座位、房型、餐食等需求"></textarea>
         </label>

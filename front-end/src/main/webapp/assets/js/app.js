@@ -115,28 +115,53 @@ async function savePlan(event) {
     await loadPlans();
 }
 
-// 打开申请弹窗，并记录当前要申请的计划 ID。
-function openApplyDialog(planId) {
-    $("applyForm").reset();
-    $("applyForm").planId.value = planId;
+// 打开申请弹窗，直接回填当前用户已保存的申请和随行人员信息。
+async function openApplyDialog(planId) {
+    const form = $("applyForm");
+    form.reset();
+    form.planId.value = planId;
+    form.applicationId.value = "";
+    $("applyCompanionsRows").innerHTML = "";
+
+    const apps = await api("/my-applications");
+    const active = apps.find((app) => Number(app.planId) === Number(planId) && app.status === "ACTIVE");
+    if (active) {
+        form.applicationId.value = active.id;
+        form.optionText.value = active.optionText || "";
+        const rows = await api(`/applications/${active.id}/companions`);
+        const fallbackCount = Math.max(Number(active.applicantCount) || 1, 1);
+        const source = rows.length ? rows : Array.from({length: fallbackCount}, () => ({}));
+        source.forEach((row) => addCompanionRow(row, "applyCompanionsRows"));
+    } else {
+        addCompanionRow({}, "applyCompanionsRows");
+    }
     $("applyDialog").showModal();
 }
 
-// 保存旅行申请，成功后刷新列表并继续维护随行人员。
+// 保存旅行申请；申请人数由人员信息行数自动计算，并同时保存随行人员。
 async function saveApply(event) {
     event.preventDefault();
     const form = $("applyForm");
-    const app = await api(`/plans/${form.planId.value}/apply`, {
-        method: "POST",
-        body: JSON.stringify({
-            applicantCount: Number(form.applicantCount.value),
-            optionText: form.optionText.value
-        })
-    });
-    $("applyDialog").close();
-    toast("申请已保存");
-    await loadPlans();
-    openCompanionsDialog(app.id, Number(form.applicantCount.value));
+    const rows = collectCompanionRows("applyCompanionsRows");
+    if (!rows.length) {
+        toast("请至少添加一名随行人员");
+        return;
+    }
+    try {
+        const app = await api(`/plans/${form.planId.value}/apply`, {
+            method: "POST",
+            body: JSON.stringify({
+                applicantCount: rows.length,
+                optionText: form.optionText.value
+            })
+        });
+        await api(`/applications/${app.id}/companions`, {method: "POST", body: JSON.stringify(rows)});
+        $("applyDialog").close();
+        toast("申请已保存");
+        await loadPlans();
+    } catch (error) {
+        toast(error.message || "申请保存失败");
+    }
 }
 
 // 打开随行人员弹窗；没有历史数据时按申请人数生成空行。
@@ -145,31 +170,35 @@ async function openCompanionsDialog(applicationId, count = 1) {
     const rows = await api(`/applications/${applicationId}/companions`);
     $("companionsRows").innerHTML = "";
     const source = rows.length ? rows : Array.from({length: count}, () => ({}));
-    source.forEach(addCompanionRow);
+    source.forEach((row) => addCompanionRow(row, "companionsRows"));
     $("companionsDialog").showModal();
 }
 
 // 动态新增一行随行人员输入项。
-function addCompanionRow(row = {}) {
+function addCompanionRow(row = {}, containerId = "companionsRows") {
     const div = document.createElement("div");
     div.className = "companion-row";
     div.innerHTML = `
-        <input placeholder="姓名" value="${row.name || ""}" required>
-        <select><option ${row.gender === "女" ? "selected" : ""}>女</option><option ${row.gender === "男" ? "selected" : ""}>男</option></select>
-        <input placeholder="身份证号" value="${row.idCard || ""}" required>
+        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required>
+        <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
+        <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
         <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>
         <button type="button">删除</button>`;
     div.querySelector("button").onclick = () => div.remove();
-    $("companionsRows").appendChild(div);
+    $(containerId).appendChild(div);
+}
+
+function collectCompanionRows(containerId = "companionsRows") {
+    return Array.from($(containerId).querySelectorAll(".companion-row")).map((row) => {
+        const inputs = row.querySelectorAll("input,select");
+        return {name: inputs[0].value, gender: inputs[1].value, idCard: inputs[2].value, bedNeeded: inputs[3].value === "true"};
+    });
 }
 
 // 收集随行人员表单行并覆盖保存到后端。
 async function saveCompanions(event) {
     event.preventDefault();
-    const rows = Array.from($("companionsRows").querySelectorAll(".companion-row")).map((row) => {
-        const inputs = row.querySelectorAll("input,select");
-        return {name: inputs[0].value, gender: inputs[1].value, idCard: inputs[2].value, bedNeeded: inputs[3].value === "true"};
-    });
+    const rows = collectCompanionRows();
     await api(`/applications/${$("companionsForm").applicationId.value}/companions`, {method: "POST", body: JSON.stringify(rows)});
     $("companionsDialog").close();
     toast("随行人员已保存");
@@ -325,7 +354,7 @@ function bindPlansPageEvents() {
         const id = Number(button.dataset.id);
         if (action === "edit") openPlanDialog(plans.find((plan) => plan.id === id));
         if (action === "delete") await deletePlan(id);
-        if (action === "apply") openApplyDialog(id);
+        if (action === "apply") await openApplyDialog(id);
         if (action === "consult") await openConsultDialog(id);
         if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
         if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
@@ -343,6 +372,7 @@ function bindPlansPageEvents() {
     $("newPlanBtn").onclick = () => openPlanDialog();
     $("planForm").addEventListener("submit", savePlan);
     $("applyForm").addEventListener("submit", saveApply);
+    $("addApplyCompanionBtn").onclick = () => addCompanionRow({}, "applyCompanionsRows");
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
