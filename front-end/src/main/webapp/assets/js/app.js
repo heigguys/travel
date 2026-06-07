@@ -244,11 +244,24 @@ async function sendConsult(event) {
 // 删除旅行计划前先加载申请人预览，提示确认后再执行删除。
 async function deletePlan(planId) {
     const applicants = await api(`/plans/${planId}/delete-preview`);
-    const suffix = applicants.length
-        ? "\n\n已有员工申请：\n" + applicants.map((a) => `${a.userName} ${a.email}`).join("\n") + "\n\n确认删除将自动取消这些申请。"
-        : "";
-    if (!confirm("确认删除该旅行计划？" + suffix)) return;
+    $("deleteForm").planId.value = planId;
+    $("deleteApplicants").innerHTML = applicants.length
+        ? applicants.map((a) => `
+            <div class="message">
+                <strong>${escapeHtml(a.userName || "")}</strong>
+                <p>${escapeHtml(a.email || "")}</p>
+            </div>
+        `).join("")
+        : "<p class='muted'>暂无员工申请</p>";
+    $("deleteDialog").showModal();
+}
+
+// 确认删除旅行计划，并刷新列表。
+async function confirmDeletePlan(event) {
+    event.preventDefault();
+    const planId = $("deleteForm").planId.value;
     await api(`/plans/${planId}/delete`, {method: "POST"});
+    $("deleteDialog").close();
     toast("旅行计划已删除");
     await loadPlans();
 }
@@ -379,6 +392,7 @@ function bindPlansPageEvents() {
     $("searchBtn").onclick = loadPlans;
     $("newPlanBtn").onclick = () => openPlanDialog();
     $("planForm").addEventListener("submit", savePlan);
+    $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("applyForm").addEventListener("submit", saveApply);
     $("addApplyCompanionBtn").onclick = () => addCompanionRow({}, "applyCompanionsRows");
     $("addCompanionBtn").onclick = () => addCompanionRow();

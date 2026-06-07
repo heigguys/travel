@@ -269,6 +269,24 @@ dialog::backdrop {
     background: #eef5ff;
 }
 
+.danger-note {
+    margin: 0;
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.delete-preview-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.delete-preview-list .message {
+    margin: 0;
+}
+
 /* 随行人员编辑行的多列表单布局。 */
 .companion-row {
     display: grid;
