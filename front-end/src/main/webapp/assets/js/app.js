@@ -5,6 +5,9 @@ let plans = [];
 
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
+const ROLE_ADMIN = 0;
+const isAdminRole = (role) => Number(role) === ROLE_ADMIN || String(role).toUpperCase() === "ADMIN";
+const roleLabel = (role) => isAdminRole(role) ? "管理员" : "用户";
 
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
@@ -39,8 +42,8 @@ function go(page) {
 
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
-    $("userInfo").textContent = `${currentUser.name}（${currentUser.employeeNo} / ${currentUser.role}）`;
-    $("newPlanBtn").classList.toggle("hidden", currentUser.role !== "ADMIN");
+    $("userInfo").textContent = `当前登录用户：${currentUser.name}（${currentUser.employeeNo} / ${roleLabel(currentUser.role)}）`;
+    $("newPlanBtn").classList.toggle("hidden", !isAdminRole(currentUser.role));
 }
 
 // 根据筛选条件加载旅行计划列表。
@@ -55,7 +58,7 @@ async function loadPlans() {
 
 // 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
-    const admin = currentUser.role === "ADMIN";
+    const admin = isAdminRole(currentUser.role);
     const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
     if (admin) headers.push("公开状态");
     headers.push("操作");
@@ -216,8 +219,8 @@ async function openConsultDialog(planId) {
 async function renderMessages(planId) {
     const messages = await api(`/plans/${planId}/consultations`);
     $("messages").innerHTML = messages.map((msg) => `
-        <div class="message ${msg.senderRole === "ADMIN" ? "admin" : ""}">
-            <strong>${msg.senderRole === "ADMIN" ? "管理员" : msg.userName}</strong>
+        <div class="message ${isAdminRole(msg.senderRole) ? "admin" : ""}">
+            <strong>${isAdminRole(msg.senderRole) ? "管理员" : msg.userName}</strong>
             <p>${escapeHtml(msg.content)}</p>
             <small>${msg.createdAt || ""}</small>
         </div>

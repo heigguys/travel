@@ -3,11 +3,15 @@ create table if not exists users (
     employee_no varchar(32) not null unique,
     name varchar(80) not null,
     email varchar(160) not null,
-    role varchar(20) not null,
+    role tinyint not null comment '0 管理员，1 普通用户',
     password_md5 varchar(32) not null,
     enabled boolean not null default true,
     created_at timestamp not null default current_timestamp
 );
+
+update users set role = '0' where cast(role as char) = 'ADMIN';
+update users set role = '1' where cast(role as char) = 'USER';
+alter table users modify role tinyint not null comment '0 管理员，1 普通用户';
 
 create table if not exists travel_plans (
     id bigint primary key auto_increment,
@@ -57,7 +61,7 @@ create table if not exists consultations (
     plan_id bigint not null,
     user_id bigint not null,
     participant_user_id bigint not null,
-    sender_role varchar(20) not null,
+    sender_role tinyint not null,
     content varchar(1000) not null,
     status varchar(20) not null default 'OPEN',
     created_at timestamp not null default current_timestamp,
@@ -66,3 +70,7 @@ create table if not exists consultations (
     constraint fk_consultations_participant foreign key (participant_user_id) references users(id),
     index idx_consultations_plan_user(plan_id, participant_user_id)
 );
+
+update consultations set sender_role = '0' where cast(sender_role as char) = 'ADMIN';
+update consultations set sender_role = '1' where cast(sender_role as char) = 'USER';
+alter table consultations modify sender_role tinyint not null;

@@ -4,7 +4,6 @@ import com.two.backend.dto.PlanRequest;
 import com.two.backend.mapper.ApplicationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Application;
-import com.two.backend.model.Role;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class TravelPlanService {
      * @return 当前用户可见的旅行计划列表
      */
     public List<TravelPlan> list(User user, String keyword, String status, String sort) {
-        return travelPlanMapper.list(user.getRole() == Role.ADMIN, user.getId(), keyword, status, sort);
+        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort);
     }
 
     /**
@@ -54,7 +53,7 @@ public class TravelPlanService {
         if (plan == null) {
             throw new BusinessException("旅行计划不存在");
         }
-        if (user.getRole() != Role.ADMIN && !Boolean.TRUE.equals(plan.getPublished())) {
+        if (!Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()) && !Boolean.TRUE.equals(plan.getPublished())) {
             throw new BusinessException("该旅行计划未公开");
         }
         return plan;
