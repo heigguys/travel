@@ -52,7 +52,7 @@ public class ApplicationService {
             active = new Application();
             active.setPlanId(planId);
             active.setUserId(user.getId());
-            active.setStatus("ACTIVE");
+            active.setStatus(Application.STATUS_ACTIVE);
             active.setApplicantCount(request.applicantCount());
             active.setOptionText(request.optionText());
             applicationMapper.insert(active);
@@ -61,6 +61,7 @@ public class ApplicationService {
             active.setOptionText(request.optionText());
             applicationMapper.update(active);
         }
+        refreshPlanStatus(planId, plan.getCapacity());
         return active;
     }
 
@@ -83,6 +84,10 @@ public class ApplicationService {
     public void cancel(Long applicationId, User user) {
         Application application = ownedApplication(applicationId, user);
         applicationMapper.cancel(application.getId());
+        TravelPlan plan = travelPlanMapper.findById(application.getPlanId());
+        if (plan != null) {
+            refreshPlanStatus(plan.getId(), plan.getCapacity());
+        }
     }
 
     /**
@@ -122,6 +127,17 @@ public class ApplicationService {
             companionMapper.insert(companion);
         }
         return companionMapper.listByApplication(applicationId);
+    }
+
+    /**
+     * 根据当前有效申请人数与定员对比，自动更新旅行计划状态。
+     *
+     * @param planId 旅行计划 ID
+     * @param capacity 计划定员
+     */
+    private void refreshPlanStatus(Long planId, Integer capacity) {
+        String status = applicationMapper.activeCount(planId) >= capacity ? "已满员" : "招募中";
+        travelPlanMapper.updateStatus(planId, status);
     }
 
     /**

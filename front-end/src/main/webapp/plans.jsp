@@ -29,6 +29,8 @@
             <select id="statusFilter">
                 <option value="">全部状态</option>
                 <option value="未开始">未开始</option>
+                <option value="招募中">招募中</option>
+                <option value="已满员">已满员</option>
                 <option value="进行中">进行中</option>
                 <option value="已结束">已结束</option>
             </select>
@@ -64,10 +66,22 @@
         </label>
         <div class="grid2">
             <label>启程日 *
-                <input name="startDate" type="date" required>
+                <div class="date-field" id="startDateField">
+                    <input name="startYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
+                    <span class="date-sep">/</span>
+                    <input name="startMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
+                    <span class="date-sep">/</span>
+                    <input name="startDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
+                </div>
             </label>
             <label>返回日 *
-                <input name="endDate" type="date" required>
+                <div class="date-field" id="endDateField">
+                    <input name="endYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
+                    <span class="date-sep">/</span>
+                    <input name="endMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
+                    <span class="date-sep">/</span>
+                    <input name="endDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
+                </div>
             </label>
         </div>
         <div class="grid2">
@@ -170,6 +184,23 @@
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>
             <button class="primary" type="submit">保存</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- 删除确认弹窗：管理员删除计划前确认，并展示已有申请员工。 -->
+<dialog id="deleteDialog">
+    <form id="deleteForm" method="dialog" class="stack">
+        <h2>删除旅行计划</h2>
+        <input type="hidden" name="planId">
+        <p class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
+        <div>
+            <strong>已有员工申请</strong>
+            <div id="deleteApplicants" class="delete-preview-list"></div>
+        </div>
+        <div class="dialog-actions">
+            <button value="cancel" type="button" data-close>取消</button>
+            <button class="danger" type="submit">确认删除</button>
         </div>
     </form>
 </dialog>
