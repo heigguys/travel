@@ -150,6 +150,7 @@ async function openApplyDialog(planId) {
 async function saveApply(event) {
     event.preventDefault();
     const form = $("applyForm");
+    if (!form.reportValidity()) return;
     const rows = collectCompanionRows("applyCompanionsRows");
     if (!rows.length) {
         toast("请至少添加一名随行人员");
@@ -187,9 +188,9 @@ function addCompanionRow(row = {}, containerId = "companionsRows") {
     const div = document.createElement("div");
     div.className = "companion-row";
     div.innerHTML = `
-        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required>
+        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required minlength="2" maxlength="20" pattern="[\\u4e00-\\u9fa5A-Za-z·\\s]{2,20}" title="姓名需为 2-20 个中文、英文、空格或 ·">
         <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
-        <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
+        <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required maxlength="18" pattern="[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[0-9Xx]" title="请输入 18 位身份证号，最后一位可为数字或 X">
         <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>
         <button type="button">删除</button>`;
     div.querySelector("button").onclick = () => div.remove();
@@ -206,6 +207,7 @@ function collectCompanionRows(containerId = "companionsRows") {
 // 收集随行人员表单行并覆盖保存到后端。
 async function saveCompanions(event) {
     event.preventDefault();
+    if (!$("companionsForm").reportValidity()) return;
     const rows = collectCompanionRows();
     await api(`/applications/${$("companionsForm").applicationId.value}/companions`, {method: "POST", body: JSON.stringify(rows)});
     $("companionsDialog").close();
