@@ -21,8 +21,8 @@ public interface TravelPlanMapper {
     @Select("""
             <script>
             select p.*,
-              coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 'ACTIVE'), 0) applicant_total,
-              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 'ACTIVE'), 0) my_applicant_count
+              coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) applicant_total,
+              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count
             from travel_plans p
             where 1 = 1
               <if test="admin == false">and p.published = true</if>

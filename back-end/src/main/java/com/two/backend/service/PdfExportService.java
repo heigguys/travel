@@ -46,7 +46,7 @@ public class PdfExportService {
                 table.addCell(new Paragraph(nullToBlank(application.getPlanNo()), textFont));
                 table.addCell(new Paragraph(nullToBlank(application.getDestination()), textFont));
                 table.addCell(new Paragraph(String.valueOf(application.getApplicantCount()), textFont));
-                table.addCell(new Paragraph(nullToBlank(application.getStatus()), textFont));
+                table.addCell(new Paragraph(applicationStatusLabel(application.getStatus()), textFont));
                 table.addCell(new Paragraph(nullToBlank(application.getOptionText()), textFont));
             }
             document.add(table);
@@ -65,5 +65,15 @@ public class PdfExportService {
      */
     private String nullToBlank(String value) {
         return value == null ? "" : value;
+    }
+
+    private String applicationStatusLabel(Integer status) {
+        if (Integer.valueOf(Application.STATUS_ACTIVE).equals(status)) {
+            return "申请成功";
+        }
+        if (Integer.valueOf(Application.STATUS_CANCELED).equals(status)) {
+            return "取消";
+        }
+        return "";
     }
 }

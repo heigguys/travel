@@ -35,7 +35,7 @@ create table if not exists applications (
     user_id bigint not null,
     applicant_count int not null,
     option_text varchar(500),
-    status varchar(20) not null default 'ACTIVE',
+    status tinyint not null default 0,
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp,
     constraint fk_applications_plan foreign key (plan_id) references travel_plans(id) on delete cascade,
@@ -43,6 +43,10 @@ create table if not exists applications (
     index idx_applications_plan_status(plan_id, status),
     index idx_applications_user(user_id)
 );
+
+update applications set status = '0' where cast(status as char) = 'ACTIVE';
+update applications set status = '1' where cast(status as char) = 'CANCELED';
+alter table applications modify status tinyint not null default 0;
 
 create table if not exists companions (
     id bigint primary key auto_increment,

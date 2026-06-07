@@ -52,7 +52,7 @@ public class ApplicationService {
             active = new Application();
             active.setPlanId(planId);
             active.setUserId(user.getId());
-            active.setStatus("ACTIVE");
+            active.setStatus(Application.STATUS_ACTIVE);
             active.setApplicantCount(request.applicantCount());
             active.setOptionText(request.optionText());
             applicationMapper.insert(active);

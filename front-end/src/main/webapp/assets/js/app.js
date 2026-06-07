@@ -8,6 +8,9 @@ const $ = (id) => document.getElementById(id);
 const ROLE_ADMIN = 0;
 const isAdminRole = (role) => Number(role) === ROLE_ADMIN || String(role).toUpperCase() === "ADMIN";
 const roleLabel = (role) => isAdminRole(role) ? "管理员" : "用户";
+const APPLICATION_STATUS_ACTIVE = 0;
+const isActiveApplication = (status) => Number(status) === APPLICATION_STATUS_ACTIVE || String(status).toUpperCase() === "ACTIVE";
+const applicationStatusLabel = (status) => isActiveApplication(status) ? "申请成功" : "取消";
 
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
@@ -127,7 +130,7 @@ async function openApplyDialog(planId) {
     $("applyCompanionsRows").innerHTML = "";
 
     const apps = await api("/my-applications");
-    const active = apps.find((app) => Number(app.planId) === Number(planId) && app.status === "ACTIVE");
+    const active = apps.find((app) => Number(app.planId) === Number(planId) && isActiveApplication(app.status));
     if (active) {
         form.applicationId.value = active.id;
         form.optionText.value = active.optionText || "";
@@ -254,9 +257,9 @@ async function openMyApps() {
     $("myAppsRows").innerHTML = apps.map((app) => `
         <div class="message">
             <strong>${app.planNo} ${app.destination}</strong>
-            <p>人数：${app.applicantCount}，状态：${app.status}，备注：${app.optionText || ""}</p>
+            <p>人数：${app.applicantCount}，状态：${applicationStatusLabel(app.status)}，备注：${app.optionText || ""}</p>
             <button data-app="${app.id}" data-count="${app.applicantCount}">修改人员信息</button>
-            ${app.status === "ACTIVE" ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
+            ${isActiveApplication(app.status) ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
         </div>`).join("") || "<p class='muted'>暂无申请</p>";
     $("myAppsDialog").showModal();
 }

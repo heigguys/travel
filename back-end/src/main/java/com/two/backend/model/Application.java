@@ -8,12 +8,15 @@ import lombok.Data;
  * 旅行申请实体，包含表字段以及查询列表时补充的计划和用户展示字段。
  */
 public class Application {
+    public static final int STATUS_ACTIVE = 0;
+    public static final int STATUS_CANCELED = 1;
+
     private Long id;
     private Long planId;
     private Long userId;
     private Integer applicantCount;
     private String optionText;
-    private String status;
+    private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String planNo;

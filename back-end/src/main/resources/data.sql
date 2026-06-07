@@ -14,5 +14,5 @@ insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, 
 (8, 'TP20241001008', '长白山', '2026-10-01', '2026-10-04', 1500.00, 10, true, '未开始');
 
 insert ignore into applications(id, plan_id, user_id, applicant_count, option_text, status) values
-(1, 1, 2, 3, '希望安排靠窗座位', 'ACTIVE'),
-(2, 2, 3, 2, '无', 'ACTIVE');
+(1, 1, 2, 3, '希望安排靠窗座位', 0),
+(2, 2, 3, 2, '无', 0);
