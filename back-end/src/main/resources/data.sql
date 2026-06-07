@@ -1,7 +1,7 @@
 insert ignore into users(id, employee_no, name, email, role, password_md5, enabled) values
-(1, 'A001', '管理员', 'admin@zhimingsoft.com', 'ADMIN', 'e10adc3949ba59abbe56e057f20f883e', true),
-(2, 'U001', '张三', 'zhangsan@zhimingsoft.com', 'USER', 'e10adc3949ba59abbe56e057f20f883e', true),
-(3, 'U002', '李四', 'lisi@zhimingsoft.com', 'USER', 'e10adc3949ba59abbe56e057f20f883e', true);
+(1, 'A001', '管理员', 'admin@zhimingsoft.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
+(2, 'U001', '张三', 'zhangsan@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
+(3, 'U002', '李四', 'lisi@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
 
 insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, price, capacity, published, status) values
 (1, 'TP20241001001', '敦煌莫高窟', '2026-10-01', '2026-10-07', 1500.00, 20, true, '未开始'),
@@ -14,5 +14,5 @@ insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, 
 (8, 'TP20241001008', '长白山', '2026-10-01', '2026-10-04', 1500.00, 10, true, '未开始');
 
 insert ignore into applications(id, plan_id, user_id, applicant_count, option_text, status) values
-(1, 1, 2, 3, '希望安排靠窗座位', 'ACTIVE'),
-(2, 2, 3, 2, '无', 'ACTIVE');
+(1, 1, 2, 3, '希望安排靠窗座位', 0),
+(2, 2, 3, 2, '无', 0);
