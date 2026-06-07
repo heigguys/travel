@@ -3,7 +3,6 @@ package com.two.backend.service;
 import com.two.backend.dto.LoginRequest;
 import com.two.backend.dto.PasswordRequest;
 import com.two.backend.mapper.UserMapper;
-import com.two.backend.model.Role;
 import com.two.backend.model.User;
 import com.two.backend.util.Md5Util;
 import jakarta.servlet.http.HttpSession;
@@ -63,7 +62,7 @@ public class AuthService {
      * @param user 当前用户
      */
     public void requireAdmin(User user) {
-        if (user.getRole() != Role.ADMIN) {
+        if (!Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole())) {
             throw new BusinessException("只有管理员可以执行该操作");
         }
     }

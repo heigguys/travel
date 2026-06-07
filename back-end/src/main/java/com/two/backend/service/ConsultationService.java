@@ -4,7 +4,6 @@ import com.two.backend.dto.ConsultationRequest;
 import com.two.backend.mapper.ConsultationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Consultation;
-import com.two.backend.model.Role;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.util.List;
@@ -32,7 +31,7 @@ public class ConsultationService {
      */
     public List<Consultation> list(Long planId, User user) {
         ensurePlanVisible(planId, user);
-        return consultationMapper.listByPlan(planId, user.getId(), user.getRole() == Role.ADMIN);
+        return consultationMapper.listByPlan(planId, user.getId(), Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()));
     }
 
     /**
@@ -49,7 +48,7 @@ public class ConsultationService {
         consultation.setPlanId(planId);
         consultation.setUserId(user.getId());
         consultation.setParticipantUserId(user.getId());
-        consultation.setSenderRole(user.getRole().name());
+        consultation.setSenderRole(user.getRole());
         consultation.setContent(request.content());
         consultation.setStatus("OPEN");
         consultationMapper.insert(consultation);
@@ -75,7 +74,7 @@ public class ConsultationService {
      */
     private void ensurePlanVisible(Long planId, User user) {
         TravelPlan plan = travelPlanMapper.findById(planId);
-        if (plan == null || (user.getRole() != Role.ADMIN && !Boolean.TRUE.equals(plan.getPublished()))) {
+        if (plan == null || (!Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()) && !Boolean.TRUE.equals(plan.getPublished()))) {
             throw new BusinessException("旅行计划不存在或未公开");
         }
     }

@@ -4,7 +4,6 @@ import com.two.backend.dto.PlanRequest;
 import com.two.backend.mapper.ApplicationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Application;
-import com.two.backend.model.Role;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class TravelPlanService {
      * @return 当前用户可见的旅行计划列表
      */
     public List<TravelPlan> list(User user, String keyword, String status, String sort) {
-        return travelPlanMapper.list(user.getRole() == Role.ADMIN, user.getId(), keyword, status, sort);
+        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort);
     }
 
     /**
@@ -54,7 +53,7 @@ public class TravelPlanService {
         if (plan == null) {
             throw new BusinessException("旅行计划不存在");
         }
-        if (user.getRole() != Role.ADMIN && !Boolean.TRUE.equals(plan.getPublished())) {
+        if (!Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()) && !Boolean.TRUE.equals(plan.getPublished())) {
             throw new BusinessException("该旅行计划未公开");
         }
         return plan;
@@ -147,6 +146,9 @@ public class TravelPlanService {
                 || request.price() == null || request.capacity() == null || request.capacity() < 1) {
             throw new BusinessException("请填写所有必填项");
         }
+        if (request.destination().length() > 10) {
+            throw new BusinessException("目的地不能超过10个字符");
+        }
         if (request.endDate().isBefore(request.startDate())) {
             throw new BusinessException("返回日不能早于启程日");
         }
@@ -175,12 +177,12 @@ public class TravelPlanService {
     }
 
     /**
-     * 根据计划日期计算状态；当前实现固定返回“未开始”。
+     * 返回存库用的占位状态；实际展示状态由查询时的 CASE WHEN 动态计算。
      *
      * @param request 计划请求
-     * @return 计划状态
+     * @return 计划状态占位值
      */
     private String statusFor(PlanRequest request) {
-        return "未开始";
+        return "招募中";
     }
 }

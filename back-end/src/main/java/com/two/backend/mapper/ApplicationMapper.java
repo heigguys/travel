@@ -18,13 +18,13 @@ public interface ApplicationMapper {
     /**
      * 查询指定用户对指定计划的有效申请。
      */
-    @Select("select * from applications where plan_id = #{planId} and user_id = #{userId} and status = 'ACTIVE'")
+    @Select("select * from applications where plan_id = #{planId} and user_id = #{userId} and status = 0")
     Application findActive(@Param("planId") Long planId, @Param("userId") Long userId);
 
     /**
      * 统计指定计划当前有效申请的总人数。
      */
-    @Select("select coalesce(sum(applicant_count), 0) from applications where plan_id = #{planId} and status = 'ACTIVE'")
+    @Select("select coalesce(sum(applicant_count), 0) from applications where plan_id = #{planId} and status = 0")
     int activeCount(Long planId);
 
     /**
@@ -81,7 +81,7 @@ public interface ApplicationMapper {
     /**
      * 将申请状态标记为已取消。
      */
-    @Update("update applications set status = 'CANCELED', updated_at = current_timestamp where id = #{id}")
+    @Update("update applications set status = 1, updated_at = current_timestamp where id = #{id}")
     int cancel(Long id);
 
     /**

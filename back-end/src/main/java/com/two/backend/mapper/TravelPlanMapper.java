@@ -21,8 +21,8 @@ public interface TravelPlanMapper {
     @Select("""
             <script>
             select p.*,
-              coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 'ACTIVE'), 0) applicant_total,
-              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 'ACTIVE'), 0) my_applicant_count
+              coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) applicant_total,
+              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count
             from travel_plans p
             where 1 = 1
               <if test="admin == false">and p.published = true</if>
@@ -69,6 +69,12 @@ public interface TravelPlanMapper {
             where id = #{id}
             """)
     int update(TravelPlan plan);
+
+    /**
+     * 单独更新旅行计划状态（申请人数变化时触发）。
+     */
+    @Update("update travel_plans set status = #{status}, updated_at = current_timestamp where id = #{id}")
+    int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     /**
      * 删除指定旅行计划。
