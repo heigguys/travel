@@ -9,10 +9,6 @@ create table if not exists users (
     created_at timestamp not null default current_timestamp
 );
 
-update users set role = '0' where cast(role as char) = 'ADMIN';
-update users set role = '1' where cast(role as char) = 'USER';
-alter table users modify role tinyint not null comment '0 管理员，1 普通用户';
-
 create table if not exists travel_plans (
     id bigint primary key auto_increment,
     plan_no varchar(40) not null unique,
@@ -44,17 +40,6 @@ create table if not exists applications (
     index idx_applications_user(user_id)
 );
 
-update applications set status = '0' where cast(status as char) = 'ACTIVE';
-update applications set status = '1' where cast(status as char) = 'CANCELED';
-alter table applications modify status tinyint not null default 0;
-
-update travel_plans p
-set status = case
-    when coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) >= p.capacity then '1'
-    else '0'
-end;
-alter table travel_plans modify status tinyint not null default 0;
-
 create table if not exists companions (
     id bigint primary key auto_increment,
     application_id bigint not null,
@@ -81,7 +66,3 @@ create table if not exists consultations (
     constraint fk_consultations_participant foreign key (participant_user_id) references users(id),
     index idx_consultations_plan_user(plan_id, participant_user_id)
 );
-
-update consultations set sender_role = '0' where cast(sender_role as char) = 'ADMIN';
-update consultations set sender_role = '1' where cast(sender_role as char) = 'USER';
-alter table consultations modify sender_role tinyint not null;
