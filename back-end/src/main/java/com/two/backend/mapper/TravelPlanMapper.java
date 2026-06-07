@@ -22,11 +22,26 @@ public interface TravelPlanMapper {
             <script>
             select p.*,
               coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) applicant_total,
-              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count
+              coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count,
+              case
+                when p.end_date &lt; current_date then '已结束'
+                when p.start_date &lt;= current_date and p.end_date &gt;= current_date then '进行中'
+                when coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) &gt;= p.capacity then '已满员'
+                when p.published = true then '招募中'
+                else '未开始'
+              end as computed_status
             from travel_plans p
             where 1 = 1
               <if test="admin == false">and p.published = true</if>
-              <if test="status != null and status != ''">and p.status = #{status}</if>
+              <if test="status != null and status != ''">
+                and case
+                  when p.end_date &lt; current_date then '已结束'
+                  when p.start_date &lt;= current_date and p.end_date &gt;= current_date then '进行中'
+                  when coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) &gt;= p.capacity then '已满员'
+                  when p.published = true then '招募中'
+                  else '未开始'
+                end = #{status}
+              </if>
               <if test="keyword != null and keyword != ''">
                 and (p.destination like concat('%', #{keyword}, '%') or p.plan_no like concat('%', #{keyword}, '%'))
               </if>
