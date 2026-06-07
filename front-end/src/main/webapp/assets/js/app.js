@@ -6,6 +6,12 @@ let plans = [];
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
 
+// 将用户角色整数转换为显示文字（0=管理员，1=普通用户）。
+const roleLabel = (role) => Number(role) === 0 ? "管理员" : "用户";
+
+// 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
+const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
+
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
     const response = await fetch(API_BASE + path, {
@@ -39,8 +45,8 @@ function go(page) {
 
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
-    $("userInfo").textContent = `${currentUser.name}（${currentUser.employeeNo} / ${currentUser.role}）`;
-    $("newPlanBtn").classList.toggle("hidden", currentUser.role !== "ADMIN");
+    $("userInfo").textContent = `${currentUser.name}（${currentUser.employeeNo} / ${roleLabel(currentUser.role)}）`;
+    $("newPlanBtn").classList.toggle("hidden", Number(currentUser.role) !== 0);
 }
 
 // 根据筛选条件加载旅行计划列表。
@@ -55,7 +61,7 @@ async function loadPlans() {
 
 // 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
-    const admin = currentUser.role === "ADMIN";
+    const admin = Number(currentUser.role) === 0;
     const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
     if (admin) headers.push("公开状态");
     headers.push("操作");
@@ -94,8 +100,14 @@ function openPlanDialog(plan = null) {
     form.reset();
     form.id.value = plan?.id || "";
     form.destination.value = plan?.destination || "";
-    form.startDate.value = plan?.startDate || "";
-    form.endDate.value = plan?.endDate || "";
+    const [sy = "", sm = "", sd = ""] = (plan?.startDate || "").split("-");
+    form.startYear.value = sy;
+    form.startMonth.value = sm ? parseInt(sm, 10) : "";
+    form.startDay.value = sd ? parseInt(sd, 10) : "";
+    const [ey = "", em = "", ed = ""] = (plan?.endDate || "").split("-");
+    form.endYear.value = ey;
+    form.endMonth.value = em ? parseInt(em, 10) : "";
+    form.endDay.value = ed ? parseInt(ed, 10) : "";
     form.price.value = plan?.price || "";
     form.capacity.value = plan?.capacity || "";
     form.published.checked = Boolean(plan?.published);
@@ -106,7 +118,26 @@ function openPlanDialog(plan = null) {
 async function savePlan(event) {
     event.preventDefault();
     const form = $("planForm");
+    const destinationInput = form.destination;
+    if (destinationInput.value.length > 10) {
+        destinationInput.setCustomValidity("目的地不能超过10个字符");
+        destinationInput.reportValidity();
+        setTimeout(() => destinationInput.setCustomValidity(""), 3000);
+        return;
+    }
+    destinationInput.setCustomValidity("");
+    const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
+    const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
+    if (!sy || !sm || !sd || !ey || !em || !ed) {
+        toast("请填写完整的启程日和返回日");
+        return;
+    }
+    const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
+    const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
     const data = new FormData(form);
+    data.set("startDate", startDate);
+    data.set("endDate", endDate);
+    ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
     data.set("published", form.published.checked ? "true" : "false");
     const id = form.id.value;
     await api(id ? `/plans/${id}` : "/plans", {method: "POST", body: data});
@@ -124,7 +155,7 @@ async function openApplyDialog(planId) {
     $("applyCompanionsRows").innerHTML = "";
 
     const apps = await api("/my-applications");
-    const active = apps.find((app) => Number(app.planId) === Number(planId) && app.status === "ACTIVE");
+    const active = apps.find((app) => Number(app.planId) === Number(planId) && Number(app.status) === 0);
     if (active) {
         form.applicationId.value = active.id;
         form.optionText.value = active.optionText || "";
@@ -174,17 +205,44 @@ async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsDialog").showModal();
 }
 
-// 动态新增一行随行人员输入项。
+// 动态新增一行随行人员输入项，并绑定姓名和身份证号的离焦校验。
 function addCompanionRow(row = {}, containerId = "companionsRows") {
     const div = document.createElement("div");
     div.className = "companion-row";
     div.innerHTML = `
-        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required>
+        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required maxlength="20">
         <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
         <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
         <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>
         <button type="button">删除</button>`;
     div.querySelector("button").onclick = () => div.remove();
+
+    const inputs = div.querySelectorAll("input");
+    const nameInput = inputs[0];
+    const idCardInput = inputs[1];
+
+    // 姓名：不能包含数字，离焦时校验，重新输入时清除提示。
+    nameInput.addEventListener("blur", () => {
+        if (/\d/.test(nameInput.value)) {
+            nameInput.setCustomValidity("姓名不能包含数字");
+        } else {
+            nameInput.setCustomValidity("");
+        }
+        nameInput.reportValidity();
+    });
+    nameInput.addEventListener("input", () => nameInput.setCustomValidity(""));
+
+    // 身份证号：18位，前17位数字，末位数字或X，离焦时校验。
+    idCardInput.addEventListener("blur", () => {
+        if (idCardInput.value && !/^\d{17}[\dX]$/i.test(idCardInput.value.trim())) {
+            idCardInput.setCustomValidity("身份证号须为18位（末位可为数字或X）");
+        } else {
+            idCardInput.setCustomValidity("");
+        }
+        idCardInput.reportValidity();
+    });
+    idCardInput.addEventListener("input", () => idCardInput.setCustomValidity(""));
+
     $(containerId).appendChild(div);
 }
 
@@ -216,8 +274,8 @@ async function openConsultDialog(planId) {
 async function renderMessages(planId) {
     const messages = await api(`/plans/${planId}/consultations`);
     $("messages").innerHTML = messages.map((msg) => `
-        <div class="message ${msg.senderRole === "ADMIN" ? "admin" : ""}">
-            <strong>${msg.senderRole === "ADMIN" ? "管理员" : msg.userName}</strong>
+        <div class="message ${Number(msg.senderRole) === 0 ? "admin" : ""}">
+            <strong>${Number(msg.senderRole) === 0 ? "管理员" : msg.userName}</strong>
             <p>${escapeHtml(msg.content)}</p>
             <small>${msg.createdAt || ""}</small>
         </div>
@@ -233,14 +291,27 @@ async function sendConsult(event) {
     await renderMessages(form.planId.value);
 }
 
-// 删除旅行计划前先加载申请人预览，提示确认后再执行删除。
+// 删除旅行计划前先加载申请人预览，打开确认弹窗。
 async function deletePlan(planId) {
     const applicants = await api(`/plans/${planId}/delete-preview`);
-    const suffix = applicants.length
-        ? "\n\n已有员工申请：\n" + applicants.map((a) => `${a.userName} ${a.email}`).join("\n") + "\n\n确认删除将自动取消这些申请。"
-        : "";
-    if (!confirm("确认删除该旅行计划？" + suffix)) return;
+    $("deleteForm").planId.value = planId;
+    $("deleteApplicants").innerHTML = applicants.length
+        ? applicants.map((a) => `
+            <div class="message">
+                <strong>${escapeHtml(a.userName || "")}</strong>
+                <p>${escapeHtml(a.email || "")}</p>
+            </div>
+        `).join("")
+        : "<p class='muted'>暂无员工申请</p>";
+    $("deleteDialog").showModal();
+}
+
+// 确认删除旅行计划，并刷新列表。
+async function confirmDeletePlan(event) {
+    event.preventDefault();
+    const planId = $("deleteForm").planId.value;
     await api(`/plans/${planId}/delete`, {method: "POST"});
+    $("deleteDialog").close();
     toast("旅行计划已删除");
     await loadPlans();
 }
@@ -251,9 +322,9 @@ async function openMyApps() {
     $("myAppsRows").innerHTML = apps.map((app) => `
         <div class="message">
             <strong>${app.planNo} ${app.destination}</strong>
-            <p>人数：${app.applicantCount}，状态：${app.status}，备注：${app.optionText || ""}</p>
+            <p>人数：${app.applicantCount}，状态：${applicationStatusLabel(app.status)}，备注：${app.optionText || ""}</p>
             <button data-app="${app.id}" data-count="${app.applicantCount}">修改人员信息</button>
-            ${app.status === "ACTIVE" ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
+            ${Number(app.status) === 0 ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
         </div>`).join("") || "<p class='muted'>暂无申请</p>";
     $("myAppsDialog").showModal();
 }
@@ -344,6 +415,35 @@ async function initLoginPage() {
     return true;
 }
 
+// 年填满4位自动跳月，月填满2位自动跳日；左右箭头键在格边界时跨格移动光标。
+function setupDateAutoJump(fieldId) {
+    const field = $(fieldId);
+    if (!field) return;
+    const [y, m, d] = field.querySelectorAll("input");
+    const parts = [y, m, d];
+
+    // 输入满位自动跳下一格
+    y.addEventListener("input", () => { if (y.value.replace(/\D/g,"").length === 4) m.focus(); });
+    m.addEventListener("input", () => { if (m.value.replace(/\D/g,"").length >= 2) d.focus(); });
+
+    // 左右箭头键：光标在边界时跳相邻格，并把光标定位到对应端
+    parts.forEach((input, i) => {
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowRight" && input.selectionStart === input.value.length && i < parts.length - 1) {
+                e.preventDefault();
+                parts[i + 1].focus();
+                parts[i + 1].setSelectionRange(0, 0);
+            }
+            if (e.key === "ArrowLeft" && input.selectionStart === 0 && i > 0) {
+                e.preventDefault();
+                const prev = parts[i - 1];
+                prev.focus();
+                prev.setSelectionRange(prev.value.length, prev.value.length);
+            }
+        });
+    });
+}
+
 // 绑定计划页按钮、弹窗和表单事件。
 function bindPlansPageEvents() {
     document.addEventListener("click", async (event) => {
@@ -364,6 +464,20 @@ function bindPlansPageEvents() {
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
 
+    // 目的地离焦校验：超过10字符时显示报错气泡，重新输入时清除。
+    const destInput = $("planForm").destination;
+    destInput.addEventListener("blur", () => {
+        if (destInput.value.length > 10) {
+            destInput.setCustomValidity("目的地不能超过10个字符");
+            destInput.reportValidity();
+        } else {
+            destInput.setCustomValidity("");
+        }
+    });
+    destInput.addEventListener("input", () => destInput.setCustomValidity(""));
+
+    setupDateAutoJump("startDateField");
+    setupDateAutoJump("endDateField");
     $("logoutBtn").onclick = async () => {
         await api("/auth/logout", {method: "POST"});
         go("index.jsp");
@@ -376,6 +490,7 @@ function bindPlansPageEvents() {
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
+    $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("closeConsultBtn").onclick = async () => {
         await api(`/plans/${$("consultForm").planId.value}/consultations/close`, {method: "POST"});
         toast("对话已结束");
