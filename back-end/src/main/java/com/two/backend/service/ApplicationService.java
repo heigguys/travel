@@ -61,6 +61,7 @@ public class ApplicationService {
             active.setOptionText(request.optionText());
             applicationMapper.update(active);
         }
+        refreshPlanStatus(planId, plan.getCapacity());
         return active;
     }
 
@@ -83,6 +84,10 @@ public class ApplicationService {
     public void cancel(Long applicationId, User user) {
         Application application = ownedApplication(applicationId, user);
         applicationMapper.cancel(application.getId());
+        TravelPlan plan = travelPlanMapper.findById(application.getPlanId());
+        if (plan != null) {
+            refreshPlanStatus(plan.getId(), plan.getCapacity());
+        }
     }
 
     /**
@@ -137,5 +142,10 @@ public class ApplicationService {
             throw new BusinessException("申请记录不存在或无权访问");
         }
         return application;
+    }
+
+    private void refreshPlanStatus(Long planId, Integer capacity) {
+        int status = applicationMapper.activeCount(planId) >= capacity ? TravelPlan.STATUS_FULL : TravelPlan.STATUS_APPLYING;
+        travelPlanMapper.updateStatus(planId, status);
     }
 }

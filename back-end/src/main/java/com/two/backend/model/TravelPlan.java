@@ -10,6 +10,9 @@ import lombok.Data;
  * 旅行计划实体，包含计划基础信息、附件信息以及申请人数统计字段。
  */
 public class TravelPlan {
+    public static final int STATUS_APPLYING = 0;
+    public static final int STATUS_FULL = 1;
+
     private Long id;
     private String planNo;
     private String destination;
@@ -20,7 +23,7 @@ public class TravelPlan {
     private Boolean published;
     private String filePath;
     private String fileName;
-    private String status;
+    private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer applicantTotal;

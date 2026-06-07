@@ -11,6 +11,8 @@ const roleLabel = (role) => isAdminRole(role) ? "管理员" : "用户";
 const APPLICATION_STATUS_ACTIVE = 0;
 const isActiveApplication = (status) => Number(status) === APPLICATION_STATUS_ACTIVE || String(status).toUpperCase() === "ACTIVE";
 const applicationStatusLabel = (status) => isActiveApplication(status) ? "申请成功" : "取消";
+const isFullPlan = (status) => Number(status) === 1 || String(status) === "已结束";
+const planStatusLabel = (status) => isFullPlan(status) ? "名额已满" : "可申请";
 
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
@@ -75,7 +77,7 @@ function renderPlans() {
             ? `<button data-action="edit" data-id="${plan.id}">编辑</button><button class="danger" data-action="delete" data-id="${plan.id}">删除</button>`
             : "";
         return `<tr>
-            <td>${plan.status || ""}</td>
+            <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
             <td>${plan.destination}</td>
             <td>${plan.startDate} - ${plan.endDate}</td>

@@ -26,7 +26,7 @@ public interface TravelPlanMapper {
             from travel_plans p
             where 1 = 1
               <if test="admin == false">and p.published = true</if>
-              <if test="status != null and status != ''">and p.status = #{status}</if>
+              <if test="status != null">and p.status = #{status}</if>
               <if test="keyword != null and keyword != ''">
                 and (p.destination like concat('%', #{keyword}, '%') or p.plan_no like concat('%', #{keyword}, '%'))
               </if>
@@ -40,7 +40,7 @@ public interface TravelPlanMapper {
             </script>
             """)
     List<TravelPlan> list(@Param("admin") boolean admin, @Param("userId") Long userId, @Param("keyword") String keyword,
-                          @Param("status") String status, @Param("sort") String sort);
+                          @Param("status") Integer status, @Param("sort") String sort);
 
     /**
      * 根据 ID 查询旅行计划。
@@ -69,6 +69,12 @@ public interface TravelPlanMapper {
             where id = #{id}
             """)
     int update(TravelPlan plan);
+
+    /**
+     * 更新旅行计划报名状态。
+     */
+    @Update("update travel_plans set status = #{status}, updated_at = current_timestamp where id = #{id}")
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     /**
      * 删除指定旅行计划。

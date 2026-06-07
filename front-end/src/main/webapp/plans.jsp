@@ -28,9 +28,8 @@
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
                 <option value="">全部状态</option>
-                <option value="未开始">未开始</option>
-                <option value="进行中">进行中</option>
-                <option value="已结束">已结束</option>
+                <option value="0">可申请</option>
+                <option value="1">名额已满</option>
             </select>
             <select id="sortSelect">
                 <option value="">默认排序</option>

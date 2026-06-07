@@ -24,7 +24,7 @@ create table if not exists travel_plans (
     published boolean not null default false,
     file_path varchar(260),
     file_name varchar(180),
-    status varchar(20) not null default '未开始',
+    status tinyint not null default 0,
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp
 );
@@ -47,6 +47,13 @@ create table if not exists applications (
 update applications set status = '0' where cast(status as char) = 'ACTIVE';
 update applications set status = '1' where cast(status as char) = 'CANCELED';
 alter table applications modify status tinyint not null default 0;
+
+update travel_plans p
+set status = case
+    when coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) >= p.capacity then '1'
+    else '0'
+end;
+alter table travel_plans modify status tinyint not null default 0;
 
 create table if not exists companions (
     id bigint primary key auto_increment,

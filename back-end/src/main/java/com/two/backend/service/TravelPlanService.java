@@ -37,7 +37,7 @@ public class TravelPlanService {
      * @param sort 排序字段
      * @return 当前用户可见的旅行计划列表
      */
-    public List<TravelPlan> list(User user, String keyword, String status, String sort) {
+    public List<TravelPlan> list(User user, String keyword, Integer status, String sort) {
         return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort);
     }
 
@@ -71,7 +71,7 @@ public class TravelPlanService {
         TravelPlan plan = new TravelPlan();
         plan.setPlanNo("TP" + System.currentTimeMillis());
         fillPlan(plan, request, file);
-        plan.setStatus("未开始");
+        plan.setStatus(TravelPlan.STATUS_APPLYING);
         travelPlanMapper.insert(plan);
         return plan;
     }
@@ -91,6 +91,7 @@ public class TravelPlanService {
             throw new BusinessException("旅行计划不存在");
         }
         fillPlan(plan, request, file);
+        plan.setStatus(statusFor(id, plan.getCapacity()));
         travelPlanMapper.update(plan);
         return plan;
     }
@@ -165,7 +166,6 @@ public class TravelPlanService {
         plan.setPrice(request.price());
         plan.setCapacity(request.capacity());
         plan.setPublished(Boolean.TRUE.equals(request.published()));
-        plan.setStatus(statusFor(request));
         StorageService.StoredFile storedFile = storageService.store(file);
         if (storedFile != null) {
             plan.setFilePath(storedFile.path());
@@ -174,12 +174,13 @@ public class TravelPlanService {
     }
 
     /**
-     * 根据计划日期计算状态；当前实现固定返回“未开始”。
+     * 根据当前有效申请人数和定员计算报名状态。
      *
-     * @param request 计划请求
+     * @param planId 旅行计划 ID
+     * @param capacity 定员
      * @return 计划状态
      */
-    private String statusFor(PlanRequest request) {
-        return "未开始";
+    private Integer statusFor(Long planId, Integer capacity) {
+        return applicationMapper.activeCount(planId) >= capacity ? TravelPlan.STATUS_FULL : TravelPlan.STATUS_APPLYING;
     }
 }
