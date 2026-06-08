@@ -9,6 +9,7 @@ import com.two.backend.model.Application;
 import com.two.backend.model.Companion;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,7 @@ public class ApplicationService {
             active.setOptionText(request.optionText());
             applicationMapper.update(active);
         }
-        refreshPlanStatus(planId, plan.getCapacity());
+        refreshPlanStatus(planId);
         return active;
     }
 
@@ -84,10 +85,7 @@ public class ApplicationService {
     public void cancel(Long applicationId, User user) {
         Application application = ownedApplication(applicationId, user);
         applicationMapper.cancel(application.getId());
-        TravelPlan plan = travelPlanMapper.findById(application.getPlanId());
-        if (plan != null) {
-            refreshPlanStatus(plan.getId(), plan.getCapacity());
-        }
+        refreshPlanStatus(application.getPlanId());
     }
 
     /**
@@ -130,14 +128,27 @@ public class ApplicationService {
     }
 
     /**
-     * 根据当前有效申请人数与定员对比，自动更新旅行计划状态。
-     *
-     * @param planId 旅行计划 ID
-     * @param capacity 计划定员
+     * 根据当前日期和申请人数重新计算并更新单条旅行计划的状态。
      */
-    private void refreshPlanStatus(Long planId, Integer capacity) {
-        String status = applicationMapper.activeCount(planId) >= capacity ? "已满员" : "招募中";
-        travelPlanMapper.updateStatus(planId, status);
+    private void refreshPlanStatus(Long planId) {
+        TravelPlan plan = travelPlanMapper.findById(planId);
+        if (plan == null) return;
+        int total = applicationMapper.activeCount(planId);
+        travelPlanMapper.updateStatus(planId, computeStatus(plan, total));
+    }
+
+    /**
+     * 根据计划日期和当前申请总人数计算整数状态值。
+     */
+    private int computeStatus(TravelPlan plan, int total) {
+        LocalDate today = LocalDate.now();
+        if (plan.getEndDate().isBefore(today)) {
+            return total >= plan.getCapacity() ? TravelPlan.STATUS_ENDED : TravelPlan.STATUS_DISBANDED;
+        }
+        if (!plan.getStartDate().isAfter(today)) {
+            return TravelPlan.STATUS_IN_PROGRESS;
+        }
+        return total >= plan.getCapacity() ? TravelPlan.STATUS_FORMED : TravelPlan.STATUS_AVAILABLE;
     }
 
     /**

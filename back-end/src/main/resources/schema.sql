@@ -20,7 +20,7 @@ create table if not exists travel_plans (
     published boolean not null default false,
     file_path varchar(260),
     file_name varchar(180),
-    status varchar(20) not null default '未开始',
+    status tinyint not null default 0 comment '0=可申请，1=已成团，2=进行中，3=已结束，4=未成团',
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp
 );

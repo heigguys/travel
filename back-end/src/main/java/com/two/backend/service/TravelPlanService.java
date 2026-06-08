@@ -7,8 +7,10 @@ import com.two.backend.model.Application;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,8 +39,26 @@ public class TravelPlanService {
      * @param sort 排序字段
      * @return 当前用户可见的旅行计划列表
      */
-    public List<TravelPlan> list(User user, String keyword, String status, String sort) {
+    public List<TravelPlan> list(User user, String keyword, Integer status, String sort) {
         return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort);
+    }
+
+    /**
+     * 根据日期计算新计划的初始状态（新计划申请人数为 0）。
+     */
+    private int computeInitialStatus(LocalDate startDate, LocalDate endDate) {
+        LocalDate today = LocalDate.now();
+        if (endDate.isBefore(today))       return TravelPlan.STATUS_DISBANDED;
+        if (!startDate.isAfter(today))     return TravelPlan.STATUS_IN_PROGRESS;
+        return TravelPlan.STATUS_AVAILABLE;
+    }
+
+    /**
+     * 每天凌晨 0 点批量刷新所有旅行计划状态。
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    public void scheduledStatusRefresh() {
+        travelPlanMapper.updateAllStatuses();
     }
 
     /**
@@ -71,7 +91,7 @@ public class TravelPlanService {
         TravelPlan plan = new TravelPlan();
         plan.setPlanNo("TP" + System.currentTimeMillis());
         fillPlan(plan, request, file);
-        plan.setStatus("未开始");
+        plan.setStatus(computeInitialStatus(request.startDate(), request.endDate()));
         travelPlanMapper.insert(plan);
         return plan;
     }
@@ -92,6 +112,7 @@ public class TravelPlanService {
         }
         fillPlan(plan, request, file);
         travelPlanMapper.update(plan);
+        travelPlanMapper.updateAllStatuses();
         return plan;
     }
 
@@ -168,7 +189,6 @@ public class TravelPlanService {
         plan.setPrice(request.price());
         plan.setCapacity(request.capacity());
         plan.setPublished(Boolean.TRUE.equals(request.published()));
-        plan.setStatus(statusFor(request));
         StorageService.StoredFile storedFile = storageService.store(file);
         if (storedFile != null) {
             plan.setFilePath(storedFile.path());
@@ -176,13 +196,4 @@ public class TravelPlanService {
         }
     }
 
-    /**
-     * 返回存库用的占位状态；实际展示状态由查询时的 CASE WHEN 动态计算。
-     *
-     * @param request 计划请求
-     * @return 计划状态占位值
-     */
-    private String statusFor(PlanRequest request) {
-        return "招募中";
-    }
 }

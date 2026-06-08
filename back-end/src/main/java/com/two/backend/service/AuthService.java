@@ -2,6 +2,7 @@ package com.two.backend.service;
 
 import com.two.backend.dto.LoginRequest;
 import com.two.backend.dto.PasswordRequest;
+import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.mapper.UserMapper;
 import com.two.backend.model.User;
 import com.two.backend.util.Md5Util;
@@ -15,9 +16,11 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     public static final String SESSION_USER_ID = "USER_ID";
     private final UserMapper userMapper;
+    private final TravelPlanMapper travelPlanMapper;
 
-    public AuthService(UserMapper userMapper) {
+    public AuthService(UserMapper userMapper, TravelPlanMapper travelPlanMapper) {
         this.userMapper = userMapper;
+        this.travelPlanMapper = travelPlanMapper;
     }
 
     /**
@@ -33,6 +36,7 @@ public class AuthService {
             throw new BusinessException("员工编号或密码错误");
         }
         session.setAttribute(SESSION_USER_ID, user.getId());
+        travelPlanMapper.updateAllStatuses();
         user.setPasswordMd5(null);
         return user;
     }

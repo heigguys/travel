@@ -52,7 +52,7 @@ public class TravelPlanController {
      * @return 旅行计划列表
      */
     public ApiResponse<List<TravelPlan>> list(@RequestParam(required = false) String keyword,
-                                              @RequestParam(required = false) String status,
+                                              @RequestParam(required = false) Integer status,
                                               @RequestParam(required = false) String sort,
                                               HttpSession session) {
         return ApiResponse.ok(travelPlanService.list(authService.currentUser(session), keyword, status, sort));
