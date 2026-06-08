@@ -28,11 +28,11 @@
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
                 <option value="">全部状态</option>
-                <option value="未开始">未开始</option>
-                <option value="招募中">招募中</option>
-                <option value="已满员">已满员</option>
-                <option value="进行中">进行中</option>
-                <option value="已结束">已结束</option>
+                <option value="0">可申请</option>
+                <option value="1">已成团</option>
+                <option value="2">进行中</option>
+                <option value="3">已结束</option>
+                <option value="4">未成团</option>
             </select>
             <select id="sortSelect">
                 <option value="">默认排序</option>
@@ -55,73 +55,6 @@
         </div>
     </section>
 </main>
-
-<!-- 旅行计划弹窗：管理员新增或编辑计划，并可上传 PDF 附件。 -->
-<dialog id="planDialog">
-    <form id="planForm" method="dialog" class="stack">
-        <h2 id="planDialogTitle">旅行计划</h2>
-        <input type="hidden" name="id">
-        <label>目的地 *
-            <input name="destination" required placeholder="如：敦煌莫高窟">
-        </label>
-        <div class="grid2">
-            <label>启程日 *
-                <div class="date-field" id="startDateField">
-                    <input name="startYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
-                    <span class="date-sep">/</span>
-                    <input name="startMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
-                    <span class="date-sep">/</span>
-                    <input name="startDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
-                </div>
-            </label>
-            <label>返回日 *
-                <div class="date-field" id="endDateField">
-                    <input name="endYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
-                    <span class="date-sep">/</span>
-                    <input name="endMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
-                    <span class="date-sep">/</span>
-                    <input name="endDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
-                </div>
-            </label>
-        </div>
-        <div class="grid2">
-            <label>价格（元）*
-                <input name="price" type="number" min="0" step="0.01" required>
-            </label>
-            <label>定员数（人）*
-                <input name="capacity" type="number" min="1" required>
-            </label>
-        </div>
-        <label>PDF 附件
-            <input name="file" type="file" accept="application/pdf">
-        </label>
-        <label class="inline">
-            <input name="published" type="checkbox"> 公开
-        </label>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="primary" type="submit">保存</button>
-        </div>
-    </form>
-</dialog>
-
-<!-- 申请弹窗：员工填写申请人数和备注。 -->
-<dialog id="applyDialog">
-    <form id="applyForm" method="dialog" class="stack">
-        <h2>申请旅行计划</h2>
-        <input type="hidden" name="planId">
-        <input type="hidden" name="applicationId">
-        <div id="applyCompanionsRows" class="stack"></div>
-        <button id="addApplyCompanionBtn" type="button">新增随行人员</button>
-        <label>选项 / 备注
-            <textarea name="optionText" rows="3" placeholder="如座位、房型、餐食等需求"></textarea>
-        </label>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="primary" type="submit">保存申请</button>
-        </div>
-    </form>
-</dialog>
 
 <!-- 随行人员弹窗：维护某条申请下的同行人员信息。 -->
 <dialog id="companionsDialog">

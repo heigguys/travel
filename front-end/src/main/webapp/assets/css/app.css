@@ -343,6 +343,21 @@ dialog::backdrop {
     margin: 0;
 }
 
+/* 独立表单页面布局，标题与卡片纵向排列。 */
+.form-page {
+    display: grid;
+    gap: 20px;
+}
+
+/* 表单卡片容器，白色背景、圆角边框、居左对齐。 */
+.form-card {
+    width: min(640px, 100%);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+}
+
 /* 通用隐藏类。 */
 .hidden {
     display: none !important;

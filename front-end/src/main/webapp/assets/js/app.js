@@ -12,6 +12,12 @@ const roleLabel = (role) => Number(role) === 0 ? "管理员" : "用户";
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
 
+// 将旅行计划状态整数转换为显示文字。
+const planStatusLabel = (status) => {
+    const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
+    return map[Number(status)] ?? "";
+};
+
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
     const response = await fetch(API_BASE + path, {
@@ -75,7 +81,7 @@ function renderPlans() {
             ? `<button data-action="edit" data-id="${plan.id}">编辑</button><button class="danger" data-action="delete" data-id="${plan.id}">删除</button>`
             : "";
         return `<tr>
-            <td>${plan.status || ""}</td>
+            <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
             <td>${plan.destination}</td>
             <td>${plan.startDate} - ${plan.endDate}</td>
@@ -91,108 +97,6 @@ function renderPlans() {
             </td>
         </tr>`;
     }).join("");
-}
-
-// 打开新增或编辑旅行计划弹窗，并把已有计划数据回填到表单。
-function openPlanDialog(plan = null) {
-    $("planDialogTitle").textContent = plan ? "编辑旅行计划" : "添加旅行计划";
-    const form = $("planForm");
-    form.reset();
-    form.id.value = plan?.id || "";
-    form.destination.value = plan?.destination || "";
-    const [sy = "", sm = "", sd = ""] = (plan?.startDate || "").split("-");
-    form.startYear.value = sy;
-    form.startMonth.value = sm ? parseInt(sm, 10) : "";
-    form.startDay.value = sd ? parseInt(sd, 10) : "";
-    const [ey = "", em = "", ed = ""] = (plan?.endDate || "").split("-");
-    form.endYear.value = ey;
-    form.endMonth.value = em ? parseInt(em, 10) : "";
-    form.endDay.value = ed ? parseInt(ed, 10) : "";
-    form.price.value = plan?.price || "";
-    form.capacity.value = plan?.capacity || "";
-    form.published.checked = Boolean(plan?.published);
-    $("planDialog").showModal();
-}
-
-// 保存旅行计划表单；有 id 时编辑，没有 id 时新增。
-async function savePlan(event) {
-    event.preventDefault();
-    const form = $("planForm");
-    const destinationInput = form.destination;
-    if (destinationInput.value.length > 10) {
-        destinationInput.setCustomValidity("目的地不能超过10个字符");
-        destinationInput.reportValidity();
-        setTimeout(() => destinationInput.setCustomValidity(""), 3000);
-        return;
-    }
-    destinationInput.setCustomValidity("");
-    const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
-    const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
-    if (!sy || !sm || !sd || !ey || !em || !ed) {
-        toast("请填写完整的启程日和返回日");
-        return;
-    }
-    const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
-    const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
-    const data = new FormData(form);
-    data.set("startDate", startDate);
-    data.set("endDate", endDate);
-    ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
-    data.set("published", form.published.checked ? "true" : "false");
-    const id = form.id.value;
-    await api(id ? `/plans/${id}` : "/plans", {method: "POST", body: data});
-    $("planDialog").close();
-    toast("旅行计划已保存");
-    await loadPlans();
-}
-
-// 打开申请弹窗，直接回填当前用户已保存的申请和随行人员信息。
-async function openApplyDialog(planId) {
-    const form = $("applyForm");
-    form.reset();
-    form.planId.value = planId;
-    form.applicationId.value = "";
-    $("applyCompanionsRows").innerHTML = "";
-
-    const apps = await api("/my-applications");
-    const active = apps.find((app) => Number(app.planId) === Number(planId) && Number(app.status) === 0);
-    if (active) {
-        form.applicationId.value = active.id;
-        form.optionText.value = active.optionText || "";
-        const rows = await api(`/applications/${active.id}/companions`);
-        const fallbackCount = Math.max(Number(active.applicantCount) || 1, 1);
-        const source = rows.length ? rows : Array.from({length: fallbackCount}, () => ({}));
-        source.forEach((row) => addCompanionRow(row, "applyCompanionsRows"));
-    } else {
-        addCompanionRow({}, "applyCompanionsRows");
-    }
-    $("applyDialog").showModal();
-}
-
-// 保存旅行申请；申请人数由人员信息行数自动计算，并同时保存随行人员。
-async function saveApply(event) {
-    event.preventDefault();
-    const form = $("applyForm");
-    const rows = collectCompanionRows("applyCompanionsRows");
-    if (!rows.length) {
-        toast("请至少添加一名随行人员");
-        return;
-    }
-    try {
-        const app = await api(`/plans/${form.planId.value}/apply`, {
-            method: "POST",
-            body: JSON.stringify({
-                applicantCount: rows.length,
-                optionText: form.optionText.value
-            })
-        });
-        await api(`/applications/${app.id}/companions`, {method: "POST", body: JSON.stringify(rows)});
-        $("applyDialog").close();
-        toast("申请已保存");
-        await loadPlans();
-    } catch (error) {
-        toast(error.message || "申请保存失败");
-    }
 }
 
 // 打开随行人员弹窗；没有历史数据时按申请人数生成空行。
@@ -316,7 +220,7 @@ async function confirmDeletePlan(event) {
     await loadPlans();
 }
 
-// 打开“我的申请”弹窗，展示当前用户申请及可执行操作。
+// 打开"我的申请"弹窗，展示当前用户申请及可执行操作。
 async function openMyApps() {
     const apps = await api("/my-applications");
     $("myAppsRows").innerHTML = apps.map((app) => `
@@ -444,7 +348,7 @@ function setupDateAutoJump(fieldId) {
     });
 }
 
-// 绑定计划页按钮、弹窗和表单事件。
+// 绑定计划列表页按钮、弹窗和表单事件。
 function bindPlansPageEvents() {
     document.addEventListener("click", async (event) => {
         const button = event.target.closest("button");
@@ -452,9 +356,10 @@ function bindPlansPageEvents() {
         if (button.dataset.close !== undefined) button.closest("dialog").close();
         const action = button.dataset.action;
         const id = Number(button.dataset.id);
-        if (action === "edit") openPlanDialog(plans.find((plan) => plan.id === id));
+        // 编辑和申请跳转到独立页面，通过 URL 参数传递计划 ID。
+        if (action === "edit") go("plan-edit.jsp?id=" + id);
         if (action === "delete") await deletePlan(id);
-        if (action === "apply") await openApplyDialog(id);
+        if (action === "apply") go("plan-apply.jsp?planId=" + id);
         if (action === "consult") await openConsultDialog(id);
         if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
         if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
@@ -464,33 +369,17 @@ function bindPlansPageEvents() {
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
 
-    // 目的地离焦校验：超过10字符时显示报错气泡，重新输入时清除。
-    const destInput = $("planForm").destination;
-    destInput.addEventListener("blur", () => {
-        if (destInput.value.length > 10) {
-            destInput.setCustomValidity("目的地不能超过10个字符");
-            destInput.reportValidity();
-        } else {
-            destInput.setCustomValidity("");
-        }
-    });
-    destInput.addEventListener("input", () => destInput.setCustomValidity(""));
-
-    setupDateAutoJump("startDateField");
-    setupDateAutoJump("endDateField");
     $("logoutBtn").onclick = async () => {
         await api("/auth/logout", {method: "POST"});
         go("index.jsp");
     };
     $("searchBtn").onclick = loadPlans;
-    $("newPlanBtn").onclick = () => openPlanDialog();
-    $("planForm").addEventListener("submit", savePlan);
-    $("applyForm").addEventListener("submit", saveApply);
-    $("addApplyCompanionBtn").onclick = () => addCompanionRow({}, "applyCompanionsRows");
+    // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
+    $("newPlanBtn").onclick = () => go("plan-edit.jsp");
+    $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
-    $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("closeConsultBtn").onclick = async () => {
         await api(`/plans/${$("consultForm").planId.value}/consultations/close`, {method: "POST"});
         toast("对话已结束");
@@ -518,21 +407,194 @@ function bindPlansPageEvents() {
     $("myAppsRows").addEventListener("click", () => {});
 }
 
-// 初始化计划页：未登录跳回登录页，已登录则加载用户信息和计划列表。
+// 初始化计划列表页：未登录跳回登录页，认证错误和加载错误分开处理防止循环跳转。
 async function initPlansPage() {
     if (!$("appView")) return false;
     bindPlansPageEvents();
     try {
         currentUser = await api("/auth/me");
-        showPlansPage();
-        await loadPlans();
     } catch {
         go("index.jsp");
+        return false;
+    }
+    showPlansPage();
+    try {
+        await loadPlans();
+    } catch (error) {
+        toast(error.message || "加载计划失败");
     }
     return true;
 }
 
-// 页面入口：根据当前 JSP 上存在的根元素选择对应初始化流程。
-initLoginPage().then((startedLogin) => {
-    if (!startedLogin) initPlansPage();
-}).catch((error) => toast(error.message));
+// 初始化旅行计划编辑页：管理员新增或编辑计划，id 参数存在时预填已有数据。
+async function initPlanEditPage() {
+    if (!$("planEditView")) return false;
+    try {
+        currentUser = await api("/auth/me");
+    } catch {
+        go("index.jsp");
+        return false;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    const form = $("planEditForm");
+    $("planEditTitle").textContent = id ? "编辑旅行计划" : "添加旅行计划";
+
+    if (id) {
+        try {
+            const plan = await api(`/plans/${id}`);
+            form.id.value = plan.id;
+            form.destination.value = plan.destination || "";
+            // 将 YYYY-MM-DD 拆分回三个输入格。
+            const [sy = "", sm = "", sd = ""] = (plan.startDate || "").split("-");
+            form.startYear.value = sy;
+            form.startMonth.value = sm ? parseInt(sm, 10) : "";
+            form.startDay.value = sd ? parseInt(sd, 10) : "";
+            const [ey = "", em = "", ed = ""] = (plan.endDate || "").split("-");
+            form.endYear.value = ey;
+            form.endMonth.value = em ? parseInt(em, 10) : "";
+            form.endDay.value = ed ? parseInt(ed, 10) : "";
+            form.price.value = plan.price || "";
+            form.capacity.value = plan.capacity || "";
+            form.published.checked = Boolean(plan.published);
+        } catch (error) {
+            toast(error.message || "加载计划失败");
+        }
+    }
+
+    // 复用分段日期自动跳格逻辑。
+    setupDateAutoJump("startDateField");
+    setupDateAutoJump("endDateField");
+
+    // 目的地离焦校验。
+    const destInput = form.destination;
+    destInput.addEventListener("blur", () => {
+        destInput.setCustomValidity(destInput.value.length > 10 ? "目的地不能超过10个字符" : "");
+        if (destInput.value.length > 10) destInput.reportValidity();
+    });
+    destInput.addEventListener("input", () => destInput.setCustomValidity(""));
+
+    $("planEditBackBtn").onclick = () => go("plans.jsp");
+    $("planEditCancelBtn").onclick = () => go("plans.jsp");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const errorEl = $("planEditError");
+        errorEl.classList.add("hidden");
+
+        if (destInput.value.length > 10) {
+            destInput.setCustomValidity("目的地不能超过10个字符");
+            destInput.reportValidity();
+            return;
+        }
+        destInput.setCustomValidity("");
+
+        const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
+        const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
+        if (!sy || !sm || !sd || !ey || !em || !ed) {
+            errorEl.textContent = "请填写完整的启程日和返回日";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
+        const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
+        const data = new FormData(form);
+        data.set("startDate", startDate);
+        data.set("endDate", endDate);
+        ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
+        data.set("published", form.published.checked ? "true" : "false");
+        const planId = form.id.value;
+
+        try {
+            await api(planId ? `/plans/${planId}` : "/plans", {method: "POST", body: data});
+            go("plans.jsp");
+        } catch (error) {
+            errorEl.textContent = error.message || "保存失败";
+            errorEl.classList.remove("hidden");
+        }
+    });
+
+    return true;
+}
+
+// 初始化旅行计划申请页：加载计划信息及已有申请数据，planId 参数由列表页传入。
+async function initPlanApplyPage() {
+    if (!$("planApplyView")) return false;
+    try {
+        currentUser = await api("/auth/me");
+    } catch {
+        go("index.jsp");
+        return false;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const planId = params.get("planId");
+    if (!planId) {
+        go("plans.jsp");
+        return false;
+    }
+
+    const form = $("planApplyForm");
+    form.planId.value = planId;
+
+    // 在标题下展示计划基本信息。
+    try {
+        const plan = await api(`/plans/${planId}`);
+        $("applyPlanInfo").textContent = `${plan.destination}　${plan.startDate} ～ ${plan.endDate}　¥${plan.price}`;
+    } catch { /* 展示失败不阻断申请流程 */ }
+
+    // 如果已有有效申请则预填随行人员，否则新建一行空行。
+    try {
+        const apps = await api("/my-applications");
+        const active = apps.find((app) => Number(app.planId) === Number(planId) && Number(app.status) === 0);
+        if (active) {
+            form.applicationId.value = active.id;
+            form.optionText.value = active.optionText || "";
+            const rows = await api(`/applications/${active.id}/companions`);
+            const fallbackCount = Math.max(Number(active.applicantCount) || 1, 1);
+            const source = rows.length ? rows : Array.from({length: fallbackCount}, () => ({}));
+            source.forEach((row) => addCompanionRow(row, "planApplyCompanionsRows"));
+        } else {
+            addCompanionRow({}, "planApplyCompanionsRows");
+        }
+    } catch {
+        addCompanionRow({}, "planApplyCompanionsRows");
+    }
+
+    $("planApplyBackBtn").onclick = () => go("plans.jsp");
+    $("planApplyCancelBtn").onclick = () => go("plans.jsp");
+    $("addPlanApplyCompanionBtn").onclick = () => addCompanionRow({}, "planApplyCompanionsRows");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const errorEl = $("planApplyError");
+        errorEl.classList.add("hidden");
+        const rows = collectCompanionRows("planApplyCompanionsRows");
+        if (!rows.length) {
+            toast("请至少添加一名随行人员");
+            return;
+        }
+        try {
+            const app = await api(`/plans/${form.planId.value}/apply`, {
+                method: "POST",
+                body: JSON.stringify({applicantCount: rows.length, optionText: form.optionText.value})
+            });
+            await api(`/applications/${app.id}/companions`, {method: "POST", body: JSON.stringify(rows)});
+            go("plans.jsp");
+        } catch (error) {
+            errorEl.textContent = error.message || "申请保存失败";
+            errorEl.classList.remove("hidden");
+        }
+    });
+
+    return true;
+}
+
+// 页面入口：依次检测各页面根元素，匹配到对应页面后执行其初始化函数。
+initLoginPage()
+    .then((started) => started || initPlanEditPage())
+    .then((started) => started || initPlanApplyPage())
+    .then((started) => started || initPlansPage())
+    .catch((error) => toast(error.message));
