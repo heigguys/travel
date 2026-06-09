@@ -18,6 +18,17 @@ const planStatusLabel = (status) => {
     return map[Number(status)] ?? "";
 };
 
+const actionIcons = {
+    edit: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
+    delete: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
+    apply: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>`,
+    consult: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>`
+};
+
+function actionButton(action, id, label, extraClass = "") {
+    return `<button class="icon-btn ${extraClass}" data-action="${action}" data-id="${id}" title="${label}" aria-label="${label}" type="button">${actionIcons[action]}</button>`;
+}
+
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
     const response = await fetch(API_BASE + path, {
@@ -78,7 +89,7 @@ function renderPlans() {
             : plan.planNo;
         const adminCells = admin ? `<td>${plan.published ? "已公开" : "未公开"}</td>` : "";
         const adminActions = admin
-            ? `<button data-action="edit" data-id="${plan.id}">编辑</button><button class="danger" data-action="delete" data-id="${plan.id}">删除</button>`
+            ? `${actionButton("edit", plan.id, "编辑")}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
         return `<tr>
             <td>${planStatusLabel(plan.status)}</td>
@@ -90,10 +101,12 @@ function renderPlans() {
             <td>${plan.applicantTotal || 0}</td>
             <td>${plan.myApplicantCount || 0}</td>
             ${adminCells}
-            <td class="actions">
-                ${adminActions}
-                <button data-action="apply" data-id="${plan.id}">申请</button>
-                <button data-action="consult" data-id="${plan.id}">咨询</button>
+            <td>
+                <div class="plan-actions">
+                    ${adminActions}
+                    ${actionButton("apply", plan.id, "申请")}
+                    ${actionButton("consult", plan.id, "咨询")}
+                </div>
             </td>
         </tr>`;
     }).join("");
