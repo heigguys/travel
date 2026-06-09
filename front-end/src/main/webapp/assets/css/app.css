@@ -111,6 +111,8 @@ label {
 
 /* 页面外壳，提供全屏高度和边距。 */
 .shell {
+    display: grid;
+    align-items: center;
     min-height: 100vh;
     padding: 28px;
 }
@@ -144,6 +146,7 @@ label {
 .app {
     display: grid;
     gap: 16px;
+    align-self: start;
 }
 
 /* 顶部栏和筛选工具栏的弹性布局。 */
@@ -364,16 +367,24 @@ dialog::backdrop {
 /* 独立表单页面布局，标题与卡片纵向排列。 */
 .form-page {
     display: grid;
-    gap: 20px;
+    gap: 16px;
+    width: min(640px, 100%);
+    margin: 0 auto;
 }
 
-/* 表单卡片容器，白色背景、圆角边框、居左对齐。 */
+/* 表单卡片容器，白色背景、圆角边框、水平居中对齐。 */
 .form-card {
-    width: min(640px, 100%);
+    width: 100%;
+    margin: 0 auto;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 24px;
+}
+
+.form-page .topbar h1,
+.form-page .topbar p {
+    margin: 0;
 }
 
 /* 通用隐藏类。 */
