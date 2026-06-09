@@ -48,7 +48,7 @@ public class ConsultationService {
         consultation.setPlanId(planId);
         consultation.setUserId(user.getId());
         consultation.setParticipantUserId(user.getId());
-        consultation.setSenderRole(String.valueOf(user.getRole()));
+        consultation.setSenderRole(user.getRole());
         consultation.setContent(request.content());
         consultation.setStatus("OPEN");
         consultationMapper.insert(consultation);

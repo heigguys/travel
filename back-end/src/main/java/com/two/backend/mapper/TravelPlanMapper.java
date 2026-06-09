@@ -13,6 +13,7 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 /**
  * 旅行计划 Mapper，负责 travel_plans 表的查询、插入、更新和删除。
+ * status 字段存储计算后的整数状态：0=可申请，1=已成团，2=进行中，3=已结束，4=未成团。
  */
 public interface TravelPlanMapper {
     /**
@@ -59,22 +60,45 @@ public interface TravelPlanMapper {
     int insert(TravelPlan plan);
 
     /**
-     * 更新旅行计划基础信息、附件信息、状态和更新时间。
+     * 更新旅行计划基础信息、附件信息和更新时间。
      */
     @Update("""
             update travel_plans
             set destination = #{destination}, start_date = #{startDate}, end_date = #{endDate}, price = #{price},
                 capacity = #{capacity}, published = #{published}, file_path = #{filePath}, file_name = #{fileName},
-                status = #{status}, updated_at = current_timestamp
+                updated_at = current_timestamp
             where id = #{id}
             """)
     int update(TravelPlan plan);
 
     /**
-     * 更新旅行计划报名状态。
+     * 更新单条旅行计划的状态（申请或取消时触发）。
      */
     @Update("update travel_plans set status = #{status}, updated_at = current_timestamp where id = #{id}")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    /**
+     * 批量刷新所有旅行计划的状态，根据日期和当前申请人数重新计算。
+     * 登录时和每天凌晨自动触发。
+     */
+    @Update("""
+            update travel_plans p
+            left join (
+              select plan_id, coalesce(sum(applicant_count), 0) as total
+              from applications
+              where status = 0
+              group by plan_id
+            ) agg on agg.plan_id = p.id
+            set p.status = case
+              when p.end_date < current_date and coalesce(agg.total, 0) >= p.capacity then 3
+              when p.end_date < current_date then 4
+              when p.start_date <= current_date then 2
+              when coalesce(agg.total, 0) >= p.capacity then 1
+              else 0
+            end,
+            p.updated_at = current_timestamp
+            """)
+    int updateAllStatuses();
 
     /**
      * 删除指定旅行计划。

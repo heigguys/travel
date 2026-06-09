@@ -7,8 +7,10 @@ import com.two.backend.model.Application;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +44,24 @@ public class TravelPlanService {
     }
 
     /**
+     * 根据日期计算新计划的初始状态（新计划申请人数为 0）。
+     */
+    private int computeInitialStatus(LocalDate startDate, LocalDate endDate) {
+        LocalDate today = LocalDate.now();
+        if (endDate.isBefore(today))       return TravelPlan.STATUS_DISBANDED;
+        if (!startDate.isAfter(today))     return TravelPlan.STATUS_IN_PROGRESS;
+        return TravelPlan.STATUS_AVAILABLE;
+    }
+
+    /**
+     * 每天凌晨 0 点批量刷新所有旅行计划状态。
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    public void scheduledStatusRefresh() {
+        travelPlanMapper.updateAllStatuses();
+    }
+
+    /**
      * 查询计划并校验当前用户是否可见。
      *
      * @param id 旅行计划 ID
@@ -71,7 +91,7 @@ public class TravelPlanService {
         TravelPlan plan = new TravelPlan();
         plan.setPlanNo("TP" + System.currentTimeMillis());
         fillPlan(plan, request, file);
-        plan.setStatus(TravelPlan.STATUS_APPLYING);
+        plan.setStatus(computeInitialStatus(request.startDate(), request.endDate()));
         travelPlanMapper.insert(plan);
         return plan;
     }
@@ -91,8 +111,8 @@ public class TravelPlanService {
             throw new BusinessException("旅行计划不存在");
         }
         fillPlan(plan, request, file);
-        plan.setStatus(statusFor(id, plan.getCapacity()));
         travelPlanMapper.update(plan);
+        travelPlanMapper.updateAllStatuses();
         return plan;
     }
 
@@ -147,6 +167,9 @@ public class TravelPlanService {
                 || request.price() == null || request.capacity() == null || request.capacity() < 1) {
             throw new BusinessException("请填写所有必填项");
         }
+        if (request.destination().length() > 10) {
+            throw new BusinessException("目的地不能超过10个字符");
+        }
         if (request.endDate().isBefore(request.startDate())) {
             throw new BusinessException("返回日不能早于启程日");
         }
@@ -173,14 +196,4 @@ public class TravelPlanService {
         }
     }
 
-    /**
-     * 根据当前有效申请人数和定员计算报名状态。
-     *
-     * @param planId 旅行计划 ID
-     * @param capacity 定员
-     * @return 计划状态
-     */
-    private Integer statusFor(Long planId, Integer capacity) {
-        return applicationMapper.activeCount(planId) >= capacity ? TravelPlan.STATUS_FULL : TravelPlan.STATUS_APPLYING;
-    }
 }

@@ -307,6 +307,75 @@ dialog::backdrop {
     max-width: 360px;
 }
 
+/* 分段日期输入框：年/月/日三格合一，整体看起来是一个输入框。 */
+.date-field {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #fff;
+    gap: 2px;
+}
+.date-field:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(31,111,235,.15);
+}
+.date-field input {
+    border: none;
+    outline: none;
+    padding: 3px 2px;
+    width: auto;
+    text-align: center;
+    background: transparent;
+    -moz-appearance: textfield;
+}
+.date-field input[name="startYear"],
+.date-field input[name="endYear"] { width: 44px; }
+.date-field input[name="startMonth"],
+.date-field input[name="endMonth"],
+.date-field input[name="startDay"],
+.date-field input[name="endDay"] { width: 28px; }
+.date-sep {
+    color: var(--muted);
+    user-select: none;
+}
+
+/* 删除确认弹窗的警告文字。 */
+.danger-note {
+    margin: 0;
+    color: var(--danger);
+    font-weight: 600;
+}
+
+/* 删除弹窗内申请人预览列表。 */
+.delete-preview-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.delete-preview-list .message {
+    margin: 0;
+}
+
+/* 独立表单页面布局，标题与卡片纵向排列。 */
+.form-page {
+    display: grid;
+    gap: 20px;
+}
+
+/* 表单卡片容器，白色背景、圆角边框、居左对齐。 */
+.form-card {
+    width: min(640px, 100%);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+}
+
 /* 通用隐藏类。 */
 .hidden {
     display: none !important;

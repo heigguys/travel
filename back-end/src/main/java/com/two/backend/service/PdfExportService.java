@@ -58,6 +58,18 @@ public class PdfExportService {
     }
 
     /**
+     * 将申请状态整数转换为可读文字。
+     *
+     * @param status 申请状态（0=有效，1=已取消）
+     * @return 状态文字
+     */
+    private String applicationStatusLabel(Integer status) {
+        if (Integer.valueOf(Application.STATUS_ACTIVE).equals(status))   return "申请成功";
+        if (Integer.valueOf(Application.STATUS_CANCELED).equals(status)) return "取消";
+        return "";
+    }
+
+    /**
      * 将可能为空的字符串转换为空串，避免 PDF 单元格出现 null 文本。
      *
      * @param value 原始文本

@@ -3,9 +3,11 @@ package com.two.backend;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @MapperScan("com.two.backend.mapper")
+@EnableScheduling
 /**
  * 后端应用入口，启动 Spring Boot 并扫描 MyBatis Mapper 接口。
  */

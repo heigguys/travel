@@ -5,10 +5,11 @@ import lombok.Data;
 @Data
 /**
  * 系统用户实体，表示管理员或普通员工账号。
+ * role 字段用整数存储：0 = 管理员，1 = 普通用户。
  */
 public class User {
     public static final int ROLE_ADMIN = 0;
-    public static final int ROLE_USER = 1;
+    public static final int ROLE_USER  = 1;
 
     private Long id;
     private String employeeNo;

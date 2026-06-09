@@ -12,7 +12,7 @@ public class Consultation {
     private Long planId;
     private Long userId;
     private Long participantUserId;
-    private String senderRole;
+    private Integer senderRole;
     private String content;
     private String status;
     private LocalDateTime createdAt;

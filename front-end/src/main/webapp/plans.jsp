@@ -29,7 +29,10 @@
             <select id="statusFilter">
                 <option value="">全部状态</option>
                 <option value="0">可申请</option>
-                <option value="1">名额已满</option>
+                <option value="1">已成团</option>
+                <option value="2">进行中</option>
+                <option value="3">已结束</option>
+                <option value="4">未成团</option>
             </select>
             <select id="sortSelect">
                 <option value="">默认排序</option>
@@ -52,78 +55,6 @@
         </div>
     </section>
 </main>
-
-<!-- 旅行计划弹窗：管理员新增或编辑计划，并可上传 PDF 附件。 -->
-<dialog id="planDialog">
-    <form id="planForm" method="dialog" class="stack">
-        <h2 id="planDialogTitle">旅行计划</h2>
-        <input type="hidden" name="id">
-        <label>目的地 *
-            <input name="destination" required placeholder="如：敦煌莫高窟">
-        </label>
-        <div class="grid2">
-            <label>启程日 *
-                <input name="startDate" type="date" required>
-            </label>
-            <label>返回日 *
-                <input name="endDate" type="date" required>
-            </label>
-        </div>
-        <div class="grid2">
-            <label>价格（元）*
-                <input name="price" type="number" min="0" step="0.01" required>
-            </label>
-            <label>定员数（人）*
-                <input name="capacity" type="number" min="1" required>
-            </label>
-        </div>
-        <label>PDF 附件
-            <input name="file" type="file" accept="application/pdf">
-        </label>
-        <label class="inline">
-            <input name="published" type="checkbox"> 公开
-        </label>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="primary" type="submit">保存</button>
-        </div>
-    </form>
-</dialog>
-
-<!-- 申请弹窗：员工填写申请人数和备注。 -->
-<dialog id="applyDialog">
-    <form id="applyForm" method="dialog" class="stack">
-        <h2>申请旅行计划</h2>
-        <input type="hidden" name="planId">
-        <input type="hidden" name="applicationId">
-        <div id="applyCompanionsRows" class="stack"></div>
-        <button id="addApplyCompanionBtn" type="button">新增随行人员</button>
-        <label>选项 / 备注
-            <textarea name="optionText" rows="3" placeholder="如座位、房型、餐食等需求"></textarea>
-        </label>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="primary" type="submit">保存申请</button>
-        </div>
-    </form>
-</dialog>
-
-<!-- 删除确认弹窗：管理员删除计划前确认，并展示已有申请员工。 -->
-<dialog id="deleteDialog">
-    <form id="deleteForm" method="dialog" class="stack">
-        <h2>删除旅行计划</h2>
-        <input type="hidden" name="planId">
-        <p class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
-        <div>
-            <strong>已有员工申请</strong>
-            <div id="deleteApplicants" class="delete-preview-list"></div>
-        </div>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="danger" type="submit">确认删除</button>
-        </div>
-    </form>
-</dialog>
 
 <!-- 随行人员弹窗：维护某条申请下的同行人员信息。 -->
 <dialog id="companionsDialog">
@@ -186,6 +117,23 @@
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>
             <button class="primary" type="submit">保存</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- 删除确认弹窗：管理员删除计划前确认，并展示已有申请员工。 -->
+<dialog id="deleteDialog">
+    <form id="deleteForm" method="dialog" class="stack">
+        <h2>删除旅行计划</h2>
+        <input type="hidden" name="planId">
+        <p class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
+        <div>
+            <strong>已有员工申请</strong>
+            <div id="deleteApplicants" class="delete-preview-list"></div>
+        </div>
+        <div class="dialog-actions">
+            <button value="cancel" type="button" data-close>取消</button>
+            <button class="danger" type="submit">确认删除</button>
         </div>
     </form>
 </dialog>
