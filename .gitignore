@@ -1,0 +1,6 @@
+target/
+back-end/src/main/resources/application.properties
+storage/
+.idea/
+*.iml
+back-end/[Help

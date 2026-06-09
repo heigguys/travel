@@ -79,13 +79,4 @@ public class PdfExportService {
         return value == null ? "" : value;
     }
 
-    private String applicationStatusLabel(Integer status) {
-        if (Integer.valueOf(Application.STATUS_ACTIVE).equals(status)) {
-            return "申请成功";
-        }
-        if (Integer.valueOf(Application.STATUS_CANCELED).equals(status)) {
-            return "取消";
-        }
-        return "";
-    }
 }
