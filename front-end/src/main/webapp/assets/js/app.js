@@ -84,8 +84,9 @@ function renderPlans() {
     headers.push("操作");
     $("planHeader").innerHTML = headers.map((h) => `<th>${h}</th>`).join("");
     $("planRows").innerHTML = plans.map((plan) => {
+        const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
         const fileLink = plan.filePath
-            ? `<a href="${API_BASE}/plans/${plan.id}/file" target="_blank">${plan.planNo}</a>`
+            ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
             : plan.planNo;
         const adminCells = admin ? `<td>${plan.published ? "已公开" : "未公开"}</td>` : "";
         const adminActions = admin
