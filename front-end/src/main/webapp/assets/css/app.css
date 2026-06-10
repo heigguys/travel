@@ -122,12 +122,16 @@ label {
     width: min(420px, 100%);
     margin: 8vh auto;
     display: grid;
-    gap: 22px;
+    gap: 16px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 30px;
     box-shadow: 0 16px 38px rgba(31, 41, 55, .08);
+}
+
+.login-panel h1 {
+    margin: 0;
 }
 
 /* 登录页英文小标题。 */
