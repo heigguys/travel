@@ -14,7 +14,6 @@
         <div>
             <p class="eyebrow">Travel Management</p>
             <h1>公司旅行管理系统</h1>
-            <p class="muted">员工编号登录后可浏览、申请旅行计划并咨询管理员。</p>
         </div>
         <form id="loginForm" class="stack">
             <label>员工编号
@@ -29,7 +28,6 @@
             <p id="loginError" class="form-error hidden">账号或密码错误</p>
             <button class="primary" type="submit">登录</button>
         </form>
-        <p class="hint">示例账号：admin A001 / user U001，密码均为 123456</p>
     </section>
 </main>
 

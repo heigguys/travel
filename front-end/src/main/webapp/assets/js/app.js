@@ -62,7 +62,7 @@ function go(page) {
 
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
-    $("userInfo").textContent = `${currentUser.name}（${currentUser.employeeNo} / ${roleLabel(currentUser.role)}）`;
+    $("userInfo").textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
     $("newPlanBtn").classList.toggle("hidden", Number(currentUser.role) !== 0);
 }
 
