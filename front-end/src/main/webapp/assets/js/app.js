@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE || "http://localhost:8080/api";
+const API_BASE = window.API_BASE || `${window.location.protocol}//${window.location.hostname || "localhost"}:8080/api`;
 // 当前登录用户和计划列表缓存，供计划页渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
@@ -319,7 +319,9 @@ async function initLoginPage() {
                 body: JSON.stringify({employeeNo: loginForm.employeeNo.value, password: loginForm.password.value})
             });
             go("plans.jsp");
-        } catch {
+        } catch (error) {
+            const message = error.message || "";
+            $("loginError").textContent = message.includes("密码") ? "账号或密码错误" : "无法连接服务器，请检查后端地址或网络";
             $("loginError").classList.remove("hidden");
         }
     });

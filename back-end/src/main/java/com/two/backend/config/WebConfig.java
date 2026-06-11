@@ -15,14 +15,14 @@ import org.springframework.web.filter.CorsFilter;
  * 确保异常处理器返回的错误响应也携带正确的 CORS 头。
  */
 public class WebConfig {
-    @Value("${app.frontend.allowed-origins}")
-    private List<String> allowedOrigins;
+    @Value("${app.frontend.allowed-origin-patterns}")
+    private List<String> allowedOriginPatterns;
 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedOriginPatterns(allowedOriginPatterns);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -30,3 +30,4 @@ public class WebConfig {
         return new CorsFilter(source);
     }
 }
+

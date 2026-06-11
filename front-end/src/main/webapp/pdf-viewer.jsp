@@ -83,7 +83,7 @@
 <iframe id="pdfFrame" class="pdf-frame" title="旅游计划 PDF 预览"></iframe>
 
 <script>
-    const API_BASE = window.API_BASE || "http://localhost:8080/api";
+    const API_BASE = window.API_BASE || `${window.location.protocol}//${window.location.hostname || "localhost"}:8080/api`;
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
     const planNo = params.get("planNo") || "travel-plan";
