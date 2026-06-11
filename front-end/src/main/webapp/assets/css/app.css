@@ -438,6 +438,21 @@ dialog::backdrop {
     display: none !important;
 }
 
+/* flatpickr 日历尺寸微调，略小于默认值。 */
+.flatpickr-calendar {
+    font-size: 13px !important;
+    width: 280px !important;
+}
+.flatpickr-day {
+    max-width: 34px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+}
+.dayContainer {
+    min-width: 280px !important;
+    max-width: 280px !important;
+}
+
 /* 小屏幕下压缩页面边距，并把多列表单改为单列。 */
 @media (max-width: 700px) {
     .shell {

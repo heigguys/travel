@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公司旅行管理系统 - 旅行计划编辑</title>
     <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 <main class="shell">
@@ -23,22 +24,10 @@
                 </label>
                 <div class="grid2">
                     <label>启程日 *
-                        <div class="date-field" id="startDateField">
-                            <input name="startYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
-                            <span class="date-sep">/</span>
-                            <input name="startMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
-                            <span class="date-sep">/</span>
-                            <input name="startDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
-                        </div>
+                        <input name="startDate" type="text" placeholder="YYYY-MM-DD" required>
                     </label>
                     <label>返回日 *
-                        <div class="date-field" id="endDateField">
-                            <input name="endYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
-                            <span class="date-sep">/</span>
-                            <input name="endMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
-                            <span class="date-sep">/</span>
-                            <input name="endDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
-                        </div>
+                        <input name="endDate" type="text" placeholder="YYYY-MM-DD" required>
                     </label>
                 </div>
                 <div class="grid2">
@@ -65,6 +54,7 @@
     </section>
 </main>
 <div id="toast" class="toast hidden"></div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

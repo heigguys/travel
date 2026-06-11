@@ -462,15 +462,8 @@ async function initPlanEditPage() {
             const plan = await api(`/plans/${id}`);
             form.id.value = plan.id;
             form.destination.value = plan.destination || "";
-            // 将 YYYY-MM-DD 拆分回三个输入格。
-            const [sy = "", sm = "", sd = ""] = (plan.startDate || "").split("-");
-            form.startYear.value = sy;
-            form.startMonth.value = sm ? parseInt(sm, 10) : "";
-            form.startDay.value = sd ? parseInt(sd, 10) : "";
-            const [ey = "", em = "", ed = ""] = (plan.endDate || "").split("-");
-            form.endYear.value = ey;
-            form.endMonth.value = em ? parseInt(em, 10) : "";
-            form.endDay.value = ed ? parseInt(ed, 10) : "";
+            form.startDate.value = plan.startDate || "";
+            form.endDate.value = plan.endDate || "";
             form.price.value = plan.price || "";
             form.capacity.value = plan.capacity || "";
             form.published.checked = Boolean(plan.published);
@@ -479,9 +472,50 @@ async function initPlanEditPage() {
         }
     }
 
-    // 复用分段日期自动跳格逻辑。
-    setupDateAutoJump("startDateField");
-    setupDateAutoJump("endDateField");
+
+    // 日期选择器：自定义 locale，月份数字显示，星期单字，周一开头。
+    const fpLocale = {
+        weekdays: {
+            shorthand: ['日','一','二','三','四','五','六'],
+            longhand:  ['星期日','星期一','星期二','星期三','星期四','星期五','星期六']
+        },
+        months: {
+            shorthand: ['1','2','3','4','5','6','7','8','9','10','11','12'],
+            longhand:  ['1','2','3','4','5','6','7','8','9','10','11','12']
+        },
+        firstDayOfWeek: 1
+    };
+    // clamp：月超过12→12，日超过当月最大→当月最大，不 rollover。
+    function clampDateStr(raw) {
+        const m = raw.match(/^(\d+)-(\d+)-(\d+)$/);
+        if (!m) return null;
+        const y  = parseInt(m[1]) || new Date().getFullYear();
+        const mo = Math.min(Math.max(parseInt(m[2]), 1), 12);
+        const maxD = new Date(y, mo, 0).getDate();
+        const d  = Math.min(Math.max(parseInt(m[3]), 1), maxD);
+        return `${String(y).padStart(4,'0')}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+    const fpOpts = {
+        dateFormat: "Y-m-d",
+        allowInput: true,
+        disableMobile: true,
+        locale: fpLocale
+    };
+    const fpStart = flatpickr(form.startDate, fpOpts);
+    const fpEnd   = flatpickr(form.endDate,   fpOpts);
+
+    [{ input: form.startDate, fp: fpStart }, { input: form.endDate, fp: fpEnd }].forEach(({ input, fp }) => {
+        input.addEventListener("blur", function () {
+            const raw = this.value;
+            const fixed = clampDateStr(raw);
+            if (fixed && fixed !== raw) {
+                setTimeout(() => {
+                    fp.setDate(fixed, true);
+                    this.value = fixed;
+                }, 20);
+            }
+        }, true);
+    });
 
     // 目的地离焦校验。
     const destInput = form.destination;
@@ -506,20 +540,7 @@ async function initPlanEditPage() {
         }
         destInput.setCustomValidity("");
 
-        const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
-        const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
-        if (!sy || !sm || !sd || !ey || !em || !ed) {
-            errorEl.textContent = "请填写完整的启程日和返回日";
-            errorEl.classList.remove("hidden");
-            return;
-        }
-
-        const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
-        const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
         const data = new FormData(form);
-        data.set("startDate", startDate);
-        data.set("endDate", endDate);
-        ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
         data.set("published", form.published.checked ? "true" : "false");
         const planId = form.id.value;
 
