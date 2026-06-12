@@ -383,12 +383,65 @@ async function initLoginPage() {
 function setupDateAutoJump(fieldId) {
     const field = $(fieldId);
     if (!field) return;
-    const [y, m, d] = field.querySelectorAll("input");
+    const [y, m, d] = field.querySelectorAll("input[data-date-part]");
     const parts = [y, m, d];
+    const nativeDate = field.querySelector(".date-native");
+    const pickerBtn = field.querySelector(".date-picker-btn");
+
+    const syncHasValue = () => {
+        field.classList.toggle("has-value", parts.some((input) => input.value));
+    };
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
+    const normalizeNumber = (input) => {
+        input.value = input.value.replace(/\D/g, "");
+        syncHasValue();
+    };
+    const normalizeDateParts = () => {
+        const year = Number(y.value);
+        let month = Number(m.value);
+        let day = Number(d.value);
+
+        if (m.value) {
+            month = clamp(Number.isFinite(month) ? month : 1, 1, 12);
+            m.value = String(month);
+        }
+
+        if (d.value) {
+            const effectiveYear = y.value.length === 4 && Number.isFinite(year) ? year : 2000;
+            const effectiveMonth = m.value ? month : 1;
+            const maxDay = daysInMonth(effectiveYear, effectiveMonth);
+            day = clamp(Number.isFinite(day) ? day : 1, 1, maxDay);
+            d.value = String(day);
+        }
+
+        syncHasValue();
+    };
+    const toNativeDateValue = () => {
+        if (!y.value || !m.value || !d.value) return "";
+        return `${y.value.padStart(4, "0")}-${m.value.padStart(2, "0")}-${d.value.padStart(2, "0")}`;
+    };
+    const fillFromNativeDate = (value) => {
+        const [year = "", month = "", day = ""] = value.split("-");
+        y.value = year;
+        m.value = month ? String(parseInt(month, 10)) : "";
+        d.value = day ? String(parseInt(day, 10)) : "";
+        syncHasValue();
+    };
 
     // 输入满位自动跳下一格
-    y.addEventListener("input", () => { if (y.value.replace(/\D/g,"").length === 4) m.focus(); });
-    m.addEventListener("input", () => { if (m.value.replace(/\D/g,"").length >= 2) d.focus(); });
+    y.addEventListener("input", () => {
+        normalizeNumber(y);
+        if (y.value.length === 4) m.focus();
+    });
+    m.addEventListener("input", () => {
+        normalizeNumber(m);
+        if (m.value.length >= 2) d.focus();
+    });
+    d.addEventListener("input", () => normalizeNumber(d));
+    m.addEventListener("blur", normalizeDateParts);
+    d.addEventListener("blur", normalizeDateParts);
+    y.addEventListener("blur", normalizeDateParts);
 
     // 左右箭头键：光标在边界时跳相邻格，并把光标定位到对应端
     parts.forEach((input, i) => {
@@ -406,6 +459,21 @@ function setupDateAutoJump(fieldId) {
             }
         });
     });
+
+    if (pickerBtn && nativeDate) {
+        pickerBtn.addEventListener("click", () => {
+            normalizeDateParts();
+            nativeDate.value = toNativeDateValue();
+            if (typeof nativeDate.showPicker === "function") {
+                nativeDate.showPicker();
+            } else {
+                nativeDate.click();
+            }
+        });
+        nativeDate.addEventListener("change", () => fillFromNativeDate(nativeDate.value));
+    }
+
+    syncHasValue();
 }
 
 // 绑定计划列表页按钮、弹窗和表单事件。
