@@ -54,8 +54,9 @@ public class TravelPlanController {
     public ApiResponse<List<TravelPlan>> list(@RequestParam(required = false) String keyword,
                                               @RequestParam(required = false) Integer status,
                                               @RequestParam(required = false) String sort,
+                                              @RequestParam(required = false) String sortDir,
                                               HttpSession session) {
-        return ApiResponse.ok(travelPlanService.list(authService.currentUser(session), keyword, status, sort));
+        return ApiResponse.ok(travelPlanService.list(authService.currentUser(session), keyword, status, sort, sortDir));
     }
 
     @GetMapping("/{id}")

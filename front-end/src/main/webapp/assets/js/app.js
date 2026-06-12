@@ -2,12 +2,14 @@ const API_BASE = window.API_BASE || `${window.location.protocol}//${window.locat
 // 当前登录用户和计划列表缓存，供计划页渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
+// 当前排序状态：col 为后端字段名，dir 为 asc/desc，null 表示未排序。
+let sortState = { col: null, dir: null };
 
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
 
 // 将用户角色整数转换为显示文字（0=管理员，1=普通用户）。
-const roleLabel = (role) => Number(role) === 0 ? "管理员" : "用户";
+const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
@@ -71,10 +73,24 @@ async function loadPlans() {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
-    if ($("sortSelect").value) params.set("sort", $("sortSelect").value);
+    if (sortState.col) {
+        params.set("sort", sortState.col);
+        params.set("sortDir", sortState.dir);
+    }
     plans = await api("/plans?" + params.toString());
     renderPlans();
 }
+
+// 各列标题对应的后端排序字段，无排序的列不在此映射中。
+const SORT_COLS = {
+    "旅游计划编号": "planNo",
+    "目的地": "destination",
+    "往返日期": "startDate",
+    "价格": "price",
+    "定员数": "capacity",
+    "申请总人数": "applicantTotal",
+    "我的申请人数": "myApplicantCount"
+};
 
 // 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
@@ -82,7 +98,13 @@ function renderPlans() {
     const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
     if (admin) headers.push("公开状态");
     headers.push("操作");
-    $("planHeader").innerHTML = headers.map((h) => `<th>${h}</th>`).join("");
+    const arrows = `<div class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></div>`;
+    $("planHeader").innerHTML = headers.map((h) => {
+        const key = SORT_COLS[h];
+        if (!key) return `<th>${h}</th>`;
+        const active = sortState.col === key ? (sortState.dir === "asc" ? " asc" : " desc") : "";
+        return `<th class="sortable${active}" data-sort="${key}"><div class="th-inner">${h}${arrows}</div></th>`;
+    }).join("");
     $("planRows").innerHTML = plans.map((plan) => {
         const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
         const fileLink = plan.filePath
@@ -384,6 +406,22 @@ function bindPlansPageEvents() {
     const passwordForm = $("passwordForm");
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
+    const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
+
+    // 列头点击排序：升序 → 降序 → 取消，切换后重新请求后端。
+    $("planHeader").addEventListener("click", async (e) => {
+        const th = e.target.closest("th[data-sort]");
+        if (!th) return;
+        const col = th.dataset.sort;
+        if (sortState.col === col) {
+            if (sortState.dir === "asc") sortState.dir = "desc";
+            else { sortState.col = null; sortState.dir = null; }
+        } else {
+            sortState.col = col;
+            sortState.dir = "asc";
+        }
+        await loadPlans();
+    });
 
     $("logoutBtn").onclick = async () => {
         await api("/auth/logout", {method: "POST"});
@@ -403,14 +441,20 @@ function bindPlansPageEvents() {
     $("myAppsBtn").onclick = openMyApps;
     $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
     $("passwordBtn").onclick = () => {
+        passwordForm.reset();
         hidePasswordMessage();
         syncOldPasswordToggle();
         syncNewPasswordToggle();
+        syncConfirmPasswordToggle();
         $("passwordDialog").showModal();
     };
     passwordForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         hidePasswordMessage();
+        if (passwordForm.newPassword.value !== passwordForm.confirmPassword.value) {
+            showPasswordMessage("两次输入的密码不一致");
+            return;
+        }
         try {
             await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: passwordForm.oldPassword.value, newPassword: passwordForm.newPassword.value})});
             showPasswordMessage("密码修改成功", true);

@@ -214,6 +214,40 @@ a {
     color: var(--blue);
 }
 
+/* 可排序列标题。 */
+th.sortable {
+    cursor: pointer;
+}
+
+th.sortable:hover {
+    background: #c8dcf8;
+}
+
+.th-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1;
+}
+
+.sort-arrows span {
+    font-size: 9px;
+    color: #9ca3af;
+    line-height: 1;
+    display: block;
+}
+
+th.asc .arrow-up,
+th.desc .arrow-down {
+    color: var(--blue);
+}
+
 .plan-actions {
     display: flex;
     align-items: center;

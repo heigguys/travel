@@ -33,15 +33,23 @@ public interface TravelPlanMapper {
               </if>
             order by
               <choose>
-                <when test="sort == 'price'">p.price</when>
+                <when test="sort == 'planNo'">p.plan_no</when>
+                <when test="sort == 'destination'">p.destination</when>
                 <when test="sort == 'startDate'">p.start_date</when>
+                <when test="sort == 'price'">p.price</when>
                 <when test="sort == 'capacity'">p.capacity</when>
+                <when test="sort == 'applicantTotal'">applicant_total</when>
+                <when test="sort == 'myApplicantCount'">my_applicant_count</when>
                 <otherwise>p.created_at</otherwise>
-              </choose> desc
+              </choose>
+              <choose>
+                <when test="sortDir == 'asc'">asc</when>
+                <otherwise>desc</otherwise>
+              </choose>
             </script>
             """)
     List<TravelPlan> list(@Param("admin") boolean admin, @Param("userId") Long userId, @Param("keyword") String keyword,
-                          @Param("status") Integer status, @Param("sort") String sort);
+                          @Param("status") Integer status, @Param("sort") String sort, @Param("sortDir") String sortDir);
 
     /**
      * 根据 ID 查询旅行计划。

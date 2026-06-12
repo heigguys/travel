@@ -34,13 +34,7 @@
                 <option value="3">已结束</option>
                 <option value="4">未成团</option>
             </select>
-            <select id="sortSelect">
-                <option value="">默认排序</option>
-                <option value="startDate">按日期排序</option>
-                <option value="price">按价格排序</option>
-                <option value="capacity">按定员排序</option>
-            </select>
-            <button id="searchBtn">搜索</button>
+<button id="searchBtn">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>
         </section>
 
@@ -111,6 +105,12 @@
             <span class="password-field">
                 <input name="newPassword" type="password" required minlength="6">
                 <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
+            </span>
+        </label>
+        <label>验证密码
+            <span class="password-field">
+                <input name="confirmPassword" type="password" required minlength="6">
+                <button id="confirmPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
             </span>
         </label>
         <p id="passwordMessage" class="form-error hidden"></p>

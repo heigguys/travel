@@ -39,8 +39,8 @@ public class TravelPlanService {
      * @param sort 排序字段
      * @return 当前用户可见的旅行计划列表
      */
-    public List<TravelPlan> list(User user, String keyword, Integer status, String sort) {
-        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort);
+    public List<TravelPlan> list(User user, String keyword, Integer status, String sort, String sortDir) {
+        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort, sortDir);
     }
 
     /**
