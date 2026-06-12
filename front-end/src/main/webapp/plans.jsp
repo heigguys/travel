@@ -114,6 +114,12 @@
                 <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
             </span>
         </label>
+        <label>确认密码
+            <span class="password-field">
+                <input name="confirmPassword" type="password" required minlength="6">
+                <button id="confirmPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
+            </span>
+        </label>
         <p id="passwordMessage" class="form-error hidden"></p>
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>

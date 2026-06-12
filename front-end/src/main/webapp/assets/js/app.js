@@ -501,6 +501,7 @@ function bindPlansPageEvents() {
     const passwordForm = $("passwordForm");
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
+    const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
 
     $("logoutBtn").onclick = async () => {
         await api("/auth/logout", {method: "POST"});
@@ -523,13 +524,25 @@ function bindPlansPageEvents() {
         hidePasswordMessage();
         syncOldPasswordToggle();
         syncNewPasswordToggle();
+        syncConfirmPasswordToggle();
         $("passwordDialog").showModal();
     };
     passwordForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         hidePasswordMessage();
+        if (passwordForm.newPassword.value !== passwordForm.confirmPassword.value) {
+            showPasswordMessage("两次输入的新密码不一致");
+            return;
+        }
         try {
-            await api("/auth/password", {method: "POST", body: JSON.stringify({oldPassword: passwordForm.oldPassword.value, newPassword: passwordForm.newPassword.value})});
+            await api("/auth/password", {
+                method: "POST",
+                body: JSON.stringify({
+                    oldPassword: passwordForm.oldPassword.value,
+                    newPassword: passwordForm.newPassword.value,
+                    confirmPassword: passwordForm.confirmPassword.value
+                })
+            });
             showPasswordMessage("密码修改成功", true);
             $("passwordDialog").close();
             toast("密码修改成功");

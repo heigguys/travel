@@ -83,6 +83,9 @@ public class AuthService {
         if (!user.getPasswordMd5().equals(oldPasswordMd5)) {
             throw new BusinessException("原密码错误");
         }
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new BusinessException("两次输入的新密码不一致");
+        }
         if (oldPasswordMd5.equals(newPasswordMd5)) {
             throw new BusinessException("新密码不能和旧密码相同");
         }
