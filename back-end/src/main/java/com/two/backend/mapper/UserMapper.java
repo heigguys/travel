@@ -14,7 +14,7 @@ public interface UserMapper {
     /**
      * 按员工编号查询启用用户。
      */
-    @Select("select * from users where employee_no = #{employeeNo} and enabled = true")
+    @Select("select * from users where binary employee_no = #{employeeNo} and enabled = true")
     User findByEmployeeNo(String employeeNo);
 
     /**

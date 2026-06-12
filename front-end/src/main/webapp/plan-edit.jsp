@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公司旅行管理系统 - 旅行计划编辑</title>
     <link rel="stylesheet" href="assets/css/app.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 <main class="shell">
@@ -24,15 +23,37 @@
                 </label>
                 <div class="grid2">
                     <label>启程日 *
-                        <input name="startDate" type="text" placeholder="YYYY-MM-DD" required>
+                        <div class="date-field" id="startDateField">
+                            <span class="date-placeholder">YYYY/MM/DD</span>
+                            <input name="startYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
+                            <span class="date-sep">/</span>
+                            <input name="startMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
+                            <span class="date-sep">/</span>
+                            <input name="startDay" data-date-part="day" type="text" inputmode="numeric" maxlength="2">
+                            <button class="date-picker-btn" type="button" aria-label="选择启程日">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                            </button>
+                            <input class="date-native" type="date" tabindex="-1">
+                        </div>
                     </label>
                     <label>返回日 *
-                        <input name="endDate" type="text" placeholder="YYYY-MM-DD" required>
+                        <div class="date-field" id="endDateField">
+                            <span class="date-placeholder">YYYY/MM/DD</span>
+                            <input name="endYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
+                            <span class="date-sep">/</span>
+                            <input name="endMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
+                            <span class="date-sep">/</span>
+                            <input name="endDay" data-date-part="day" type="text" inputmode="numeric" maxlength="2">
+                            <button class="date-picker-btn" type="button" aria-label="选择返回日">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                            </button>
+                            <input class="date-native" type="date" tabindex="-1">
+                        </div>
                     </label>
                 </div>
                 <div class="grid2">
                     <label>价格（元）*
-                        <input name="price" type="number" min="0" step="0.01" required>
+                        <input name="price" type="number" min="0" max="99999.99" step="0.01" required>
                     </label>
                     <label>定员数（人）*
                         <input name="capacity" type="number" min="1" required>
@@ -54,7 +75,6 @@
     </section>
 </main>
 <div id="toast" class="toast hidden"></div>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

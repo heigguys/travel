@@ -4,6 +4,8 @@ let currentUser = null;
 let plans = [];
 // 当前排序状态：col 为后端字段名，dir 为 asc/desc，null 表示未排序。
 let sortState = { col: null, dir: null };
+let currentPlanPage = 1;
+const PLAN_PAGE_SIZE = 10;
 
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
@@ -13,6 +15,20 @@ const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
+
+// 将价格统一显示为人民币格式，例如 ¥2,280。
+const formatPrice = (price) => {
+    const value = Number(price);
+    if (!Number.isFinite(value)) return "";
+    return `¥${value.toLocaleString("en-US", {maximumFractionDigits: 0})}`;
+};
+
+const MAX_PLAN_PRICE = 99999.99;
+
+// 将后端日期 YYYY-MM-DD 统一显示为 YYYY/MM/DD。
+const formatDate = (date) => String(date || "").replaceAll("-", "/");
+
+const formatDateRange = (startDate, endDate) => `${formatDate(startDate)} - ${formatDate(endDate)}`;
 
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
@@ -78,6 +94,7 @@ async function loadPlans() {
         params.set("sortDir", sortState.dir);
     }
     plans = await api("/plans?" + params.toString());
+    currentPlanPage = 1;
     renderPlans();
 }
 
@@ -105,7 +122,10 @@ function renderPlans() {
         const active = sortState.col === key ? (sortState.dir === "asc" ? " asc" : " desc") : "";
         return `<th class="sortable${active}" data-sort="${key}"><div class="th-inner">${h}${arrows}</div></th>`;
     }).join("");
-    $("planRows").innerHTML = plans.map((plan) => {
+    const totalPages = Math.max(Math.ceil(plans.length / PLAN_PAGE_SIZE), 1);
+    currentPlanPage = Math.min(Math.max(currentPlanPage, 1), totalPages);
+    const pagePlans = plans.slice((currentPlanPage - 1) * PLAN_PAGE_SIZE, currentPlanPage * PLAN_PAGE_SIZE);
+    $("planRows").innerHTML = pagePlans.map((plan) => {
         const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
@@ -118,8 +138,8 @@ function renderPlans() {
             <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
             <td>${plan.destination}</td>
-            <td>${plan.startDate} - ${plan.endDate}</td>
-            <td>${plan.price}</td>
+            <td>${formatDateRange(plan.startDate, plan.endDate)}</td>
+            <td>${formatPrice(plan.price)}</td>
             <td>${plan.capacity}</td>
             <td>${plan.applicantTotal || 0}</td>
             <td>${plan.myApplicantCount || 0}</td>
@@ -133,6 +153,30 @@ function renderPlans() {
             </td>
         </tr>`;
     }).join("");
+    renderPlanPagination();
+}
+
+// 渲染旅行计划分页控件，每页固定显示 10 条。
+function renderPlanPagination() {
+    const pagination = $("planPagination");
+    if (!pagination) return;
+    const total = plans.length;
+    if (!total) {
+        pagination.innerHTML = `<span class="pagination-info">共 0 条</span>`;
+        return;
+    }
+    const totalPages = Math.ceil(total / PLAN_PAGE_SIZE);
+    const buttons = Array.from({length: totalPages}, (_, index) => {
+        const page = index + 1;
+        const active = page === currentPlanPage ? " active" : "";
+        return `<button class="page-btn${active}" data-page="${page}" type="button">${page}</button>`;
+    }).join("");
+    pagination.innerHTML = `
+        <span class="pagination-info">共 ${total} 条，第 ${currentPlanPage} / ${totalPages} 页</span>
+        <button class="page-btn" data-page="${currentPlanPage - 1}" type="button" ${currentPlanPage === 1 ? "disabled" : ""}>上一页</button>
+        ${buttons}
+        <button class="page-btn" data-page="${currentPlanPage + 1}" type="button" ${currentPlanPage === totalPages ? "disabled" : ""}>下一页</button>
+    `;
 }
 
 // 打开随行人员弹窗；没有历史数据时按申请人数生成空行。
@@ -361,12 +405,65 @@ async function initLoginPage() {
 function setupDateAutoJump(fieldId) {
     const field = $(fieldId);
     if (!field) return;
-    const [y, m, d] = field.querySelectorAll("input");
+    const [y, m, d] = field.querySelectorAll("input[data-date-part]");
     const parts = [y, m, d];
+    const nativeDate = field.querySelector(".date-native");
+    const pickerBtn = field.querySelector(".date-picker-btn");
+
+    const syncHasValue = () => {
+        field.classList.toggle("has-value", parts.some((input) => input.value));
+    };
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
+    const normalizeNumber = (input) => {
+        input.value = input.value.replace(/\D/g, "");
+        syncHasValue();
+    };
+    const normalizeDateParts = () => {
+        const year = Number(y.value);
+        let month = Number(m.value);
+        let day = Number(d.value);
+
+        if (m.value) {
+            month = clamp(Number.isFinite(month) ? month : 1, 1, 12);
+            m.value = String(month);
+        }
+
+        if (d.value) {
+            const effectiveYear = y.value.length === 4 && Number.isFinite(year) ? year : 2000;
+            const effectiveMonth = m.value ? month : 1;
+            const maxDay = daysInMonth(effectiveYear, effectiveMonth);
+            day = clamp(Number.isFinite(day) ? day : 1, 1, maxDay);
+            d.value = String(day);
+        }
+
+        syncHasValue();
+    };
+    const toNativeDateValue = () => {
+        if (!y.value || !m.value || !d.value) return "";
+        return `${y.value.padStart(4, "0")}-${m.value.padStart(2, "0")}-${d.value.padStart(2, "0")}`;
+    };
+    const fillFromNativeDate = (value) => {
+        const [year = "", month = "", day = ""] = value.split("-");
+        y.value = year;
+        m.value = month ? String(parseInt(month, 10)) : "";
+        d.value = day ? String(parseInt(day, 10)) : "";
+        syncHasValue();
+    };
 
     // 输入满位自动跳下一格
-    y.addEventListener("input", () => { if (y.value.replace(/\D/g,"").length === 4) m.focus(); });
-    m.addEventListener("input", () => { if (m.value.replace(/\D/g,"").length >= 2) d.focus(); });
+    y.addEventListener("input", () => {
+        normalizeNumber(y);
+        if (y.value.length === 4) m.focus();
+    });
+    m.addEventListener("input", () => {
+        normalizeNumber(m);
+        if (m.value.length >= 2) d.focus();
+    });
+    d.addEventListener("input", () => normalizeNumber(d));
+    m.addEventListener("blur", normalizeDateParts);
+    d.addEventListener("blur", normalizeDateParts);
+    y.addEventListener("blur", normalizeDateParts);
 
     // 左右箭头键：光标在边界时跳相邻格，并把光标定位到对应端
     parts.forEach((input, i) => {
@@ -384,6 +481,21 @@ function setupDateAutoJump(fieldId) {
             }
         });
     });
+
+    if (pickerBtn && nativeDate) {
+        pickerBtn.addEventListener("click", () => {
+            normalizeDateParts();
+            nativeDate.value = toNativeDateValue();
+            if (typeof nativeDate.showPicker === "function") {
+                nativeDate.showPicker();
+            } else {
+                nativeDate.click();
+            }
+        });
+        nativeDate.addEventListener("change", () => fillFromNativeDate(nativeDate.value));
+    }
+
+    syncHasValue();
 }
 
 // 绑定计划列表页按钮、弹窗和表单事件。
@@ -391,6 +503,11 @@ function bindPlansPageEvents() {
     document.addEventListener("click", async (event) => {
         const button = event.target.closest("button");
         if (!button) return;
+        if (button.dataset.page) {
+            currentPlanPage = Number(button.dataset.page);
+            renderPlans();
+            return;
+        }
         if (button.dataset.close !== undefined) button.closest("dialog").close();
         const action = button.dataset.action;
         const id = Number(button.dataset.id);
@@ -569,6 +686,13 @@ async function initPlanEditPage() {
     });
     destInput.addEventListener("input", () => destInput.setCustomValidity(""));
 
+    form.price.addEventListener("invalid", () => {
+        if (form.price.validity.rangeOverflow) {
+            form.price.setCustomValidity("价格不能超过99,999.99元");
+        }
+    });
+    form.price.addEventListener("input", () => form.price.setCustomValidity(""));
+
     $("planEditBackBtn").onclick = () => go("plans.jsp");
     $("planEditCancelBtn").onclick = () => go("plans.jsp");
 
@@ -584,6 +708,26 @@ async function initPlanEditPage() {
         }
         destInput.setCustomValidity("");
 
+        const price = Number(form.price.value);
+        if (Number.isFinite(price) && price > MAX_PLAN_PRICE) {
+            form.price.setCustomValidity("价格不能超过99,999.99元");
+            form.price.reportValidity();
+            errorEl.textContent = "价格不能超过99,999.99元";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        form.price.setCustomValidity("");
+
+        const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
+        const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
+        if (!sy || !sm || !sd || !ey || !em || !ed) {
+            errorEl.textContent = "请填写完整的启程日和返回日";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
+        const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
         const data = new FormData(form);
         data.set("published", form.published.checked ? "true" : "false");
         const planId = form.id.value;
@@ -623,7 +767,7 @@ async function initPlanApplyPage() {
     // 在标题下展示计划基本信息。
     try {
         const plan = await api(`/plans/${planId}`);
-        $("applyPlanInfo").textContent = `${plan.destination}　${plan.startDate} ～ ${plan.endDate}　¥${plan.price}`;
+        $("applyPlanInfo").textContent = `${plan.destination}　${formatDateRange(plan.startDate, plan.endDate)}　${formatPrice(plan.price)}`;
     } catch { /* 展示失败不阻断申请流程 */ }
 
     // 如果已有有效申请则预填随行人员，否则新建一行空行。
