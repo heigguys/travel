@@ -174,6 +174,12 @@ label {
 /* 筛选工具栏靠左排列。 */
 .toolbar {
     justify-content: flex-start;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: -4px 0;
+    padding: 8px 0;
+    background: var(--bg);
 }
 
 .toolbar input {
@@ -187,6 +193,7 @@ label {
 /* 表格外层容器，提供滚动、边框和白色背景。 */
 .table-wrap {
     overflow: auto;
+    max-height: calc(100vh - 190px);
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -212,6 +219,9 @@ th:last-child, td:last-child {
 }
 
 th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     background: #d9e6fb;
 }
 
@@ -447,6 +457,10 @@ dialog::backdrop {
 @media (max-width: 700px) {
     .shell {
         padding: 16px;
+    }
+
+    .table-wrap {
+        max-height: calc(100vh - 170px);
     }
 
     .grid2, .companion-row {

@@ -19,6 +19,13 @@ const formatPrice = (price) => {
     return `¥${value.toLocaleString("en-US", {maximumFractionDigits: 0})}`;
 };
 
+const MAX_PLAN_PRICE = 99999.99;
+
+// 将后端日期 YYYY-MM-DD 统一显示为 YYYY/MM/DD。
+const formatDate = (date) => String(date || "").replaceAll("-", "/");
+
+const formatDateRange = (startDate, endDate) => `${formatDate(startDate)} - ${formatDate(endDate)}`;
+
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
     const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
@@ -103,7 +110,7 @@ function renderPlans() {
             <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
             <td>${plan.destination}</td>
-            <td>${plan.startDate} - ${plan.endDate}</td>
+            <td>${formatDateRange(plan.startDate, plan.endDate)}</td>
             <td>${formatPrice(plan.price)}</td>
             <td>${plan.capacity}</td>
             <td>${plan.applicantTotal || 0}</td>
@@ -498,6 +505,13 @@ async function initPlanEditPage() {
     });
     destInput.addEventListener("input", () => destInput.setCustomValidity(""));
 
+    form.price.addEventListener("invalid", () => {
+        if (form.price.validity.rangeOverflow) {
+            form.price.setCustomValidity("价格不能超过99,999.99元");
+        }
+    });
+    form.price.addEventListener("input", () => form.price.setCustomValidity(""));
+
     $("planEditBackBtn").onclick = () => go("plans.jsp");
     $("planEditCancelBtn").onclick = () => go("plans.jsp");
 
@@ -512,6 +526,16 @@ async function initPlanEditPage() {
             return;
         }
         destInput.setCustomValidity("");
+
+        const price = Number(form.price.value);
+        if (Number.isFinite(price) && price > MAX_PLAN_PRICE) {
+            form.price.setCustomValidity("价格不能超过99,999.99元");
+            form.price.reportValidity();
+            errorEl.textContent = "价格不能超过99,999.99元";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        form.price.setCustomValidity("");
 
         const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
         const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
@@ -565,7 +589,7 @@ async function initPlanApplyPage() {
     // 在标题下展示计划基本信息。
     try {
         const plan = await api(`/plans/${planId}`);
-        $("applyPlanInfo").textContent = `${plan.destination}　${plan.startDate} ～ ${plan.endDate}　${formatPrice(plan.price)}`;
+        $("applyPlanInfo").textContent = `${plan.destination}　${formatDateRange(plan.startDate, plan.endDate)}　${formatPrice(plan.price)}`;
     } catch { /* 展示失败不阻断申请流程 */ }
 
     // 如果已有有效申请则预填随行人员，否则新建一行空行。
