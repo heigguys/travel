@@ -7,10 +7,17 @@ let plans = [];
 const $ = (id) => document.getElementById(id);
 
 // 将用户角色整数转换为显示文字（0=管理员，1=普通用户）。
-const roleLabel = (role) => Number(role) === 0 ? "管理员" : "用户";
+const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通用户";
 
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
+
+// 将价格统一显示为人民币格式，例如 ¥2,280。
+const formatPrice = (price) => {
+    const value = Number(price);
+    if (!Number.isFinite(value)) return "";
+    return `¥${value.toLocaleString("en-US", {maximumFractionDigits: 0})}`;
+};
 
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
@@ -97,7 +104,7 @@ function renderPlans() {
             <td>${fileLink}</td>
             <td>${plan.destination}</td>
             <td>${plan.startDate} - ${plan.endDate}</td>
-            <td>${plan.price}</td>
+            <td>${formatPrice(plan.price)}</td>
             <td>${plan.capacity}</td>
             <td>${plan.applicantTotal || 0}</td>
             <td>${plan.myApplicantCount || 0}</td>
@@ -558,7 +565,7 @@ async function initPlanApplyPage() {
     // 在标题下展示计划基本信息。
     try {
         const plan = await api(`/plans/${planId}`);
-        $("applyPlanInfo").textContent = `${plan.destination}　${plan.startDate} ～ ${plan.endDate}　¥${plan.price}`;
+        $("applyPlanInfo").textContent = `${plan.destination}　${plan.startDate} ～ ${plan.endDate}　${formatPrice(plan.price)}`;
     } catch { /* 展示失败不阻断申请流程 */ }
 
     // 如果已有有效申请则预填随行人员，否则新建一行空行。

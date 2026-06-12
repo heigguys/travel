@@ -201,9 +201,14 @@ table {
 
 th, td {
     border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
     padding: 10px;
     text-align: center;
     white-space: nowrap;
+}
+
+th:last-child, td:last-child {
+    border-right: 0;
 }
 
 th {
