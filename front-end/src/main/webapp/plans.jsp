@@ -53,6 +53,7 @@
                 <tbody id="planRows"></tbody>
             </table>
         </div>
+        <div id="planPagination" class="pagination"></div>
     </section>
 </main>
 

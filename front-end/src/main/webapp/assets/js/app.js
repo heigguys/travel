@@ -2,6 +2,8 @@ const API_BASE = window.API_BASE || `${window.location.protocol}//${window.locat
 // 当前登录用户和计划列表缓存，供计划页渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
+let currentPlanPage = 1;
+const PLAN_PAGE_SIZE = 10;
 
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
@@ -87,6 +89,7 @@ async function loadPlans() {
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
     if ($("sortSelect").value) params.set("sort", $("sortSelect").value);
     plans = await api("/plans?" + params.toString());
+    currentPlanPage = 1;
     renderPlans();
 }
 
@@ -97,7 +100,10 @@ function renderPlans() {
     if (admin) headers.push("公开状态");
     headers.push("操作");
     $("planHeader").innerHTML = headers.map((h) => `<th>${h}</th>`).join("");
-    $("planRows").innerHTML = plans.map((plan) => {
+    const totalPages = Math.max(Math.ceil(plans.length / PLAN_PAGE_SIZE), 1);
+    currentPlanPage = Math.min(Math.max(currentPlanPage, 1), totalPages);
+    const pagePlans = plans.slice((currentPlanPage - 1) * PLAN_PAGE_SIZE, currentPlanPage * PLAN_PAGE_SIZE);
+    $("planRows").innerHTML = pagePlans.map((plan) => {
         const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
@@ -125,6 +131,30 @@ function renderPlans() {
             </td>
         </tr>`;
     }).join("");
+    renderPlanPagination();
+}
+
+// 渲染旅行计划分页控件，每页固定显示 10 条。
+function renderPlanPagination() {
+    const pagination = $("planPagination");
+    if (!pagination) return;
+    const total = plans.length;
+    if (!total) {
+        pagination.innerHTML = `<span class="pagination-info">共 0 条</span>`;
+        return;
+    }
+    const totalPages = Math.ceil(total / PLAN_PAGE_SIZE);
+    const buttons = Array.from({length: totalPages}, (_, index) => {
+        const page = index + 1;
+        const active = page === currentPlanPage ? " active" : "";
+        return `<button class="page-btn${active}" data-page="${page}" type="button">${page}</button>`;
+    }).join("");
+    pagination.innerHTML = `
+        <span class="pagination-info">共 ${total} 条，第 ${currentPlanPage} / ${totalPages} 页</span>
+        <button class="page-btn" data-page="${currentPlanPage - 1}" type="button" ${currentPlanPage === 1 ? "disabled" : ""}>上一页</button>
+        ${buttons}
+        <button class="page-btn" data-page="${currentPlanPage + 1}" type="button" ${currentPlanPage === totalPages ? "disabled" : ""}>下一页</button>
+    `;
 }
 
 // 打开随行人员弹窗；没有历史数据时按申请人数生成空行。
@@ -383,6 +413,11 @@ function bindPlansPageEvents() {
     document.addEventListener("click", async (event) => {
         const button = event.target.closest("button");
         if (!button) return;
+        if (button.dataset.page) {
+            currentPlanPage = Number(button.dataset.page);
+            renderPlans();
+            return;
+        }
         if (button.dataset.close !== undefined) button.closest("dialog").close();
         const action = button.dataset.action;
         const id = Number(button.dataset.id);

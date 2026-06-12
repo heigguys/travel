@@ -174,12 +174,6 @@ label {
 /* 筛选工具栏靠左排列。 */
 .toolbar {
     justify-content: flex-start;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    margin: -4px 0;
-    padding: 8px 0;
-    background: var(--bg);
 }
 
 .toolbar input {
@@ -193,7 +187,6 @@ label {
 /* 表格外层容器，提供滚动、边框和白色背景。 */
 .table-wrap {
     overflow: auto;
-    max-height: calc(100vh - 190px);
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -219,10 +212,11 @@ th:last-child, td:last-child {
 }
 
 th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
     background: #d9e6fb;
+}
+
+tbody tr:hover {
+    background: #f5f9ff;
 }
 
 a {
@@ -269,6 +263,36 @@ button.icon-btn svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    color: var(--muted);
+    margin-right: 4px;
+}
+
+.page-btn {
+    min-width: 36px;
+    padding: 7px 10px;
+}
+
+.page-btn.active {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: #fff;
+}
+
+.page-btn:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+    background: #f2f4f7;
 }
 
 /* 弹窗基础尺寸和边框。 */
@@ -457,10 +481,6 @@ dialog::backdrop {
 @media (max-width: 700px) {
     .shell {
         padding: 16px;
-    }
-
-    .table-wrap {
-        max-height: calc(100vh - 170px);
     }
 
     .grid2, .companion-row {
