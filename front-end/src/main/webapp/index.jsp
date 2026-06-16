@@ -17,15 +17,15 @@
         </div>
         <form id="loginForm" class="stack">
             <label>员工编号
-                <input name="employeeNo" placeholder="A001 / U001" required>
+                <input name="employeeNo" required>
             </label>
             <label>密码
                 <span class="password-field">
-                    <input name="password" type="password" placeholder="默认 123456" required>
+                    <input name="password" type="password" required>
                     <button id="loginPasswordToggle" class="password-toggle hidden" type="button" aria-label="show password">&#128065;&#65039;</button>
                 </span>
             </label>
-            <p id="loginError" class="form-error hidden">账号或密码错误</p>
+            <p id="loginError" class="form-error hidden"></p>
             <button class="primary" type="submit">登录</button>
         </form>
     </section>

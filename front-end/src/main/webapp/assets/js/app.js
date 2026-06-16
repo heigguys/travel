@@ -8,8 +8,8 @@ const PLAN_PAGE_SIZE = 10;
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
 
-// 将用户角色整数转换为显示文字（0=管理员，1=普通用户）。
-const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通用户";
+// 将用户角色整数转换为显示文字（0=管理员，1=普通员工）。
+const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
@@ -365,7 +365,9 @@ async function initLoginPage() {
             go("plans.jsp");
         } catch (error) {
             const message = error.message || "";
-            $("loginError").textContent = message.includes("密码") ? "账号或密码错误" : "无法连接服务器，请检查后端地址或网络";
+            $("loginError").textContent = ["该用户不存在", "密码错误"].includes(message)
+                ? message
+                : "无法连接服务器，请检查后端地址或网络";
             $("loginError").classList.remove("hidden");
         }
     });

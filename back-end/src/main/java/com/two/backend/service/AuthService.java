@@ -32,8 +32,11 @@ public class AuthService {
      */
     public User login(LoginRequest request, HttpSession session) {
         User user = userMapper.findByEmployeeNo(request.employeeNo());
-        if (user == null || !user.getEmployeeNo().equals(request.employeeNo()) || !user.getPasswordMd5().equals(Md5Util.md5(request.password()))) {
-            throw new BusinessException("员工编号或密码错误");
+        if (user == null) {
+            throw new BusinessException("该用户不存在");
+        }
+        if (!user.getPasswordMd5().equals(Md5Util.md5(request.password()))) {
+            throw new BusinessException("密码错误");
         }
         session.setAttribute(SESSION_USER_ID, user.getId());
         travelPlanMapper.updateAllStatuses();
