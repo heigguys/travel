@@ -32,7 +32,7 @@ public class AuthService {
      */
     public User login(LoginRequest request, HttpSession session) {
         User user = userMapper.findByEmployeeNo(request.employeeNo());
-        if (user == null || !user.getPasswordMd5().equals(Md5Util.md5(request.password()))) {
+        if (user == null || !user.getEmployeeNo().equals(request.employeeNo()) || !user.getPasswordMd5().equals(Md5Util.md5(request.password()))) {
             throw new BusinessException("员工编号或密码错误");
         }
         session.setAttribute(SESSION_USER_ID, user.getId());
@@ -82,6 +82,9 @@ public class AuthService {
         String newPasswordMd5 = Md5Util.md5(request.newPassword());
         if (!user.getPasswordMd5().equals(oldPasswordMd5)) {
             throw new BusinessException("原密码错误");
+        }
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new BusinessException("两次输入的新密码不一致");
         }
         if (oldPasswordMd5.equals(newPasswordMd5)) {
             throw new BusinessException("新密码不能和旧密码相同");

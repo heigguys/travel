@@ -24,26 +24,36 @@
                 <div class="grid2">
                     <label>启程日 *
                         <div class="date-field" id="startDateField">
-                            <input name="startYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
+                            <span class="date-placeholder">YYYY/MM/DD</span>
+                            <input name="startYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
                             <span class="date-sep">/</span>
-                            <input name="startMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
+                            <input name="startMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
                             <span class="date-sep">/</span>
-                            <input name="startDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
+                            <input name="startDay" data-date-part="day" type="text" inputmode="numeric" maxlength="2">
+                            <button class="date-picker-btn" type="button" aria-label="选择启程日">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                            </button>
+                            <input class="date-native" type="date" tabindex="-1">
                         </div>
                     </label>
                     <label>返回日 *
                         <div class="date-field" id="endDateField">
-                            <input name="endYear" type="text" inputmode="numeric" placeholder="YYYY" maxlength="4">
+                            <span class="date-placeholder">YYYY/MM/DD</span>
+                            <input name="endYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
                             <span class="date-sep">/</span>
-                            <input name="endMonth" type="text" inputmode="numeric" placeholder="M" maxlength="2">
+                            <input name="endMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
                             <span class="date-sep">/</span>
-                            <input name="endDay" type="text" inputmode="numeric" placeholder="D" maxlength="2">
+                            <input name="endDay" data-date-part="day" type="text" inputmode="numeric" maxlength="2">
+                            <button class="date-picker-btn" type="button" aria-label="选择返回日">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                            </button>
+                            <input class="date-native" type="date" tabindex="-1">
                         </div>
                     </label>
                 </div>
                 <div class="grid2">
                     <label>价格（元）*
-                        <input name="price" type="number" min="0" step="0.01" required>
+                        <input name="price" type="number" min="0" max="99999.99" step="0.01" required>
                     </label>
                     <label>定员数（人）*
                         <input name="capacity" type="number" min="1" required>
