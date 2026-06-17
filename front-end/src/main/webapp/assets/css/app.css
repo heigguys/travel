@@ -658,26 +658,11 @@ dialog::backdrop {
     color: var(--text);
 }
 
-.upload-file-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    width: 44px;
-    height: 52px;
-    border: 1px solid var(--blue);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--blue);
-    font-size: 12px;
-    font-weight: 700;
-}
-
 .upload-file-copy {
     display: grid;
     gap: 6px;
     min-width: 0;
-    text-align: left;
+    text-align: center;
 }
 
 .upload-file-name {
