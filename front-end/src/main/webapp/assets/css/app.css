@@ -520,6 +520,10 @@ dialog::backdrop {
     justify-items: center;
 }
 
+.plan-apply-page {
+    width: min(1060px, 100%);
+}
+
 /* 表单卡片容器，白色背景、圆角边框、水平居中对齐。 */
 .form-card {
     width: 100%;
@@ -533,14 +537,6 @@ dialog::backdrop {
 .form-page .topbar h1,
 .form-page .topbar p {
     margin: 0;
-}
-
-.wide-apply-form textarea {
-    min-height: 140px;
-}
-
-.wide-apply-form > button {
-    justify-self: start;
 }
 
 .visually-hidden {
@@ -561,6 +557,11 @@ dialog::backdrop {
     margin: 0 auto;
     padding: 24px;
     box-shadow: 0 4px 14px rgba(31, 41, 55, .06);
+}
+
+.plan-apply-card {
+    width: min(1000px, 100%);
+    max-width: 1000px;
 }
 
 .plan-edit-form {
@@ -621,8 +622,68 @@ dialog::backdrop {
 }
 
 .plan-edit-form input:not([data-date-part]):not(.date-native),
+.plan-edit-form textarea,
 .plan-edit-form .date-field {
     min-height: 38px;
+}
+
+.plan-apply-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.apply-plan-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 1.45fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.apply-summary-item {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+}
+
+.apply-summary-item span {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.apply-summary-item strong {
+    color: var(--text);
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.plan-apply-companions {
+    display: grid;
+    gap: 12px;
+}
+
+.plan-apply-companions > button {
+    justify-self: start;
+}
+
+.person-divider {
+    border-top: 1px solid var(--line);
+}
+
+.plan-apply-companions .companion-row {
+    grid-template-columns: 130px 90px minmax(260px, 1fr) 100px 64px;
+}
+
+.plan-apply-companions .companion-row button {
+    min-width: 58px;
+    white-space: nowrap;
+}
+
+.plan-apply-companions .companion-row input[readonly] {
+    background: var(--bg);
+    color: var(--text);
 }
 
 .field-only {
@@ -780,6 +841,11 @@ dialog::backdrop {
     }
 
     .plan-control-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .apply-plan-summary,
+    .plan-apply-companions .companion-row {
         grid-template-columns: 1fr;
     }
 

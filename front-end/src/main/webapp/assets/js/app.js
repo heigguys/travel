@@ -167,17 +167,25 @@ async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsDialog").showModal();
 }
 
-// 动态新增一行随行人员输入项，并绑定姓名和身份证号的离焦校验。
-function addCompanionRow(row = {}, containerId = "companionsRows") {
+// 动态新增一行人员输入项，并绑定姓名和身份证号的离焦校验。
+function addCompanionRow(row = {}, containerId = "companionsRows", options = {}) {
     const div = document.createElement("div");
     div.className = "companion-row";
+    const nameValue = options.lockedName ? (row.name || currentUser?.name || "") : (row.name || "");
+    const genderPlaceholder = options.requireGenderChoice
+        ? `<option value="" ${row.gender ? "" : "selected"} disabled>性别</option>`
+        : "";
+    const deleteControl = options.hideDelete
+        ? `<span class="companion-action-placeholder" aria-hidden="true"></span>`
+        : `<button type="button">删除</button>`;
     div.innerHTML = `
-        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required maxlength="20">
-        <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
+        <input placeholder="姓名" value="${escapeHtml(nameValue)}" required maxlength="20" ${options.lockedName ? "readonly" : ""}>
+        <select required>${genderPlaceholder}<option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
         <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
         <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>
-        <button type="button">删除</button>`;
-    div.querySelector("button").onclick = () => div.remove();
+        ${deleteControl}`;
+    const deleteButton = div.querySelector("button");
+    if (deleteButton) deleteButton.onclick = () => div.remove();
 
     const inputs = div.querySelectorAll("input");
     const nameInput = inputs[0];
@@ -724,7 +732,19 @@ async function initPlanApplyPage() {
     // 在标题下展示计划基本信息。
     try {
         const plan = await api(`/plans/${planId}`);
-        $("applyPlanInfo").textContent = `${plan.destination}　${formatDateRange(plan.startDate, plan.endDate)}　${formatPrice(plan.price)}`;
+        $("applyPlanInfo").innerHTML = `
+            <div class="apply-summary-item">
+                <span>目的地</span>
+                <strong>${escapeHtml(plan.destination || "-")}</strong>
+            </div>
+            <div class="apply-summary-item">
+                <span>行程时间</span>
+                <strong>${escapeHtml(formatDateRange(plan.startDate, plan.endDate))}</strong>
+            </div>
+            <div class="apply-summary-item">
+                <span>价格</span>
+                <strong>${escapeHtml(formatPrice(plan.price))}</strong>
+            </div>`;
     } catch { /* 展示失败不阻断申请流程 */ }
 
     // 如果已有有效申请则预填随行人员，否则新建一行空行。
@@ -736,24 +756,49 @@ async function initPlanApplyPage() {
             form.optionText.value = active.optionText || "";
             const rows = await api(`/applications/${active.id}/companions`);
             const fallbackCount = Math.max(Number(active.applicantCount) || 1, 1);
-            const source = rows.length ? rows : Array.from({length: fallbackCount}, () => ({}));
-            source.forEach((row) => addCompanionRow(row, "planApplyCompanionsRows"));
+            const source = rows.length ? rows : Array.from({length: fallbackCount}, (_, index) => index === 0 ? {name: currentUser.name || ""} : ({}));
+            const [selfRow = {name: currentUser.name || ""}, ...extraRows] = source;
+            addCompanionRow(selfRow, "planApplyCompanionsRows", {
+                lockedName: true,
+                hideDelete: true,
+                requireGenderChoice: true
+            });
+            extraRows.forEach((row) => addCompanionRow(row, "planApplyExtraRows"));
         } else {
-            addCompanionRow({}, "planApplyCompanionsRows");
+            addCompanionRow({name: currentUser.name || ""}, "planApplyCompanionsRows", {
+                lockedName: true,
+                hideDelete: true,
+                requireGenderChoice: true
+            });
         }
     } catch {
-        addCompanionRow({}, "planApplyCompanionsRows");
+        addCompanionRow({name: currentUser.name || ""}, "planApplyCompanionsRows", {
+            lockedName: true,
+            hideDelete: true,
+            requireGenderChoice: true
+        });
     }
 
     $("planApplyBackBtn").onclick = () => go("plans.jsp");
     $("planApplyCancelBtn").onclick = () => go("plans.jsp");
-    $("addPlanApplyCompanionBtn").onclick = () => addCompanionRow({}, "planApplyCompanionsRows");
+    $("addPlanApplyCompanionBtn").onclick = () => addCompanionRow({}, "planApplyExtraRows");
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const errorEl = $("planApplyError");
         errorEl.classList.add("hidden");
-        const rows = collectCompanionRows("planApplyCompanionsRows");
+        const missingGender = Array.from($("planApplyForm").querySelectorAll(".companion-row"))
+            .map((row) => row.querySelector("select"))
+            .find((select) => select && !select.value);
+        if (missingGender) {
+            missingGender.reportValidity();
+            toast("请选择性别");
+            return;
+        }
+        const rows = [
+            ...collectCompanionRows("planApplyCompanionsRows"),
+            ...collectCompanionRows("planApplyExtraRows")
+        ];
         if (!rows.length) {
             toast("请至少添加一名随行人员");
             return;
