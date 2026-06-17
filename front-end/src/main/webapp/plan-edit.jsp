@@ -84,8 +84,12 @@
                         <strong>附件</strong>
                         <span>上传计划相关文档</span>
                     </div>
-                    <label class="upload-dropzone" for="planFileInput">
-                        <span id="planFileText">点击上传PDF文件</span>
+                    <label id="planFileDropzone" class="upload-dropzone" for="planFileInput">
+                        <span class="upload-file-icon" aria-hidden="true">PDF</span>
+                        <span class="upload-file-copy">
+                            <strong id="planFileText" class="upload-file-name">点击上传PDF文件</strong>
+                            <span id="planFileHint" class="upload-file-hint">仅支持 PDF</span>
+                        </span>
                         <input id="planFileInput" name="file" type="file" accept="application/pdf">
                     </label>
                 </div>

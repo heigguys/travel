@@ -589,6 +589,14 @@ async function initPlanEditPage() {
     const form = $("planEditForm");
     const fileInput = $("planFileInput");
     const fileText = $("planFileText");
+    const fileHint = $("planFileHint");
+    const fileDropzone = $("planFileDropzone");
+    const updateFileDisplay = (fileName) => {
+        const hasFile = Boolean(fileName);
+        if (fileText) fileText.textContent = hasFile ? fileName : "点击上传PDF文件";
+        if (fileHint) fileHint.textContent = hasFile ? "已选择 PDF，点击可重新选择" : "仅支持 PDF";
+        if (fileDropzone) fileDropzone.classList.toggle("has-file", hasFile);
+    };
     $("planEditTitle").textContent = id ? "旅游计划修改" : "旅游计划添加";
 
     if (id) {
@@ -608,15 +616,15 @@ async function initPlanEditPage() {
             form.price.value = plan.price || "";
             form.capacity.value = plan.capacity || "";
             form.published.value = Boolean(plan.published) ? "true" : "false";
-            if (fileText && plan.fileName) fileText.textContent = plan.fileName;
+            updateFileDisplay(plan.fileName);
         } catch (error) {
             toast(error.message || "加载计划失败");
         }
     }
 
-    if (fileInput && fileText) {
+    if (fileInput) {
         fileInput.addEventListener("change", () => {
-            fileText.textContent = fileInput.files.length ? fileInput.files[0].name : "点击上传PDF文件";
+            updateFileDisplay(fileInput.files.length ? fileInput.files[0].name : "");
         });
     }
 

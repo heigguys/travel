@@ -514,9 +514,10 @@ dialog::backdrop {
 .form-page {
     display: grid;
     gap: 16px;
-    width: min(1180px, 100%);
+    width: min(860px, 100%);
     margin: 0 auto;
     align-self: start;
+    justify-items: center;
 }
 
 /* 表单卡片容器，白色背景、圆角边框、水平居中对齐。 */
@@ -555,8 +556,10 @@ dialog::backdrop {
 }
 
 .plan-edit-card {
+    width: min(800px, 100%);
     max-width: 800px;
-    padding: 18px;
+    margin: 0 auto;
+    padding: 24px;
     box-shadow: 0 4px 14px rgba(31, 41, 55, .06);
 }
 
@@ -571,9 +574,9 @@ dialog::backdrop {
 
 .plan-edit-title {
     margin: 0;
-    padding: 0 0 10px;
-    color: #0b3b95;
-    font-size: 16px;
+    padding: 0 0 12px;
+    color: var(--blue);
+    font-size: 22px;
     font-weight: 700;
     border-bottom: 2px solid var(--blue);
 }
@@ -592,13 +595,13 @@ dialog::backdrop {
 }
 
 .plan-row-label strong {
-    color: #111827;
+    color: var(--text);
     font-size: 14px;
 }
 
 .plan-row-label span:not(.required) {
-    color: #5d708a;
-    font-size: 12px;
+    color: var(--muted);
+    font-size: 14px;
     font-weight: 400;
 }
 
@@ -613,8 +616,8 @@ dialog::backdrop {
 }
 
 .plan-edit-form label {
-    color: #344765;
-    font-size: 12px;
+    color: var(--text);
+    font-size: 14px;
 }
 
 .plan-edit-form input:not([data-date-part]):not(.date-native),
@@ -628,23 +631,75 @@ dialog::backdrop {
 
 .upload-dropzone {
     min-height: 100px;
-    border: 2px dashed #bfd0e6;
+    border: 2px dashed #c7d7ee;
     border-radius: 8px;
-    background: #fbfdff;
-    color: #45617f;
+    background: #fff;
+    color: var(--muted);
     font-size: 14px;
     font-weight: 400;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 14px;
     text-align: center;
     cursor: pointer;
     padding: 18px;
+    min-width: 0;
 }
 
 .upload-dropzone:hover {
     border-color: var(--blue);
-    background: #f5f9ff;
+    background: #f6f8fb;
+}
+
+.upload-dropzone.has-file {
+    border-color: var(--blue);
+    background: #eef5ff;
+    color: var(--text);
+}
+
+.upload-file-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 52px;
+    border: 1px solid var(--blue);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.upload-file-copy {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    text-align: left;
+}
+
+.upload-file-name {
+    display: block;
+    max-width: min(420px, 62vw);
+    overflow: hidden;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upload-dropzone.has-file .upload-file-name {
+    color: var(--blue);
+    font-size: 18px;
+}
+
+.upload-file-hint {
+    color: var(--muted);
+    font-size: 14px;
 }
 
 .upload-dropzone input {
@@ -658,14 +713,14 @@ dialog::backdrop {
     min-height: 46px;
     padding: 10px 18px;
     border-radius: 6px;
-    background: #f7f9fc;
+    background: var(--bg);
 }
 
 .radio-option {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #1f2937;
+    color: var(--text);
     font-size: 14px;
     font-weight: 600;
 }
@@ -681,9 +736,9 @@ dialog::backdrop {
     margin: -10px 0 0;
     padding: 8px 10px;
     border-radius: 4px;
-    background: #eaf3ff;
-    color: #55708d;
-    font-size: 12px;
+    background: #eef5ff;
+    color: var(--muted);
+    font-size: 14px;
 }
 
 .plan-edit-form > .form-error,
@@ -698,8 +753,8 @@ dialog::backdrop {
     gap: 16px;
     padding-top: 16px;
     border-top: 1px solid var(--line);
-    color: #5d708a;
-    font-size: 12px;
+    color: var(--muted);
+    font-size: 14px;
 }
 
 .plan-form-footer .dialog-actions {
@@ -727,7 +782,7 @@ dialog::backdrop {
     }
 
     .plan-edit-card {
-        padding: 16px;
+        padding: 18px;
     }
 
     .plan-form-row {
