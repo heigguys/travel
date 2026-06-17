@@ -59,9 +59,14 @@
                         <input name="capacity" type="number" min="1" required>
                     </label>
                 </div>
-                <label>PDF 附件
-                    <input name="file" type="file" accept="application/pdf">
-                </label>
+                <div class="file-field">
+                    <span class="file-label">PDF 附件</span>
+                    <input id="planFileInput" class="visually-hidden-file" name="file" type="file" accept="application/pdf">
+                    <div class="file-control">
+                        <button id="planFileBtn" type="button">选择PDF</button>
+                        <span id="planFileName" class="file-name">未选择文件</span>
+                    </div>
+                </div>
                 <label class="inline">
                     <input name="published" type="checkbox"> 公开
                 </label>

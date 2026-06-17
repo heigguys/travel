@@ -28,6 +28,25 @@ const formatDate = (date) => String(date || "").replaceAll("-", "/");
 
 const formatDateRange = (startDate, endDate) => `${formatDate(startDate)} - ${formatDate(endDate)}`;
 
+// 校验分段日期输入，并给出具体字段的错误原因。
+function validateDateParts(year, month, day, label) {
+    if (!year && !month && !day) return `${label}不能为空`;
+    if (!year || !month || !day) return `请填写完整的${label}`;
+    if (year.length !== 4) return `${label}年份必须为4位`;
+
+    const y = Number(year);
+    const m = Number(month);
+    const d = Number(day);
+    if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) {
+        return `${label}只能输入数字`;
+    }
+    if (m < 1 || m > 12) return `${label}月份必须在1到12之间`;
+
+    const maxDay = new Date(y, m, 0).getDate();
+    if (d < 1 || d > maxDay) return `${label}日期必须在1到${maxDay}之间`;
+    return "";
+}
+
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
     const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
@@ -43,6 +62,10 @@ const actionIcons = {
 
 function actionButton(action, id, label, extraClass = "") {
     return `<button class="icon-btn ${extraClass}" data-action="${action}" data-id="${id}" title="${label}" aria-label="${label}" type="button">${actionIcons[action]}</button>`;
+}
+
+function disabledActionButton(action, label) {
+    return `<button class="icon-btn disabled" title="${label}" aria-label="${label}" type="button" disabled>${actionIcons[action]}</button>`;
 }
 
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
@@ -109,8 +132,11 @@ function renderPlans() {
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
             : plan.planNo;
         const adminCells = admin ? `<td>${plan.published ? "已公开" : "未公开"}</td>` : "";
+        const editAction = plan.published
+            ? disabledActionButton("edit", "已公开的计划不可编辑")
+            : actionButton("edit", plan.id, "编辑");
         const adminActions = admin
-            ? `${actionButton("edit", plan.id, "编辑")}${actionButton("delete", plan.id, "删除", "danger")}`
+            ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
         return `<tr>
             <td>${planStatusLabel(plan.status)}</td>
@@ -257,6 +283,10 @@ async function sendConsult(event) {
 async function deletePlan(planId) {
     const applicants = await api(`/plans/${planId}/delete-preview`);
     $("deleteForm").planId.value = planId;
+    const hasApplicants = applicants.length > 0;
+    $("deleteMessage").textContent = hasApplicants
+        ? "已经有员工申请本计划。如需删除本计划，请先发送邮件通知员工。"
+        : "确认删除该旅行计划？删除后将无法恢复。";
     $("deleteApplicants").innerHTML = applicants.length
         ? applicants.map((a) => `
             <div class="message">
@@ -265,6 +295,8 @@ async function deletePlan(planId) {
             </div>
         `).join("")
         : "<p class='muted'>暂无员工申请</p>";
+    $("mailNotifyBtn").classList.toggle("hidden", !hasApplicants);
+    $("confirmDeleteBtn").classList.toggle("hidden", hasApplicants);
     $("deleteDialog").showModal();
 }
 
@@ -276,6 +308,25 @@ async function confirmDeletePlan(event) {
     $("deleteDialog").close();
     toast("旅行计划已删除");
     await loadPlans();
+}
+
+// 向已申请员工发送取消通知邮件后删除旅行计划。
+async function notifyApplicantsAndDelete() {
+    const planId = $("deleteForm").planId.value;
+    const button = $("mailNotifyBtn");
+    button.disabled = true;
+    button.textContent = "发送中...";
+    try {
+        await api(`/plans/${planId}/notify-cancel-and-delete`, {method: "POST"});
+        $("deleteDialog").close();
+        toast("邮件通知已发送，旅行计划已删除");
+        await loadPlans();
+    } catch (error) {
+        toast(error.message || "邮件通知发送失败");
+    } finally {
+        button.disabled = false;
+        button.textContent = "邮件通知";
+    }
 }
 
 // 打开"我的申请"弹窗，展示当前用户申请及可执行操作。
@@ -391,32 +442,11 @@ function setupDateAutoJump(fieldId) {
     const syncHasValue = () => {
         field.classList.toggle("has-value", parts.some((input) => input.value));
     };
-    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-    const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
     const normalizeNumber = (input) => {
         input.value = input.value.replace(/\D/g, "");
         syncHasValue();
     };
-    const normalizeDateParts = () => {
-        const year = Number(y.value);
-        let month = Number(m.value);
-        let day = Number(d.value);
-
-        if (m.value) {
-            month = clamp(Number.isFinite(month) ? month : 1, 1, 12);
-            m.value = String(month);
-        }
-
-        if (d.value) {
-            const effectiveYear = y.value.length === 4 && Number.isFinite(year) ? year : 2000;
-            const effectiveMonth = m.value ? month : 1;
-            const maxDay = daysInMonth(effectiveYear, effectiveMonth);
-            day = clamp(Number.isFinite(day) ? day : 1, 1, maxDay);
-            d.value = String(day);
-        }
-
-        syncHasValue();
-    };
+    const normalizeDateParts = syncHasValue;
     const toNativeDateValue = () => {
         if (!y.value || !m.value || !d.value) return "";
         return `${y.value.padStart(4, "0")}-${m.value.padStart(2, "0")}-${d.value.padStart(2, "0")}`;
@@ -511,6 +541,7 @@ function bindPlansPageEvents() {
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);
+    $("mailNotifyBtn").onclick = notifyApplicantsAndDelete;
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
@@ -590,6 +621,11 @@ async function initPlanEditPage() {
     if (id) {
         try {
             const plan = await api(`/plans/${id}`);
+            if (plan.published) {
+                toast("已公开的旅行计划不可编辑");
+                setTimeout(() => go("plans.jsp"), 900);
+                return true;
+            }
             form.id.value = plan.id;
             form.destination.value = plan.destination || "";
             // 将 YYYY-MM-DD 拆分回三个输入格。
@@ -604,6 +640,9 @@ async function initPlanEditPage() {
             form.price.value = plan.price || "";
             form.capacity.value = plan.capacity || "";
             form.published.checked = Boolean(plan.published);
+            if (plan.fileName) {
+                $("planFileName").textContent = plan.fileName;
+            }
         } catch (error) {
             toast(error.message || "加载计划失败");
         }
@@ -613,56 +652,139 @@ async function initPlanEditPage() {
     setupDateAutoJump("startDateField");
     setupDateAutoJump("endDateField");
 
-    // 目的地离焦校验。
+    const errorEl = $("planEditError");
     const destInput = form.destination;
-    destInput.addEventListener("blur", () => {
-        destInput.setCustomValidity(destInput.value.length > 10 ? "目的地不能超过10个字符" : "");
-        if (destInput.value.length > 10) destInput.reportValidity();
-    });
-    destInput.addEventListener("input", () => destInput.setCustomValidity(""));
+    const startDateInputs = [form.startYear, form.startMonth, form.startDay];
+    const endDateInputs = [form.endYear, form.endMonth, form.endDay];
 
-    form.price.addEventListener("invalid", () => {
-        if (form.price.validity.rangeOverflow) {
-            form.price.setCustomValidity("价格不能超过99,999.99元");
+    function showPlanEditError(input, message) {
+        input.setCustomValidity(message);
+        if (message) {
+            errorEl.textContent = message;
+            errorEl.classList.remove("hidden");
+        } else {
+            errorEl.classList.add("hidden");
         }
+        return !message;
+    }
+
+    function clearPlanEditError(input) {
+        input.setCustomValidity("");
+        errorEl.classList.add("hidden");
+    }
+
+    function validateDestination(show = true) {
+        const value = destInput.value.trim();
+        let message = "";
+        if (!value) message = "目的地不能为空";
+        else if (value.length > 10) message = "目的地不能超过10个字符";
+        if (show) return showPlanEditError(destInput, message);
+        destInput.setCustomValidity(message);
+        return !message;
+    }
+
+    function validatePrice(show = true) {
+        const value = form.price.value.trim();
+        const price = Number(value);
+        let message = "";
+        if (!value) message = "价格不能为空";
+        else if (!Number.isFinite(price)) message = "价格必须为数字";
+        else if (price < 0) message = "价格不能小于0元";
+        else if (price > MAX_PLAN_PRICE) message = "价格不能超过99,999.99元";
+        if (show) return showPlanEditError(form.price, message);
+        form.price.setCustomValidity(message);
+        return !message;
+    }
+
+    function validateCapacity(show = true) {
+        const value = form.capacity.value.trim();
+        const capacity = Number(value);
+        let message = "";
+        if (!value) message = "定员数不能为空";
+        else if (!Number.isInteger(capacity)) message = "定员数必须为整数";
+        else if (capacity < 1) message = "定员数必须大于等于1";
+        if (show) return showPlanEditError(form.capacity, message);
+        form.capacity.setCustomValidity(message);
+        return !message;
+    }
+
+    function validateFile(show = true) {
+        const file = form.file.files[0];
+        const message = file && !file.name.toLowerCase().endsWith(".pdf") ? "附件只能上传 PDF 文件" : "";
+        if (show) return showPlanEditError(form.file, message);
+        form.file.setCustomValidity(message);
+        return !message;
+    }
+
+    function dateValue(inputs) {
+        return `${inputs[0].value.padStart(4, "0")}-${inputs[1].value.padStart(2, "0")}-${inputs[2].value.padStart(2, "0")}`;
+    }
+
+    function validateDateGroup(inputs, label, show = true) {
+        const message = validateDateParts(inputs[0].value, inputs[1].value, inputs[2].value, label);
+        if (show) return showPlanEditError(inputs[2], message);
+        inputs[2].setCustomValidity(message);
+        return !message;
+    }
+
+    function validateEndAfterStart(show = true, errorInput = form.endDay) {
+        if (!validateDateGroup(startDateInputs, "启程日", false) || !validateDateGroup(endDateInputs, "返回日", false)) {
+            return true;
+        }
+        const message = new Date(dateValue(endDateInputs)) < new Date(dateValue(startDateInputs)) ? "返回日不能早于启程日" : "";
+        form.startDay.setCustomValidity("");
+        form.endDay.setCustomValidity("");
+        if (show) return showPlanEditError(errorInput, message);
+        errorInput.setCustomValidity(message);
+        return !message;
+    }
+
+    destInput.addEventListener("blur", () => validateDestination());
+    destInput.addEventListener("input", () => clearPlanEditError(destInput));
+    form.price.addEventListener("blur", () => validatePrice());
+    form.price.addEventListener("input", () => clearPlanEditError(form.price));
+    form.capacity.addEventListener("blur", () => validateCapacity());
+    form.capacity.addEventListener("input", () => clearPlanEditError(form.capacity));
+    $("planFileBtn").addEventListener("click", () => form.file.click());
+    form.file.addEventListener("change", () => {
+        $("planFileName").textContent = form.file.files[0]?.name || "未选择文件";
+        validateFile();
     });
-    form.price.addEventListener("input", () => form.price.setCustomValidity(""));
+    startDateInputs.forEach((input) => {
+        input.addEventListener("blur", () => {
+            if (validateDateGroup(startDateInputs, "启程日")) {
+                validateEndAfterStart(true, form.startDay);
+            }
+        });
+        input.addEventListener("input", () => clearPlanEditError(form.startDay));
+    });
+    endDateInputs.forEach((input) => {
+        input.addEventListener("blur", () => validateDateGroup(endDateInputs, "返回日") && validateEndAfterStart(true, form.endDay));
+        input.addEventListener("input", () => clearPlanEditError(form.endDay));
+    });
+    const startNativeDate = $("startDateField").querySelector(".date-native");
+    const endNativeDate = $("endDateField").querySelector(".date-native");
+    startNativeDate.addEventListener("change", () => validateDateGroup(startDateInputs, "启程日") && validateEndAfterStart(true, form.startDay));
+    endNativeDate.addEventListener("change", () => validateDateGroup(endDateInputs, "返回日") && validateEndAfterStart(true, form.endDay));
 
     $("planEditBackBtn").onclick = () => go("plans.jsp");
     $("planEditCancelBtn").onclick = () => go("plans.jsp");
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const errorEl = $("planEditError");
         errorEl.classList.add("hidden");
 
-        if (destInput.value.length > 10) {
-            destInput.setCustomValidity("目的地不能超过10个字符");
-            destInput.reportValidity();
-            return;
-        }
-        destInput.setCustomValidity("");
+        if (!validateDestination()) return;
+        if (!validateDateGroup(startDateInputs, "启程日")) return;
+        if (!validateDateGroup(endDateInputs, "返回日")) return;
+        if (!validateEndAfterStart(true, form.endDay)) return;
+        if (!validatePrice()) return;
+        if (!validateCapacity()) return;
+        if (!validateFile()) return;
 
-        const price = Number(form.price.value);
-        if (Number.isFinite(price) && price > MAX_PLAN_PRICE) {
-            form.price.setCustomValidity("价格不能超过99,999.99元");
-            form.price.reportValidity();
-            errorEl.textContent = "价格不能超过99,999.99元";
-            errorEl.classList.remove("hidden");
-            return;
-        }
-        form.price.setCustomValidity("");
+        const startDate = dateValue(startDateInputs);
+        const endDate = dateValue(endDateInputs);
 
-        const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
-        const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
-        if (!sy || !sm || !sd || !ey || !em || !ed) {
-            errorEl.textContent = "请填写完整的启程日和返回日";
-            errorEl.classList.remove("hidden");
-            return;
-        }
-
-        const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
-        const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
         const data = new FormData(form);
         data.set("startDate", startDate);
         data.set("endDate", endDate);

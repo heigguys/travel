@@ -128,6 +128,21 @@ public class TravelPlanController {
         return ApiResponse.message("旅行计划已删除");
     }
 
+    @PostMapping("/{id}/notify-cancel-and-delete")
+    /**
+     * 管理员删除已有申请的旅行计划前，先向申请员工发送取消通知邮件。
+     *
+     * @param id 旅行计划 ID
+     * @param session 当前 HTTP 会话
+     * @return 通知并删除成功消息
+     */
+    public ApiResponse<Void> notifyCancelAndDelete(@PathVariable Long id, HttpSession session) {
+        User user = authService.currentUser(session);
+        authService.requireAdmin(user);
+        travelPlanService.notifyCancelAndDelete(id);
+        return ApiResponse.message("邮件通知已发送，旅行计划已删除");
+    }
+
     @GetMapping("/{id}/file")
     /**
      * 读取旅行计划的 PDF 附件并以内联方式返回。
