@@ -527,7 +527,6 @@ function bindPlansPageEvents() {
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
     const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
-    const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
 
     // 列头点击排序：升序 → 降序 → 取消，切换后重新请求后端。
     $("planHeader").addEventListener("click", async (e) => {
