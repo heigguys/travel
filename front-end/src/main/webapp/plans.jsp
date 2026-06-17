@@ -40,7 +40,7 @@
                 <option value="price">按价格排序</option>
                 <option value="capacity">按定员排序</option>
             </select>
-            <button id="searchBtn">搜索</button>
+            <button id="searchBtn" class="primary">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>
         </section>
 
