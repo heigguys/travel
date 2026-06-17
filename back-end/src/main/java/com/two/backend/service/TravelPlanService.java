@@ -21,7 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
  * 旅行计划服务，封装计划查询、可见性校验、维护和附件读取。
  */
 public class TravelPlanService {
-    private static final BigDecimal MAX_PLAN_PRICE = new BigDecimal("99999.99");
+    private static final BigDecimal MIN_PLAN_PRICE = BigDecimal.ZERO;
+    private static final BigDecimal MAX_PLAN_PRICE = new BigDecimal("10000");
+    private static final int MIN_CAPACITY = 10;
+    private static final int MAX_CAPACITY = 50;
 
     private final TravelPlanMapper travelPlanMapper;
     private final ApplicationMapper applicationMapper;
@@ -52,7 +55,7 @@ public class TravelPlanService {
     private int computeInitialStatus(LocalDate startDate, LocalDate endDate) {
         LocalDate today = LocalDate.now();
         if (endDate.isBefore(today))       return TravelPlan.STATUS_DISBANDED;
-        if (!startDate.isAfter(today))     return TravelPlan.STATUS_IN_PROGRESS;
+        if (!startDate.isAfter(today))     return TravelPlan.STATUS_DISBANDED;
         return TravelPlan.STATUS_AVAILABLE;
     }
 
@@ -167,14 +170,23 @@ public class TravelPlanService {
     private void validatePlan(PlanRequest request) {
         if (request.destination() == null || request.destination().isBlank()
                 || request.startDate() == null || request.endDate() == null
-                || request.price() == null || request.capacity() == null || request.capacity() < 1) {
+                || request.price() == null || request.capacity() == null) {
             throw new BusinessException("请填写所有必填项");
         }
         if (request.destination().length() > 10) {
             throw new BusinessException("目的地不能超过10个字符");
         }
+        if (request.price().compareTo(MIN_PLAN_PRICE) < 0) {
+            throw new BusinessException("价格不能为负数");
+        }
         if (request.price().compareTo(MAX_PLAN_PRICE) > 0) {
-            throw new BusinessException("价格不能超过99,999.99元");
+            throw new BusinessException("单人价格上限为 10000 元");
+        }
+        if (request.capacity() < MIN_CAPACITY) {
+            throw new BusinessException("定员数不能少于 10 人");
+        }
+        if (request.capacity() > MAX_CAPACITY) {
+            throw new BusinessException("定员数不能超过 50 人");
         }
         if (request.endDate().isBefore(request.startDate())) {
             throw new BusinessException("返回日不能早于启程日");

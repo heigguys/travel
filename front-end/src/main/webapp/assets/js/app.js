@@ -21,7 +21,7 @@ const formatPrice = (price) => {
     return `¥${value.toLocaleString("en-US", {maximumFractionDigits: 0})}`;
 };
 
-const MAX_PLAN_PRICE = 99999.99;
+const MAX_PLAN_PRICE = 10000;
 
 // 将后端日期 YYYY-MM-DD 统一显示为 YYYY/MM/DD。
 const formatDate = (date) => String(date || "").replaceAll("-", "/");
@@ -648,12 +648,29 @@ async function initPlanEditPage() {
     });
     destInput.addEventListener("input", () => destInput.setCustomValidity(""));
 
-    form.price.addEventListener("invalid", () => {
-        if (form.price.validity.rangeOverflow) {
-            form.price.setCustomValidity("价格不能超过99,999.99元");
+    // 价格离焦校验：[0, 10000]。
+    form.price.addEventListener("blur", () => {
+        const v = Number(form.price.value);
+        if (form.price.value !== "" && (v < 0 || v > MAX_PLAN_PRICE)) {
+            form.price.setCustomValidity(v < 0 ? "价格不能为负数" : "单人价格上限为10000元");
+            form.price.reportValidity();
+        } else {
+            form.price.setCustomValidity("");
         }
     });
     form.price.addEventListener("input", () => form.price.setCustomValidity(""));
+
+    // 定员数离焦校验：[10, 50]。
+    form.capacity.addEventListener("blur", () => {
+        const v = Number(form.capacity.value);
+        if (form.capacity.value !== "" && (v < 10 || v > 50)) {
+            form.capacity.setCustomValidity(v < 10 ? "定员数不能少于10人" : "人数上限为50人");
+            form.capacity.reportValidity();
+        } else {
+            form.capacity.setCustomValidity("");
+        }
+    });
+    form.capacity.addEventListener("input", () => form.capacity.setCustomValidity(""));
 
     $("planEditBackBtn").onclick = () => go("plans.jsp");
     $("planEditCancelBtn").onclick = () => go("plans.jsp");
@@ -671,11 +688,9 @@ async function initPlanEditPage() {
         destInput.setCustomValidity("");
 
         const price = Number(form.price.value);
-        if (Number.isFinite(price) && price > MAX_PLAN_PRICE) {
-            form.price.setCustomValidity("价格不能超过99,999.99元");
+        if (Number.isFinite(price) && (price < 0 || price > MAX_PLAN_PRICE)) {
+            form.price.setCustomValidity(price < 0 ? "价格不能为负数" : "单人价格上限为10000元");
             form.price.reportValidity();
-            errorEl.textContent = "价格不能超过99,999.99元";
-            errorEl.classList.remove("hidden");
             return;
         }
         form.price.setCustomValidity("");
