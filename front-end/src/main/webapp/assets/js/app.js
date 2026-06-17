@@ -2,6 +2,8 @@ const API_BASE = window.API_BASE || `${window.location.protocol}//${window.locat
 // 当前登录用户和计划列表缓存，供计划页渲染与事件处理复用。
 let currentUser = null;
 let plans = [];
+// 当前排序状态：col 为后端字段名，dir 为 asc/desc，null 表示未排序。
+let sortState = { col: null, dir: null };
 let currentPlanPage = 1;
 const PLAN_PAGE_SIZE = 10;
 
@@ -87,11 +89,25 @@ async function loadPlans() {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
-    if ($("sortSelect").value) params.set("sort", $("sortSelect").value);
+    if (sortState.col) {
+        params.set("sort", sortState.col);
+        params.set("sortDir", sortState.dir);
+    }
     plans = await api("/plans?" + params.toString());
     currentPlanPage = 1;
     renderPlans();
 }
+
+// 各列标题对应的后端排序字段，无排序的列不在此映射中。
+const SORT_COLS = {
+    "旅游计划编号": "planNo",
+    "目的地": "destination",
+    "往返日期": "startDate",
+    "价格": "price",
+    "定员数": "capacity",
+    "申请总人数": "applicantTotal",
+    "我的申请人数": "myApplicantCount"
+};
 
 // 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
@@ -99,7 +115,13 @@ function renderPlans() {
     const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
     if (admin) headers.push("公开状态");
     headers.push("操作");
-    $("planHeader").innerHTML = headers.map((h) => `<th>${h}</th>`).join("");
+    const arrows = `<div class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></div>`;
+    $("planHeader").innerHTML = headers.map((h) => {
+        const key = SORT_COLS[h];
+        if (!key) return `<th>${h}</th>`;
+        const active = sortState.col === key ? (sortState.dir === "asc" ? " asc" : " desc") : "";
+        return `<th class="sortable${active}" data-sort="${key}"><div class="th-inner">${h}${arrows}</div></th>`;
+    }).join("");
     const totalPages = Math.max(Math.ceil(plans.length / PLAN_PAGE_SIZE), 1);
     currentPlanPage = Math.min(Math.max(currentPlanPage, 1), totalPages);
     const pagePlans = plans.slice((currentPlanPage - 1) * PLAN_PAGE_SIZE, currentPlanPage * PLAN_PAGE_SIZE);
@@ -193,22 +215,17 @@ function addCompanionRow(row = {}, containerId = "companionsRows", options = {})
 
     // 姓名：不能包含数字，离焦时校验，重新输入时清除提示。
     nameInput.addEventListener("blur", () => {
-        if (/\d/.test(nameInput.value)) {
-            nameInput.setCustomValidity("姓名不能包含数字");
-        } else {
-            nameInput.setCustomValidity("");
-        }
+        nameInput.setCustomValidity(/\d/.test(nameInput.value) ? "姓名不能包含数字" : "");
         nameInput.reportValidity();
     });
     nameInput.addEventListener("input", () => nameInput.setCustomValidity(""));
 
-    // 身份证号：18位，前17位数字，末位数字或X，离焦时校验。
+    // 身份证号：18位，末位可为数字或X。
     idCardInput.addEventListener("blur", () => {
-        if (idCardInput.value && !/^\d{17}[\dX]$/i.test(idCardInput.value.trim())) {
-            idCardInput.setCustomValidity("身份证号须为18位（末位可为数字或X）");
-        } else {
-            idCardInput.setCustomValidity("");
-        }
+        idCardInput.setCustomValidity(
+            idCardInput.value && !/^\d{17}[\dXx]$/.test(idCardInput.value.trim())
+                ? "身份证号须为18位（末位可为数字或X）" : ""
+        );
         idCardInput.reportValidity();
     });
     idCardInput.addEventListener("input", () => idCardInput.setCustomValidity(""));
@@ -373,9 +390,7 @@ async function initLoginPage() {
             go("plans.jsp");
         } catch (error) {
             const message = error.message || "";
-            $("loginError").textContent = ["该用户不存在", "密码错误"].includes(message)
-                ? message
-                : "无法连接服务器，请检查后端地址或网络";
+            $("loginError").textContent = message.includes("密码") ? "账号或密码错误" : "无法连接服务器，请检查后端地址或网络";
             $("loginError").classList.remove("hidden");
         }
     });
@@ -512,6 +527,22 @@ function bindPlansPageEvents() {
     const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
     const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
     const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
+    const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
+
+    // 列头点击排序：升序 → 降序 → 取消，切换后重新请求后端。
+    $("planHeader").addEventListener("click", async (e) => {
+        const th = e.target.closest("th[data-sort]");
+        if (!th) return;
+        const col = th.dataset.sort;
+        if (sortState.col === col) {
+            if (sortState.dir === "asc") sortState.dir = "desc";
+            else { sortState.col = null; sortState.dir = null; }
+        } else {
+            sortState.col = col;
+            sortState.dir = "asc";
+        }
+        await loadPlans();
+    });
 
     $("logoutBtn").onclick = async () => {
         await api("/auth/logout", {method: "POST"});
