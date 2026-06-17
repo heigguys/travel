@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-<main class="shell">
+<main class="shell form-shell">
     <!-- 旅行计划申请页：员工提交或修改申请，URL 参数 planId 指定目标计划。 -->
     <section id="planApplyView" class="form-page">
         <header class="topbar">
@@ -19,7 +19,7 @@
             <button id="planApplyBackBtn" type="button">← 返回列表</button>
         </header>
         <div class="form-card">
-            <form id="planApplyForm" class="stack">
+            <form id="planApplyForm" class="stack wide-apply-form">
                 <input type="hidden" name="planId">
                 <input type="hidden" name="applicationId">
                 <div id="planApplyCompanionsRows" class="stack"></div>

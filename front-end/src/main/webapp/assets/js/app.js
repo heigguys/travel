@@ -587,7 +587,9 @@ async function initPlanEditPage() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
     const form = $("planEditForm");
-    $("planEditTitle").textContent = id ? "编辑旅行计划" : "添加旅行计划";
+    const fileInput = $("planFileInput");
+    const fileText = $("planFileText");
+    $("planEditTitle").textContent = id ? "旅游计划修改" : "旅游计划添加";
 
     if (id) {
         try {
@@ -605,10 +607,17 @@ async function initPlanEditPage() {
             form.endDay.value = ed ? parseInt(ed, 10) : "";
             form.price.value = plan.price || "";
             form.capacity.value = plan.capacity || "";
-            form.published.checked = Boolean(plan.published);
+            form.published.value = Boolean(plan.published) ? "true" : "false";
+            if (fileText && plan.fileName) fileText.textContent = plan.fileName;
         } catch (error) {
             toast(error.message || "加载计划失败");
         }
+    }
+
+    if (fileInput && fileText) {
+        fileInput.addEventListener("change", () => {
+            fileText.textContent = fileInput.files.length ? fileInput.files[0].name : "点击上传PDF文件";
+        });
     }
 
     // 复用分段日期自动跳格逻辑。
@@ -669,7 +678,7 @@ async function initPlanEditPage() {
         data.set("startDate", startDate);
         data.set("endDate", endDate);
         ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
-        data.set("published", form.published.checked ? "true" : "false");
+        data.set("published", form.published.value === "true" ? "true" : "false");
         const planId = form.id.value;
 
         try {
