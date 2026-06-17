@@ -189,6 +189,19 @@ async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsDialog").showModal();
 }
 
+// 渲染申请人行：姓名只读（来自登录账号），其余字段可编辑，无删除按钮。
+function addApplicantRow(containerId, user, row = {}) {
+    const div = document.createElement("div");
+    div.className = "companion-row applicant-row";
+    div.innerHTML = `
+        <input value="${escapeHtml(user.name)}" readonly title="姓名来自登录账号，不可修改">
+        <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
+        <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
+        <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>`;
+
+    $(containerId).appendChild(div);
+}
+
 // 动态新增一行随行人员输入项，并绑定姓名和身份证号的离焦校验。
 function addCompanionRow(row = {}, containerId = "companionsRows") {
     const div = document.createElement("div");
@@ -207,22 +220,17 @@ function addCompanionRow(row = {}, containerId = "companionsRows") {
 
     // 姓名：不能包含数字，离焦时校验，重新输入时清除提示。
     nameInput.addEventListener("blur", () => {
-        if (/\d/.test(nameInput.value)) {
-            nameInput.setCustomValidity("姓名不能包含数字");
-        } else {
-            nameInput.setCustomValidity("");
-        }
+        nameInput.setCustomValidity(/\d/.test(nameInput.value) ? "姓名不能包含数字" : "");
         nameInput.reportValidity();
     });
     nameInput.addEventListener("input", () => nameInput.setCustomValidity(""));
 
-    // 身份证号：18位，前17位数字，末位数字或X，离焦时校验。
+    // 身份证号：18位，末位可为数字或X。
     idCardInput.addEventListener("blur", () => {
-        if (idCardInput.value && !/^\d{17}[\dX]$/i.test(idCardInput.value.trim())) {
-            idCardInput.setCustomValidity("身份证号须为18位（末位可为数字或X）");
-        } else {
-            idCardInput.setCustomValidity("");
-        }
+        idCardInput.setCustomValidity(
+            idCardInput.value && !/^\d{17}[\dXx]$/.test(idCardInput.value.trim())
+                ? "身份证号须为18位（末位可为数字或X）" : ""
+        );
         idCardInput.reportValidity();
     });
     idCardInput.addEventListener("input", () => idCardInput.setCustomValidity(""));
@@ -770,43 +778,61 @@ async function initPlanApplyPage() {
         $("applyPlanInfo").textContent = `${plan.destination}　${formatDateRange(plan.startDate, plan.endDate)}　${formatPrice(plan.price)}`;
     } catch { /* 展示失败不阻断申请流程 */ }
 
-    // 如果已有有效申请则预填随行人员，否则新建一行空行。
+    // 显示/隐藏随行人员分隔标题（有随行人员行时才显示）。
+    function syncDivider() {
+        const hasCompanions = $("planApplyCompanionsRows").querySelector(".companion-row") !== null;
+        $("planApplyCompanionsDivider").classList.toggle("hidden", !hasCompanions);
+    }
+
+    // 向随行人员列表新增一行，删除时同步更新分隔标题可见性。
+    function addApplyCompanionRow(row = {}) {
+        addCompanionRow(row, "planApplyCompanionsRows");
+        // 覆盖刚插入行的删除按钮，使其同步 divider 状态。
+        const rows = $("planApplyCompanionsRows").querySelectorAll(".companion-row");
+        const lastRow = rows[rows.length - 1];
+        lastRow.querySelector("button").onclick = () => { lastRow.remove(); syncDivider(); };
+        syncDivider();
+    }
+
+    // 如果已有有效申请则预填数据，否则仅渲染申请人行。
     try {
         const apps = await api("/my-applications");
         const active = apps.find((app) => Number(app.planId) === Number(planId) && Number(app.status) === 0);
         if (active) {
             form.applicationId.value = active.id;
             form.optionText.value = active.optionText || "";
-            const rows = await api(`/applications/${active.id}/companions`);
-            const fallbackCount = Math.max(Number(active.applicantCount) || 1, 1);
-            const source = rows.length ? rows : Array.from({length: fallbackCount}, () => ({}));
-            source.forEach((row) => addCompanionRow(row, "planApplyCompanionsRows"));
+            const saved = await api(`/applications/${active.id}/companions`);
+            // 第一条记录是申请人，其余是随行人员。
+            const [applicantRow = {}, ...companionRows] = saved.length
+                ? saved
+                : Array.from({length: Math.max(Number(active.applicantCount) || 1, 1)}, () => ({}));
+            addApplicantRow("planApplyApplicantRow", currentUser, applicantRow);
+            companionRows.forEach((row) => addApplyCompanionRow(row));
         } else {
-            addCompanionRow({}, "planApplyCompanionsRows");
+            addApplicantRow("planApplyApplicantRow", currentUser);
         }
     } catch {
-        addCompanionRow({}, "planApplyCompanionsRows");
+        addApplicantRow("planApplyApplicantRow", currentUser);
     }
 
     $("planApplyBackBtn").onclick = () => go("plans.jsp");
     $("planApplyCancelBtn").onclick = () => go("plans.jsp");
-    $("addPlanApplyCompanionBtn").onclick = () => addCompanionRow({}, "planApplyCompanionsRows");
+    $("addPlanApplyCompanionBtn").onclick = () => addApplyCompanionRow();
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const errorEl = $("planApplyError");
         errorEl.classList.add("hidden");
-        const rows = collectCompanionRows("planApplyCompanionsRows");
-        if (!rows.length) {
-            toast("请至少添加一名随行人员");
-            return;
-        }
+        // 申请人行 + 随行人员行合并为完整名单。
+        const applicantRows = collectCompanionRows("planApplyApplicantRow");
+        const companionRows = collectCompanionRows("planApplyCompanionsRows");
+        const allRows = [...applicantRows, ...companionRows];
         try {
             const app = await api(`/plans/${form.planId.value}/apply`, {
                 method: "POST",
-                body: JSON.stringify({applicantCount: rows.length, optionText: form.optionText.value})
+                body: JSON.stringify({applicantCount: allRows.length, optionText: form.optionText.value})
             });
-            await api(`/applications/${app.id}/companions`, {method: "POST", body: JSON.stringify(rows)});
+            await api(`/applications/${app.id}/companions`, {method: "POST", body: JSON.stringify(allRows)});
             go("plans.jsp");
         } catch (error) {
             errorEl.textContent = error.message || "申请保存失败";

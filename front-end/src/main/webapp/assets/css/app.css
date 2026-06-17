@@ -412,9 +412,33 @@ dialog::backdrop {
 /* 随行人员编辑行的多列表单布局。 */
 .companion-row {
     display: grid;
-    grid-template-columns: 1fr 120px 1.4fr 120px auto;
+    grid-template-columns: 1fr 120px 2.2fr 120px auto;
     gap: 8px;
     align-items: center;
+}
+
+/* 申请人行：同随行人员行，但无删除按钮，4列。 */
+.applicant-row {
+    grid-template-columns: 1fr 120px 2.2fr 120px;
+}
+
+/* 随行人员分组分隔线：左侧标签 + 右侧延伸细线。 */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.section-divider span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+.section-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
 }
 
 /* 全局 Toast 提示。 */
@@ -543,7 +567,7 @@ dialog::backdrop {
 .form-page {
     display: grid;
     gap: 16px;
-    width: min(640px, 100%);
+    width: min(780px, 100%);
     margin: 0 auto;
 }
 

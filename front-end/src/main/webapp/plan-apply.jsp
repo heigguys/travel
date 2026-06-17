@@ -22,6 +22,11 @@
             <form id="planApplyForm" class="stack">
                 <input type="hidden" name="planId">
                 <input type="hidden" name="applicationId">
+                <!-- 申请人行：JS 初始化时自动填入登录用户姓名 -->
+                <div id="planApplyApplicantRow"></div>
+                <!-- 随行人员分隔标题：有随行人员时显示 -->
+                <div id="planApplyCompanionsDivider" class="section-divider hidden"><span>随行人员</span></div>
+                <!-- 随行人员列表 -->
                 <div id="planApplyCompanionsRows" class="stack"></div>
                 <button id="addPlanApplyCompanionBtn" type="button">新增随行人员</button>
                 <label>选项 / 备注
