@@ -584,10 +584,6 @@ function bindPlansPageEvents() {
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
-    $("closeConsultBtn").onclick = async () => {
-        await api(`/plans/${$("consultForm").planId.value}/consultations/close`, {method: "POST"});
-        toast("对话已结束");
-    };
     $("myAppsBtn").onclick = openMyApps;
     $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
     $("passwordBtn").onclick = () => {

@@ -79,7 +79,6 @@
         <div id="messages" class="messages"></div>
         <textarea name="content" rows="3" placeholder="输入咨询或回复内容" required></textarea>
         <div class="dialog-actions">
-            <button id="closeConsultBtn" type="button">结束对话</button>
             <button value="cancel" type="button" data-close>关闭</button>
             <button class="primary" type="submit">发送</button>
         </div>
