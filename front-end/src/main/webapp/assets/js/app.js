@@ -95,6 +95,16 @@ function go(page) {
     window.location.href = page;
 }
 
+// 平滑关闭弹窗，避免原生 dialog 直接消失造成生硬跳变。
+function closeDialog(dialog) {
+    if (!dialog || !dialog.open || dialog.classList.contains("dialog-closing")) return;
+    dialog.classList.add("dialog-closing");
+    window.setTimeout(() => {
+        dialog.classList.remove("dialog-closing");
+        dialog.close();
+    }, 180);
+}
+
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
     $("userInfo").textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
@@ -288,7 +298,7 @@ async function saveCompanions(event) {
     event.preventDefault();
     const rows = collectCompanionRows();
     await api(`/applications/${$("companionsForm").applicationId.value}/companions`, {method: "POST", body: JSON.stringify(rows)});
-    $("companionsDialog").close();
+    closeDialog($("companionsDialog"));
     toast("随行人员已保存");
 }
 
@@ -394,7 +404,7 @@ async function confirmDeletePlan(event) {
     event.preventDefault();
     const planId = $("deleteForm").planId.value;
     await api(`/plans/${planId}/delete`, {method: "POST"});
-    $("deleteDialog").close();
+    closeDialog($("deleteDialog"));
     toast("旅行计划已删除");
     await loadPlans();
 }
@@ -407,7 +417,7 @@ async function notifyApplicantsAndDelete() {
     button.textContent = "发送中...";
     try {
         await api(`/plans/${planId}/notify-cancel-and-delete`, {method: "POST"});
-        $("deleteDialog").close();
+        closeDialog($("deleteDialog"));
         toast("邮件通知已发送，旅行计划已删除");
         await loadPlans();
     } catch (error) {
@@ -447,14 +457,21 @@ function escapeHtml(text) {
 // 绑定密码输入框的显示/隐藏按钮，并在输入为空时自动恢复隐藏状态。
 function setupPasswordToggle(input, toggle, onInput = () => {}) {
     if (!input || !toggle) return () => {};
+    const eyeIcon = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOffIcon = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 13.4 13.4"/><path d="M9.9 5.2A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-2.8 3.7"/><path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.3-1"/></svg>`;
+    const renderIcon = () => {
+        const visible = input.type === "text";
+        toggle.innerHTML = visible ? eyeIcon : eyeOffIcon;
+        toggle.setAttribute("aria-label", visible ? "隐藏密码" : "显示密码");
+        toggle.setAttribute("title", visible ? "隐藏密码" : "显示密码");
+    };
     const sync = () => {
         const hasPassword = input.value.length > 0;
         toggle.classList.toggle("hidden", !hasPassword);
         if (!hasPassword) {
             input.type = "password";
-            toggle.textContent = "\uD83D\uDC41\uFE0F";
-            toggle.setAttribute("aria-label", "show password");
         }
+        renderIcon();
     };
 
     input.addEventListener("input", () => {
@@ -465,8 +482,7 @@ function setupPasswordToggle(input, toggle, onInput = () => {}) {
     toggle.addEventListener("click", () => {
         const showingPassword = input.type === "text";
         input.type = showingPassword ? "password" : "text";
-        toggle.textContent = showingPassword ? "\uD83D\uDC41\uFE0F" : "\uD83D\uDE48";
-        toggle.setAttribute("aria-label", showingPassword ? "show password" : "hide password");
+        renderIcon();
         input.focus();
     });
 
@@ -626,7 +642,7 @@ function bindPlansPageEvents() {
             renderPlans();
             return;
         }
-        if (button.dataset.close !== undefined) button.closest("dialog").close();
+        if (button.dataset.close !== undefined) closeDialog(button.closest("dialog"));
         const action = button.dataset.action;
         const id = Number(button.dataset.id);
         // 编辑和申请跳转到独立页面，通过 URL 参数传递计划 ID。
@@ -698,7 +714,7 @@ function bindPlansPageEvents() {
                 })
             });
             showPasswordMessage("密码修改成功", true);
-            $("passwordDialog").close();
+            closeDialog($("passwordDialog"));
             toast("密码修改成功");
         } catch (error) {
             showPasswordMessage(error.message || "密码修改失败");
