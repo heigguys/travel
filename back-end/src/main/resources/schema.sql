@@ -66,3 +66,9 @@ create table if not exists consultations (
     constraint fk_consultations_participant foreign key (participant_user_id) references users(id),
     index idx_consultations_plan_user(plan_id, participant_user_id)
 );
+
+create table if not exists consultation_admin_reads (
+    plan_id bigint primary key,
+    last_read_at timestamp not null default current_timestamp,
+    constraint fk_consultation_admin_reads_plan foreign key (plan_id) references travel_plans(id) on delete cascade
+);

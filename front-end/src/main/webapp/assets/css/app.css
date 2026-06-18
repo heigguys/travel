@@ -273,6 +273,7 @@ button.icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     width: 32px;
     height: 32px;
     padding: 0;
@@ -283,6 +284,18 @@ button.icon-btn {
 
 button.icon-btn:hover {
     background: #eef5ff;
+}
+
+button.icon-btn.has-unread::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d92d20;
+    box-shadow: 0 0 0 2px #fff;
 }
 
 button.icon-btn.disabled,

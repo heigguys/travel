@@ -1,4 +1,5 @@
 target/
+back-end/.m2/
 back-end/src/main/resources/application.properties
 storage/
 .idea/

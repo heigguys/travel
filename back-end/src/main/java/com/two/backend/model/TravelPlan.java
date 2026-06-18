@@ -32,4 +32,5 @@ public class TravelPlan {
     private LocalDateTime updatedAt;
     private Integer applicantTotal;
     private Integer myApplicantCount;
+    private Boolean hasUnreadConsultation;
 }

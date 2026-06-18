@@ -30,6 +30,13 @@ const formatDate = (date) => String(date || "").replaceAll("-", "/");
 
 const formatDateRange = (startDate, endDate) => `${formatDate(startDate)} - ${formatDate(endDate)}`;
 
+const formatDateTime = (value) => {
+    if (!value) return "";
+    const normalized = String(value).replace("T", " ");
+    const [datePart = "", timePart = ""] = normalized.split(" ");
+    return `${formatDate(datePart)} ${timePart.slice(0, 5)}`.trim();
+};
+
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
     const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
@@ -141,6 +148,7 @@ function renderPlans() {
         const adminActions = admin
             ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
+        const consultClass = admin && plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
             <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
@@ -155,7 +163,7 @@ function renderPlans() {
                 <div class="plan-actions">
                     ${adminActions}
                     ${actionButton("apply", plan.id, "申请")}
-                    ${actionButton("consult", plan.id, "咨询")}
+                    ${actionButton("consult", plan.id, "咨询", consultClass)}
                 </div>
             </td>
         </tr>`;
@@ -266,11 +274,21 @@ async function renderMessages(planId) {
     const messages = await api(`/plans/${planId}/consultations`);
     $("messages").innerHTML = messages.map((msg) => `
         <div class="message ${Number(msg.senderRole) === 0 ? "admin" : ""}">
-            <strong>${Number(msg.senderRole) === 0 ? "管理员" : msg.userName}</strong>
+            <strong>${messageSenderName(msg)}</strong>
             <p>${escapeHtml(msg.content)}</p>
-            <small>${msg.createdAt || ""}</small>
+            <small>${formatDateTime(msg.createdAt)}</small>
         </div>
     `).join("") || "<p class='muted'>暂无咨询内容</p>";
+    if (Number(currentUser.role) === 0) {
+        plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
+        renderPlans();
+    }
+}
+
+function messageSenderName(msg) {
+    if (Number(msg.userId) === Number(currentUser.id)) return "我";
+    if (Number(msg.senderRole) === 0) return "管理员";
+    return escapeHtml(msg.userName || "员工");
 }
 
 // 发送咨询消息，成功后清空输入框并刷新消息列表。

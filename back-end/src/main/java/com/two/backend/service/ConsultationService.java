@@ -31,7 +31,11 @@ public class ConsultationService {
      */
     public List<Consultation> list(Long planId, User user) {
         ensurePlanVisible(planId, user);
-        return consultationMapper.listByPlan(planId, user.getId(), Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()));
+        List<Consultation> consultations = consultationMapper.listByPlan(planId);
+        if (isAdmin(user)) {
+            consultationMapper.markAdminRead(planId);
+        }
+        return consultations;
     }
 
     /**
@@ -52,6 +56,9 @@ public class ConsultationService {
         consultation.setContent(request.content());
         consultation.setStatus("OPEN");
         consultationMapper.insert(consultation);
+        if (isAdmin(user)) {
+            consultationMapper.markAdminRead(planId);
+        }
         return consultation;
     }
 
@@ -74,8 +81,12 @@ public class ConsultationService {
      */
     private void ensurePlanVisible(Long planId, User user) {
         TravelPlan plan = travelPlanMapper.findById(planId);
-        if (plan == null || (!Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()) && !Boolean.TRUE.equals(plan.getPublished()))) {
+        if (plan == null || (!isAdmin(user) && !Boolean.TRUE.equals(plan.getPublished()))) {
             throw new BusinessException("旅行计划不存在或未公开");
         }
+    }
+
+    private boolean isAdmin(User user) {
+        return Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole());
     }
 }

@@ -15,7 +15,7 @@ import org.apache.ibatis.annotations.Update;
  */
 public interface ConsultationMapper {
     /**
-     * 查询计划咨询；管理员可看全部，普通用户只看自己的会话。
+     * 查询计划下全部公开咨询消息。
      */
     @Select("""
             select c.*, u.name user_name, u.employee_no, p.destination
@@ -23,10 +23,9 @@ public interface ConsultationMapper {
             join users u on u.id = c.user_id
             join travel_plans p on p.id = c.plan_id
             where c.plan_id = #{planId}
-              and (#{admin} = true or c.participant_user_id = #{userId})
-            order by c.created_at
+            order by c.created_at, c.id
             """)
-    List<Consultation> listByPlan(@Param("planId") Long planId, @Param("userId") Long userId, @Param("admin") boolean admin);
+    List<Consultation> listByPlan(@Param("planId") Long planId);
 
     /**
      * 插入新的咨询消息，并回填自增 ID。
@@ -37,6 +36,16 @@ public interface ConsultationMapper {
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Consultation consultation);
+
+    /**
+     * 记录管理员已查看某个计划咨询消息。
+     */
+    @Insert("""
+            insert into consultation_admin_reads(plan_id, last_read_at)
+            values(#{planId}, current_timestamp)
+            on duplicate key update last_read_at = values(last_read_at)
+            """)
+    int markAdminRead(@Param("planId") Long planId);
 
     /**
      * 关闭指定用户在指定计划下的咨询会话。
