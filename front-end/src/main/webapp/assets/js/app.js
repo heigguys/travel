@@ -6,6 +6,12 @@ let plans = [];
 let sortState = { col: null, dir: null };
 let currentPlanPage = 1;
 const PLAN_PAGE_SIZE = 10;
+const PLAN_LIST_REFRESH_MS = 10000;
+let planListRefreshTimer = null;
+let planListRefreshInFlight = false;
+let activeConsultPlanId = null;
+let consultRefreshTimer = null;
+let consultRefreshInFlight = false;
 
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
@@ -96,7 +102,7 @@ function showPlansPage() {
 }
 
 // 根据筛选条件加载旅行计划列表。
-async function loadPlans() {
+async function loadPlans({resetPage = true} = {}) {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
@@ -105,8 +111,33 @@ async function loadPlans() {
         params.set("sortDir", sortState.dir);
     }
     plans = await api("/plans?" + params.toString());
-    currentPlanPage = 1;
+    if (resetPage) currentPlanPage = 1;
     renderPlans();
+}
+
+function startPlanListAutoRefresh() {
+    stopPlanListAutoRefresh();
+    planListRefreshTimer = setInterval(refreshPlanListInBackground, PLAN_LIST_REFRESH_MS);
+}
+
+function stopPlanListAutoRefresh() {
+    if (planListRefreshTimer) {
+        clearInterval(planListRefreshTimer);
+        planListRefreshTimer = null;
+    }
+    planListRefreshInFlight = false;
+}
+
+async function refreshPlanListInBackground() {
+    if (!$("appView") || planListRefreshInFlight || document.hidden) return;
+    planListRefreshInFlight = true;
+    try {
+        await loadPlans({resetPage: false});
+    } catch (error) {
+        console.warn("刷新旅行计划一览失败", error);
+    } finally {
+        planListRefreshInFlight = false;
+    }
 }
 
 // 各列标题对应的后端排序字段，无排序的列不在此映射中。
@@ -263,24 +294,63 @@ async function saveCompanions(event) {
 
 // 打开咨询弹窗并加载当前计划的历史消息。
 async function openConsultDialog(planId) {
+    stopConsultAutoRefresh();
+    activeConsultPlanId = planId;
     $("consultForm").reset();
     $("consultForm").planId.value = planId;
-    await renderMessages(planId);
+    await renderMessages(planId, {forceScroll: true});
     $("consultDialog").showModal();
+    startConsultAutoRefresh();
 }
 
 // 渲染咨询消息列表，并对消息正文做 HTML 转义。
-async function renderMessages(planId) {
+async function renderMessages(planId, {forceScroll = false} = {}) {
     const messages = await api(`/plans/${planId}/consultations`);
-    $("messages").innerHTML = messages.map((msg) => `
+    const messagesEl = $("messages");
+    const shouldKeepAtBottom = forceScroll || isNearBottom(messagesEl);
+    messagesEl.innerHTML = messages.map((msg) => `
         <div class="message ${Number(msg.senderRole) === 0 ? "admin" : ""}">
             <strong>${messageSenderName(msg)}</strong>
             <p>${escapeHtml(msg.content)}</p>
             <small>${formatDateTime(msg.createdAt)}</small>
         </div>
     `).join("") || "<p class='muted'>暂无咨询内容</p>";
+    if (shouldKeepAtBottom) {
+        requestAnimationFrame(() => {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        });
+    }
     plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
     renderPlans();
+}
+
+function isNearBottom(element) {
+    return element.scrollHeight - element.scrollTop - element.clientHeight <= 48;
+}
+
+function startConsultAutoRefresh() {
+    consultRefreshTimer = setInterval(refreshActiveConsultMessages, 3000);
+}
+
+function stopConsultAutoRefresh() {
+    if (consultRefreshTimer) {
+        clearInterval(consultRefreshTimer);
+        consultRefreshTimer = null;
+    }
+    activeConsultPlanId = null;
+    consultRefreshInFlight = false;
+}
+
+async function refreshActiveConsultMessages() {
+    if (!activeConsultPlanId || consultRefreshInFlight || !$("consultDialog").open) return;
+    consultRefreshInFlight = true;
+    try {
+        await renderMessages(activeConsultPlanId);
+    } catch (error) {
+        console.warn("刷新咨询消息失败", error);
+    } finally {
+        consultRefreshInFlight = false;
+    }
 }
 
 function messageSenderName(msg) {
@@ -295,7 +365,7 @@ async function sendConsult(event) {
     const form = $("consultForm");
     await api(`/plans/${form.planId.value}/consultations`, {method: "POST", body: JSON.stringify({content: form.content.value})});
     form.content.value = "";
-    await renderMessages(form.planId.value);
+    await renderMessages(form.planId.value, {forceScroll: true});
 }
 
 // 删除旅行计划前先加载申请人预览，打开确认弹窗。
@@ -600,6 +670,8 @@ function bindPlansPageEvents() {
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
+    $("consultDialog").addEventListener("close", stopConsultAutoRefresh);
+    window.addEventListener("beforeunload", stopPlanListAutoRefresh);
     $("myAppsBtn").onclick = openMyApps;
     $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
     $("passwordBtn").onclick = () => {
@@ -648,6 +720,7 @@ async function initPlansPage() {
     showPlansPage();
     try {
         await loadPlans();
+        startPlanListAutoRefresh();
     } catch (error) {
         toast(error.message || "加载计划失败");
     }
