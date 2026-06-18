@@ -216,8 +216,9 @@ label {
 /* 旅行计划表格基础样式。 */
 table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
-    min-width: 920px;
+    min-width: 1258px;
 }
 
 th, td {
@@ -226,6 +227,8 @@ th, td {
     padding: 10px;
     text-align: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 th:last-child, td:last-child {
@@ -276,6 +279,23 @@ th.sortable:hover {
 th.asc .arrow-up,
 th.desc .arrow-down {
     color: var(--blue);
+}
+
+.col-status { width: 88px; }
+.col-plan-no { width: 150px; }
+.col-destination { width: 150px; }
+.col-date-range { width: 180px; }
+.col-price { width: 100px; }
+.col-capacity { width: 90px; }
+.col-applicant-total { width: 120px; }
+.col-my-applicant-count { width: 130px; }
+.col-published { width: 100px; }
+.col-actions { width: 150px; }
+
+th.col-actions,
+td.col-actions {
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .plan-actions {

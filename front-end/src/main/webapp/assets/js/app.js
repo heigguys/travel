@@ -150,39 +150,38 @@ async function refreshPlanListInBackground() {
     }
 }
 
-// 各列标题对应的后端排序字段，无排序的列不在此映射中。
-const SORT_COLS = {
-    "旅游计划编号": "planNo",
-    "目的地": "destination",
-    "往返日期": "startDate",
-    "价格": "price",
-    "定员数": "capacity",
-    "申请总人数": "applicantTotal",
-    "我的申请人数": "myApplicantCount"
-};
-
 // 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
 function renderPlans() {
     const admin = Number(currentUser.role) === 0;
-    const headers = ["状态", "旅游计划编号", "目的地", "往返日期", "价格", "定员数", "申请总人数", "我的申请人数"];
-    if (admin) headers.push("公开状态");
-    headers.push("操作");
+    const columns = [
+        {label: "状态", className: "col-status"},
+        {label: "旅游计划编号", sort: "planNo", className: "col-plan-no"},
+        {label: "目的地", sort: "destination", className: "col-destination"},
+        {label: "往返日期", sort: "startDate", className: "col-date-range"},
+        {label: "价格", sort: "price", className: "col-price"},
+        {label: "定员数", sort: "capacity", className: "col-capacity"},
+        {label: "申请总人数", sort: "applicantTotal", className: "col-applicant-total"},
+        {label: "我的申请人数", sort: "myApplicantCount", className: "col-my-applicant-count"}
+    ];
+    if (admin) columns.push({label: "公开状态", className: "col-published"});
+    columns.push({label: "操作", className: "col-actions"});
     const arrows = `<div class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></div>`;
-    $("planHeader").innerHTML = headers.map((h) => {
-        const key = SORT_COLS[h];
-        if (!key) return `<th>${h}</th>`;
-        const active = sortState.col === key ? (sortState.dir === "asc" ? " asc" : " desc") : "";
-        return `<th class="sortable${active}" data-sort="${key}"><div class="th-inner">${h}${arrows}</div></th>`;
+    $("planHeader").innerHTML = columns.map((column) => {
+        if (!column.sort) return `<th class="${column.className}">${column.label}</th>`;
+        const active = sortState.col === column.sort ? (sortState.dir === "asc" ? " asc" : " desc") : "";
+        return `<th class="${column.className} sortable${active}" data-sort="${column.sort}"><div class="th-inner">${column.label}${arrows}</div></th>`;
     }).join("");
     const totalPages = Math.max(Math.ceil(plans.length / PLAN_PAGE_SIZE), 1);
     currentPlanPage = Math.min(Math.max(currentPlanPage, 1), totalPages);
     const pagePlans = plans.slice((currentPlanPage - 1) * PLAN_PAGE_SIZE, currentPlanPage * PLAN_PAGE_SIZE);
     $("planRows").innerHTML = pagePlans.map((plan) => {
         const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
+        const planNo = escapeHtml(plan.planNo || "");
+        const destination = escapeHtml(plan.destination || "");
         const fileLink = plan.filePath
-            ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
-            : plan.planNo;
-        const adminCells = admin ? `<td>${plan.published ? "已公开" : "未公开"}</td>` : "";
+            ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
+            : planNo;
+        const adminCells = admin ? `<td class="col-published">${plan.published ? "已公开" : "未公开"}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
             : actionButton("edit", plan.id, "编辑");
@@ -191,16 +190,16 @@ function renderPlans() {
             : "";
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
-            <td>${planStatusLabel(plan.status)}</td>
-            <td>${fileLink}</td>
-            <td>${plan.destination}</td>
-            <td>${formatDateRange(plan.startDate, plan.endDate)}</td>
-            <td>${formatPrice(plan.price)}</td>
-            <td>${plan.capacity}</td>
-            <td>${plan.applicantTotal || 0}</td>
-            <td>${plan.myApplicantCount || 0}</td>
+            <td class="col-status">${planStatusLabel(plan.status)}</td>
+            <td class="col-plan-no" title="${planNo}">${fileLink}</td>
+            <td class="col-destination" title="${destination}">${destination}</td>
+            <td class="col-date-range">${formatDateRange(plan.startDate, plan.endDate)}</td>
+            <td class="col-price">${formatPrice(plan.price)}</td>
+            <td class="col-capacity">${plan.capacity}</td>
+            <td class="col-applicant-total">${plan.applicantTotal || 0}</td>
+            <td class="col-my-applicant-count">${plan.myApplicantCount || 0}</td>
             ${adminCells}
-            <td>
+            <td class="col-actions">
                 <div class="plan-actions">
                     ${adminActions}
                     ${actionButton("apply", plan.id, "申请")}
