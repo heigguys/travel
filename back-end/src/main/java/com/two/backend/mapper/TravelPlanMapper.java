@@ -24,14 +24,25 @@ public interface TravelPlanMapper {
             select p.*,
               coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) applicant_total,
               coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count,
-              case when #{admin} = true and exists (
-                select 1
-                from consultations c
-                left join consultation_admin_reads r on r.plan_id = c.plan_id
-                where c.plan_id = p.id
-                  and c.sender_role = 1
-                  and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
-              ) then true else false end has_unread_consultation
+              case
+                when #{admin} = true and exists (
+                  select 1
+                  from consultations c
+                  left join consultation_admin_reads r on r.plan_id = c.plan_id
+                  where c.plan_id = p.id
+                    and c.sender_role = 1
+                    and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+                ) then true
+                when #{admin} = false and exists (
+                  select 1
+                  from consultations c
+                  left join consultation_user_reads r on r.plan_id = c.plan_id and r.user_id = #{userId}
+                  where c.plan_id = p.id
+                    and c.user_id != #{userId}
+                    and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+                ) then true
+                else false
+              end has_unread_consultation
             from travel_plans p
             where 1 = 1
               <if test="admin == false">and p.published = true</if>

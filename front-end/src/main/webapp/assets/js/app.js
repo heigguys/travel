@@ -148,7 +148,7 @@ function renderPlans() {
         const adminActions = admin
             ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
-        const consultClass = admin && plan.hasUnreadConsultation ? "has-unread" : "";
+        const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
             <td>${planStatusLabel(plan.status)}</td>
             <td>${fileLink}</td>
@@ -279,10 +279,8 @@ async function renderMessages(planId) {
             <small>${formatDateTime(msg.createdAt)}</small>
         </div>
     `).join("") || "<p class='muted'>暂无咨询内容</p>";
-    if (Number(currentUser.role) === 0) {
-        plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
-        renderPlans();
-    }
+    plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
+    renderPlans();
 }
 
 function messageSenderName(msg) {

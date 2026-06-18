@@ -48,6 +48,16 @@ public interface ConsultationMapper {
     int markAdminRead(@Param("planId") Long planId);
 
     /**
+     * 记录普通用户已查看某个计划咨询消息。
+     */
+    @Insert("""
+            insert into consultation_user_reads(plan_id, user_id, last_read_at)
+            values(#{planId}, #{userId}, current_timestamp)
+            on duplicate key update last_read_at = values(last_read_at)
+            """)
+    int markUserRead(@Param("planId") Long planId, @Param("userId") Long userId);
+
+    /**
      * 关闭指定用户在指定计划下的咨询会话。
      */
     @Update("update consultations set status = 'CLOSED' where plan_id = #{planId} and participant_user_id = #{userId}")

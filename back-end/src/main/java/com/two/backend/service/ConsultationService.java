@@ -34,6 +34,8 @@ public class ConsultationService {
         List<Consultation> consultations = consultationMapper.listByPlan(planId);
         if (isAdmin(user)) {
             consultationMapper.markAdminRead(planId);
+        } else {
+            consultationMapper.markUserRead(planId, user.getId());
         }
         return consultations;
     }
@@ -58,6 +60,8 @@ public class ConsultationService {
         consultationMapper.insert(consultation);
         if (isAdmin(user)) {
             consultationMapper.markAdminRead(planId);
+        } else {
+            consultationMapper.markUserRead(planId, user.getId());
         }
         return consultation;
     }
