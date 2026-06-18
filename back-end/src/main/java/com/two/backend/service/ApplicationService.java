@@ -146,7 +146,7 @@ public class ApplicationService {
             return total >= plan.getCapacity() ? TravelPlan.STATUS_ENDED : TravelPlan.STATUS_DISBANDED;
         }
         if (!plan.getStartDate().isAfter(today)) {
-            return TravelPlan.STATUS_IN_PROGRESS;
+            return total >= plan.getCapacity() ? TravelPlan.STATUS_IN_PROGRESS : TravelPlan.STATUS_DISBANDED;
         }
         return total >= plan.getCapacity() ? TravelPlan.STATUS_FORMED : TravelPlan.STATUS_AVAILABLE;
     }

@@ -100,7 +100,8 @@ public interface TravelPlanMapper {
             set p.status = case
               when p.end_date < current_date and coalesce(agg.total, 0) >= p.capacity then 3
               when p.end_date < current_date then 4
-              when p.start_date <= current_date then 2
+              when p.start_date <= current_date and coalesce(agg.total, 0) >= p.capacity then 2
+              when p.start_date <= current_date then 4
               when coalesce(agg.total, 0) >= p.capacity then 1
               else 0
             end,
