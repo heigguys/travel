@@ -762,8 +762,13 @@ async function initPlanEditPage() {
 
         const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
         const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
-        if (!sy || !sm || !sd || !ey || !em || !ed) {
-            errorEl.textContent = "请填写完整的启程日和返回日";
+        if (!sy || !sm || !sd) {
+            errorEl.textContent = "请填写完整的启程日";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        if (!ey || !em || !ed) {
+            errorEl.textContent = "请填写完整的返回日";
             errorEl.classList.remove("hidden");
             return;
         }
