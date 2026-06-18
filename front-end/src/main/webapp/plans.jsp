@@ -133,14 +133,15 @@
     <form id="deleteForm" method="dialog" class="stack">
         <h2>删除旅行计划</h2>
         <input type="hidden" name="planId">
-        <p class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
+        <p id="deleteMessage" class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
         <div>
             <strong>已有员工申请</strong>
             <div id="deleteApplicants" class="delete-preview-list"></div>
         </div>
         <div class="dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>
-            <button class="danger" type="submit">确认删除</button>
+            <button id="mailNotifyBtn" class="primary hidden" type="button">邮件通知</button>
+            <button id="confirmDeleteBtn" class="danger" type="submit">确认删除</button>
         </div>
     </form>
 </dialog>

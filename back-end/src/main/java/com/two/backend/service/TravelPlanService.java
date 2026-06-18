@@ -29,11 +29,14 @@ public class TravelPlanService {
     private final TravelPlanMapper travelPlanMapper;
     private final ApplicationMapper applicationMapper;
     private final StorageService storageService;
+    private final MailNotificationService mailNotificationService;
 
-    public TravelPlanService(TravelPlanMapper travelPlanMapper, ApplicationMapper applicationMapper, StorageService storageService) {
+    public TravelPlanService(TravelPlanMapper travelPlanMapper, ApplicationMapper applicationMapper,
+                             StorageService storageService, MailNotificationService mailNotificationService) {
         this.travelPlanMapper = travelPlanMapper;
         this.applicationMapper = applicationMapper;
         this.storageService = storageService;
+        this.mailNotificationService = mailNotificationService;
     }
 
     /**
@@ -116,6 +119,9 @@ public class TravelPlanService {
         if (plan == null) {
             throw new BusinessException("旅行计划不存在");
         }
+        if (Boolean.TRUE.equals(plan.getPublished())) {
+            throw new BusinessException("已公开的旅行计划不可编辑");
+        }
         fillPlan(plan, request, file);
         travelPlanMapper.update(plan);
         travelPlanMapper.updateAllStatuses();
@@ -143,6 +149,32 @@ public class TravelPlanService {
      * @param id 旅行计划 ID
      */
     public void delete(Long id) {
+        List<Application> applicants = deletePreview(id);
+        if (!applicants.isEmpty()) {
+            throw new BusinessException("已经有员工申请本计划。如需删除本计划，请先发送邮件通知员工。");
+        }
+        applicationMapper.deleteByPlan(id);
+        travelPlanMapper.delete(id);
+    }
+
+    @Transactional
+    /**
+     * 向已申请员工发送取消通知邮件后删除旅行计划。
+     *
+     * @param id 旅行计划 ID
+     */
+    public void notifyCancelAndDelete(Long id) {
+        TravelPlan plan = travelPlanMapper.findById(id);
+        if (plan == null) {
+            throw new BusinessException("旅行计划不存在");
+        }
+        List<Application> applicants = applicationMapper.listActiveByPlan(id);
+        if (applicants.isEmpty()) {
+            applicationMapper.deleteByPlan(id);
+            travelPlanMapper.delete(id);
+            return;
+        }
+        mailNotificationService.sendPlanCancelNotice(plan, applicants);
         applicationMapper.deleteByPlan(id);
         travelPlanMapper.delete(id);
     }

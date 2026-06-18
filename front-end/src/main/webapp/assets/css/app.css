@@ -285,6 +285,18 @@ button.icon-btn:hover {
     background: #eef5ff;
 }
 
+button.icon-btn.disabled,
+button.icon-btn:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+button.icon-btn.disabled:hover,
+button.icon-btn:disabled:hover {
+    background: transparent;
+}
+
 button.icon-btn.danger {
     border-color: transparent;
     color: var(--danger);
@@ -369,6 +381,47 @@ dialog::backdrop {
 
 .inline input {
     width: auto;
+}
+
+.file-field {
+    display: grid;
+    gap: 6px;
+}
+
+.file-label {
+    font-weight: 600;
+}
+
+.file-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-control button {
+    flex: 0 0 auto;
+}
+
+.file-name {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 10px;
+    color: var(--muted);
+    background: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.visually-hidden-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* 咨询消息滚动区域。 */

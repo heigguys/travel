@@ -1,7 +1,7 @@
 insert ignore into users(id, employee_no, name, email, role, password_md5, enabled) values
-(1, 'A001', '管理员', 'admin@zhimingsoft.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
-(2, 'U001', '张三', 'zhangsan@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
-(3, 'U002', '李四', 'lisi@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
+(1, '聂宁波', '聂宁波', '2190058893@qq.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
+(2, '唐笑松', '唐笑松', '2837069797@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
+(3, '史简', '史简', '1466648412@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
 
 insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, price, capacity, published, status) values
 (1, 'TP20260615001', '敦煌莫高窟', '2026-09-18', '2026-09-24', 3280.00, 20, true, 0),

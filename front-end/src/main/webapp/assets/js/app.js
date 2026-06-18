@@ -47,6 +47,10 @@ function actionButton(action, id, label, extraClass = "") {
     return `<button class="icon-btn ${extraClass}" data-action="${action}" data-id="${id}" title="${label}" aria-label="${label}" type="button">${actionIcons[action]}</button>`;
 }
 
+function disabledActionButton(action, label) {
+    return `<button class="icon-btn disabled" title="${label}" aria-label="${label}" type="button" disabled>${actionIcons[action]}</button>`;
+}
+
 // 统一 API 请求封装：自动携带 Cookie，并兼容 JSON 响应和文件流响应。
 async function api(path, options = {}) {
     const response = await fetch(API_BASE + path, {
@@ -131,8 +135,11 @@ function renderPlans() {
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener">${plan.planNo}</a>`
             : plan.planNo;
         const adminCells = admin ? `<td>${plan.published ? "已公开" : "未公开"}</td>` : "";
+        const editAction = plan.published
+            ? disabledActionButton("edit", "已公开的计划不可编辑")
+            : actionButton("edit", plan.id, "编辑");
         const adminActions = admin
-            ? `${actionButton("edit", plan.id, "编辑")}${actionButton("delete", plan.id, "删除", "danger")}`
+            ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
         return `<tr>
             <td>${planStatusLabel(plan.status)}</td>
@@ -189,25 +196,17 @@ async function openCompanionsDialog(applicationId, count = 1) {
     $("companionsDialog").showModal();
 }
 
-// 动态新增一行人员输入项，并绑定姓名和身份证号的离焦校验。
-function addCompanionRow(row = {}, containerId = "companionsRows", options = {}) {
+// 动态新增一行随行人员输入项，并绑定姓名和身份证号的离焦校验。
+function addCompanionRow(row = {}, containerId = "companionsRows") {
     const div = document.createElement("div");
     div.className = "companion-row";
-    const nameValue = options.lockedName ? (row.name || currentUser?.name || "") : (row.name || "");
-    const genderPlaceholder = options.requireGenderChoice
-        ? `<option value="" ${row.gender ? "" : "selected"} disabled>性别</option>`
-        : "";
-    const deleteControl = options.hideDelete
-        ? `<span class="companion-action-placeholder" aria-hidden="true"></span>`
-        : `<button type="button">删除</button>`;
     div.innerHTML = `
-        <input placeholder="姓名" value="${escapeHtml(nameValue)}" required maxlength="20" ${options.lockedName ? "readonly" : ""}>
-        <select required>${genderPlaceholder}<option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
+        <input placeholder="姓名" value="${escapeHtml(row.name || "")}" required maxlength="20">
+        <select><option value="女" ${row.gender === "女" ? "selected" : ""}>女</option><option value="男" ${row.gender === "男" ? "selected" : ""}>男</option></select>
         <input placeholder="身份证号" value="${escapeHtml(row.idCard || "")}" required>
         <select><option value="true" ${row.bedNeeded !== false ? "selected" : ""}>占床</option><option value="false" ${row.bedNeeded === false ? "selected" : ""}>不占床</option></select>
-        ${deleteControl}`;
-    const deleteButton = div.querySelector("button");
-    if (deleteButton) deleteButton.onclick = () => div.remove();
+        <button type="button">删除</button>`;
+    div.querySelector("button").onclick = () => div.remove();
 
     const inputs = div.querySelectorAll("input");
     const nameInput = inputs[0];
@@ -215,17 +214,22 @@ function addCompanionRow(row = {}, containerId = "companionsRows", options = {})
 
     // 姓名：不能包含数字，离焦时校验，重新输入时清除提示。
     nameInput.addEventListener("blur", () => {
-        nameInput.setCustomValidity(/\d/.test(nameInput.value) ? "姓名不能包含数字" : "");
+        if (/\d/.test(nameInput.value)) {
+            nameInput.setCustomValidity("姓名不能包含数字");
+        } else {
+            nameInput.setCustomValidity("");
+        }
         nameInput.reportValidity();
     });
     nameInput.addEventListener("input", () => nameInput.setCustomValidity(""));
 
-    // 身份证号：18位，末位可为数字或X。
+    // 身份证号：18位，前17位数字，末位数字或X，离焦时校验。
     idCardInput.addEventListener("blur", () => {
-        idCardInput.setCustomValidity(
-            idCardInput.value && !/^\d{17}[\dXx]$/.test(idCardInput.value.trim())
-                ? "身份证号须为18位（末位可为数字或X）" : ""
-        );
+        if (idCardInput.value && !/^\d{17}[\dX]$/i.test(idCardInput.value.trim())) {
+            idCardInput.setCustomValidity("身份证号须为18位（末位可为数字或X）");
+        } else {
+            idCardInput.setCustomValidity("");
+        }
         idCardInput.reportValidity();
     });
     idCardInput.addEventListener("input", () => idCardInput.setCustomValidity(""));
@@ -282,6 +286,10 @@ async function sendConsult(event) {
 async function deletePlan(planId) {
     const applicants = await api(`/plans/${planId}/delete-preview`);
     $("deleteForm").planId.value = planId;
+    const hasApplicants = applicants.length > 0;
+    $("deleteMessage").textContent = hasApplicants
+        ? "已经有员工申请本计划。如需删除本计划，请先发送邮件通知员工。"
+        : "确认删除该旅行计划？删除后将无法恢复。";
     $("deleteApplicants").innerHTML = applicants.length
         ? applicants.map((a) => `
             <div class="message">
@@ -290,6 +298,8 @@ async function deletePlan(planId) {
             </div>
         `).join("")
         : "<p class='muted'>暂无员工申请</p>";
+    $("mailNotifyBtn").classList.toggle("hidden", !hasApplicants);
+    $("confirmDeleteBtn").classList.toggle("hidden", hasApplicants);
     $("deleteDialog").showModal();
 }
 
@@ -301,6 +311,25 @@ async function confirmDeletePlan(event) {
     $("deleteDialog").close();
     toast("旅行计划已删除");
     await loadPlans();
+}
+
+// 向已申请员工发送取消通知邮件后删除旅行计划。
+async function notifyApplicantsAndDelete() {
+    const planId = $("deleteForm").planId.value;
+    const button = $("mailNotifyBtn");
+    button.disabled = true;
+    button.textContent = "发送中...";
+    try {
+        await api(`/plans/${planId}/notify-cancel-and-delete`, {method: "POST"});
+        $("deleteDialog").close();
+        toast("邮件通知已发送，旅行计划已删除");
+        await loadPlans();
+    } catch (error) {
+        toast(error.message || "邮件通知发送失败");
+    } finally {
+        button.disabled = false;
+        button.textContent = "邮件通知";
+    }
 }
 
 // 打开"我的申请"弹窗，展示当前用户申请及可执行操作。
@@ -551,6 +580,7 @@ function bindPlansPageEvents() {
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);
+    $("mailNotifyBtn").onclick = notifyApplicantsAndDelete;
     $("addCompanionBtn").onclick = () => addCompanionRow();
     $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
@@ -640,6 +670,11 @@ async function initPlanEditPage() {
     if (id) {
         try {
             const plan = await api(`/plans/${id}`);
+            if (plan.published) {
+                toast("已公开的旅行计划不可编辑");
+                setTimeout(() => go("plans.jsp"), 900);
+                return true;
+            }
             form.id.value = plan.id;
             form.destination.value = plan.destination || "";
             // 将 YYYY-MM-DD 拆分回三个输入格。
