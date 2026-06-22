@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.two.backend.mapper.TravelPlanMapper">
+
+    <select id="list" resultType="com.two.backend.model.TravelPlan">
+        select p.*,
+          coalesce((select sum(a.applicant_count) from applications a where a.plan_id = p.id and a.status = 0), 0) applicant_total,
+          coalesce((select a.applicant_count from applications a where a.plan_id = p.id and a.user_id = #{userId} and a.status = 0), 0) my_applicant_count,
+          case
+            when #{admin} = true and exists (
+              select 1
+              from consultations c
+              left join consultation_admin_reads r on r.plan_id = c.plan_id
+              where c.plan_id = p.id
+                and c.sender_role = 1
+                and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+            ) then true
+            when #{admin} = false and exists (
+              select 1
+              from consultations c
+              left join consultation_user_reads r on r.plan_id = c.plan_id and r.user_id = #{userId}
+              where c.plan_id = p.id
+                and c.user_id != #{userId}
+                and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+            ) then true
+            else false
+          end has_unread_consultation
+        from travel_plans p
+        where 1 = 1
+        <if test="admin == false">
+            and p.published = true
+        </if>
+        <if test="admin == true and published != null">
+            and p.published = #{published}
+        </if>
+        <if test="status != null">
+            and p.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (p.destination like concat('%', #{keyword}, '%') or p.plan_no like concat('%', #{keyword}, '%'))
+        </if>
+        order by
+        <choose>
+            <when test="sort == 'planNo'">p.plan_no</when>
+            <when test="sort == 'destination'">p.destination</when>
+            <when test="sort == 'startDate'">p.start_date</when>
+            <when test="sort == 'price'">p.price</when>
+            <when test="sort == 'capacity'">p.capacity</when>
+            <when test="sort == 'applicantTotal'">applicant_total</when>
+            <when test="sort == 'myApplicantCount'">my_applicant_count</when>
+            <otherwise>p.created_at</otherwise>
+        </choose>
+        <choose>
+            <when test="sortDir == 'asc'">asc</when>
+            <otherwise>desc</otherwise>
+        </choose>
+    </select>
+
+    <select id="findById" resultType="com.two.backend.model.TravelPlan">
+        select *
+        from travel_plans
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.two.backend.model.TravelPlan"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into travel_plans(plan_no, destination, start_date, end_date, price, capacity, published, file_path, file_name, status)
+        values(#{planNo}, #{destination}, #{startDate}, #{endDate}, #{price}, #{capacity}, #{published}, #{filePath}, #{fileName}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.two.backend.model.TravelPlan">
+        update travel_plans
+        set destination = #{destination},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            price = #{price},
+            capacity = #{capacity},
+            published = #{published},
+            file_path = #{filePath},
+            file_name = #{fileName},
+            updated_at = current_timestamp
+        where id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        update travel_plans
+        set status = #{status},
+            updated_at = current_timestamp
+        where id = #{id}
+    </update>
+
+    <update id="updateAllStatuses">
+        update travel_plans p
+        left join (
+          select plan_id, coalesce(sum(applicant_count), 0) as total
+          from applications
+          where status = 0
+          group by plan_id
+        ) agg on agg.plan_id = p.id
+        set p.status = case
+          when p.end_date &lt; current_date and coalesce(agg.total, 0) >= p.capacity then 3
+          when p.end_date &lt; current_date then 4
+          when p.start_date &lt;= current_date and coalesce(agg.total, 0) >= p.capacity then 2
+          when p.start_date &lt;= current_date then 4
+          when coalesce(agg.total, 0) >= p.capacity then 1
+          else 0
+        end,
+        p.updated_at = current_timestamp
+    </update>
+
+    <delete id="delete">
+        delete from travel_plans
+        where id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.two.backend.mapper.UserMapper">
+
+    <select id="findByEmployeeNo" resultType="com.two.backend.model.User">
+        select *
+        from users
+        where binary employee_no = #{employeeNo}
+          and enabled = true
+    </select>
+
+    <select id="findById" resultType="com.two.backend.model.User">
+        select *
+        from users
+        where id = #{id}
+          and enabled = true
+    </select>
+
+    <update id="updatePassword">
+        update users
+        set password_md5 = #{passwordMd5}
+        where id = #{id}
+    </update>
+
+</mapper>

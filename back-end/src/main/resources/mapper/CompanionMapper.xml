@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.two.backend.mapper.CompanionMapper">
+
+    <select id="listByApplication" resultType="com.two.backend.model.Companion">
+        select *
+        from companions
+        where application_id = #{applicationId}
+        order by id
+    </select>
+
+    <insert id="insert" parameterType="com.two.backend.model.Companion"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into companions(application_id, name, gender, id_card, bed_needed)
+        values(#{applicationId}, #{name}, #{gender}, #{idCard}, #{bedNeeded})
+    </insert>
+
+    <delete id="deleteByApplication">
+        delete from companions
+        where application_id = #{applicationId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.two.backend.mapper.ApplicationMapper">
+
+    <select id="findActive" resultType="com.two.backend.model.Application">
+        select *
+        from applications
+        where plan_id = #{planId}
+          and user_id = #{userId}
+          and status = 0
+    </select>
+
+    <select id="activeCount" resultType="int">
+        select coalesce(sum(applicant_count), 0)
+        from applications
+        where plan_id = #{planId}
+          and status = 0
+    </select>
+
+    <select id="listActiveByPlan" resultType="com.two.backend.model.Application">
+        select a.*, u.name user_name, u.employee_no, u.email, p.plan_no, p.destination
+        from applications a
+        join users u on u.id = a.user_id
+        join travel_plans p on p.id = a.plan_id
+        where a.plan_id = #{planId}
+          and a.status = 0
+        order by a.created_at
+    </select>
+
+    <select id="listByUser" resultType="com.two.backend.model.Application">
+        select a.*, p.plan_no, p.destination
+        from applications a
+        join travel_plans p on p.id = a.plan_id
+        where a.user_id = #{userId}
+        order by a.updated_at desc
+    </select>
+
+    <select id="findById" resultType="com.two.backend.model.Application">
+        select *
+        from applications
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.two.backend.model.Application"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into applications(plan_id, user_id, applicant_count, option_text, status)
+        values(#{planId}, #{userId}, #{applicantCount}, #{optionText}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.two.backend.model.Application">
+        update applications
+        set applicant_count = #{applicantCount},
+            option_text = #{optionText},
+            status = #{status},
+            updated_at = current_timestamp
+        where id = #{id}
+    </update>
+
+    <update id="cancel">
+        update applications
+        set status = 1,
+            updated_at = current_timestamp
+        where id = #{id}
+    </update>
+
+    <delete id="deleteByPlan">
+        delete from applications
+        where plan_id = #{planId}
+    </delete>
+
+</mapper>
