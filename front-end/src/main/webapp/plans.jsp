@@ -23,7 +23,7 @@
             </div>
         </header>
 
-        <!-- 筛选工具栏：按关键字、状态和排序方式查询旅行计划。 -->
+        <!-- 筛选工具栏：按关键字和状态查询旅行计划。 -->
         <section class="toolbar">
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
@@ -33,12 +33,6 @@
                 <option value="2">进行中</option>
                 <option value="3">已结束</option>
                 <option value="4">未成团</option>
-            </select>
-            <select id="sortSelect">
-                <option value="">默认排序</option>
-                <option value="startDate">按日期排序</option>
-                <option value="price">按价格排序</option>
-                <option value="capacity">按定员排序</option>
             </select>
             <button id="searchBtn" class="primary">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>

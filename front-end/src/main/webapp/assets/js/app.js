@@ -723,6 +723,13 @@ function bindPlansPageEvents() {
         go("index.jsp");
     };
     $("searchBtn").onclick = loadPlans;
+    $("keywordInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            loadPlans();
+        }
+    });
+    $("statusFilter").addEventListener("change", () => loadPlans());
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);
