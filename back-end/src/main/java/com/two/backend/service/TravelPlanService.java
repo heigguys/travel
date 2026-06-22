@@ -45,11 +45,12 @@ public class TravelPlanService {
      * @param user 当前用户
      * @param keyword 目的地或计划编号关键字
      * @param status 计划状态
+     * @param published 公开状态
      * @param sort 排序字段
      * @return 当前用户可见的旅行计划列表
      */
-    public List<TravelPlan> list(User user, String keyword, Integer status, String sort, String sortDir) {
-        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, sort, sortDir);
+    public List<TravelPlan> list(User user, String keyword, Integer status, Boolean published, String sort, String sortDir) {
+        return travelPlanMapper.list(Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole()), user.getId(), keyword, status, published, sort, sortDir);
     }
 
     /**

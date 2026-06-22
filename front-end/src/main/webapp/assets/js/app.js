@@ -113,7 +113,9 @@ function closeDialog(dialog) {
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
     $("userInfo").textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
-    $("newPlanBtn").classList.toggle("hidden", Number(currentUser.role) !== 0);
+    const admin = Number(currentUser.role) === 0;
+    $("newPlanBtn").classList.toggle("hidden", !admin);
+    $("publishedFilter").classList.toggle("hidden", !admin);
 }
 
 // 根据筛选条件加载旅行计划列表。
@@ -121,6 +123,9 @@ async function loadPlans({resetPage = true} = {}) {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
+    if (!$("publishedFilter").classList.contains("hidden") && $("publishedFilter").value) {
+        params.set("published", $("publishedFilter").value);
+    }
     if (sortState.col) {
         params.set("sort", sortState.col);
         params.set("sortDir", sortState.dir);
@@ -730,6 +735,7 @@ function bindPlansPageEvents() {
         }
     });
     $("statusFilter").addEventListener("change", () => loadPlans());
+    $("publishedFilter").addEventListener("change", () => loadPlans());
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);

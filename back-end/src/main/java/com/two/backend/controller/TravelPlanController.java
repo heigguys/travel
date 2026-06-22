@@ -47,16 +47,18 @@ public class TravelPlanController {
      *
      * @param keyword 目的地或计划编号关键字
      * @param status 计划状态
+     * @param published 公开状态
      * @param sort 排序字段
      * @param session 当前 HTTP 会话
      * @return 旅行计划列表
      */
     public ApiResponse<List<TravelPlan>> list(@RequestParam(required = false) String keyword,
                                               @RequestParam(required = false) Integer status,
+                                              @RequestParam(required = false) Boolean published,
                                               @RequestParam(required = false) String sort,
                                               @RequestParam(required = false) String sortDir,
                                               HttpSession session) {
-        return ApiResponse.ok(travelPlanService.list(authService.currentUser(session), keyword, status, sort, sortDir));
+        return ApiResponse.ok(travelPlanService.list(authService.currentUser(session), keyword, status, published, sort, sortDir));
     }
 
     @GetMapping("/{id}")
