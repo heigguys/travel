@@ -5,10 +5,11 @@ let plans = [];
 // 当前排序状态：col 为后端字段名，dir 为 asc/desc，null 表示未排序。
 let sortState = { col: null, dir: null };
 let currentPlanPage = 1;
-const PLAN_PAGE_SIZE = 10;
+const PLAN_PAGE_SIZE = 7;
 const PLAN_LIST_REFRESH_MS = 10000;
 let planListRefreshTimer = null;
 let planListRefreshInFlight = false;
+let globalNavEventsBound = false;
 let activeConsultPlanId = null;
 let consultRefreshTimer = null;
 let consultRefreshInFlight = false;
@@ -21,6 +22,11 @@ const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
+
+const applicationStatusBadge = (status) => {
+    const value = Number(status);
+    return `<span class="status-badge application-status status-application-${value}">${applicationStatusLabel(value)}</span>`;
+};
 
 // 将价格统一显示为人民币格式，例如 ¥2,280。
 const formatPrice = (price) => {
@@ -47,6 +53,16 @@ const formatDateTime = (value) => {
 const planStatusLabel = (status) => {
     const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
     return map[Number(status)] ?? "";
+};
+
+const planStatusBadge = (status) => {
+    const value = Number(status);
+    return `<span class="status-badge plan-status status-plan-${value}">${planStatusLabel(value)}</span>`;
+};
+
+const publishStatusBadge = (published) => {
+    const isPublished = published === true || Number(published) === 1 || String(published).toLowerCase() === "true";
+    return `<span class="status-badge publish-status ${isPublished ? "status-published" : "status-draft"}">${isPublished ? "已公开" : "未公开"}</span>`;
 };
 
 const actionIcons = {
@@ -107,8 +123,15 @@ function closeDialog(dialog) {
 
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
-    $("userInfo").textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
+    updateGlobalNav();
     $("newPlanBtn").classList.toggle("hidden", Number(currentUser.role) !== 0);
+}
+
+function updateGlobalNav() {
+    const userInfo = $("userInfo");
+    if (userInfo && currentUser) {
+        userInfo.textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
+    }
 }
 
 // 根据筛选条件加载旅行计划列表。
@@ -181,7 +204,7 @@ function renderPlans() {
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
             : planNo;
-        const adminCells = admin ? `<td class="col-published">${plan.published ? "已公开" : "未公开"}</td>` : "";
+        const adminCells = admin ? `<td class="col-published">${publishStatusBadge(plan.published)}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
             : actionButton("edit", plan.id, "编辑");
@@ -190,7 +213,7 @@ function renderPlans() {
             : "";
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
-            <td class="col-status">${planStatusLabel(plan.status)}</td>
+            <td class="col-status">${planStatusBadge(plan.status)}</td>
             <td class="col-plan-no" title="${planNo}">${fileLink}</td>
             <td class="col-destination" title="${destination}">${destination}</td>
             <td class="col-date-range">${formatDateRange(plan.startDate, plan.endDate)}</td>
@@ -433,11 +456,11 @@ async function openMyApps() {
     $("myAppsRows").innerHTML = apps.map((app) => `
         <div class="message">
             <strong>${app.planNo} ${app.destination}</strong>
-            <p>人数：${app.applicantCount}，状态：${applicationStatusLabel(app.status)}，备注：${app.optionText || ""}</p>
+            <p>人数：${app.applicantCount}，状态：${applicationStatusBadge(app.status)}，备注：${app.optionText || ""}</p>
             <button data-app="${app.id}" data-count="${app.applicantCount}">修改人员信息</button>
             ${Number(app.status) === 0 ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
         </div>`).join("") || "<p class='muted'>暂无申请</p>";
-    $("myAppsDialog").showModal();
+    if (!$("myAppsDialog").open) $("myAppsDialog").showModal();
 }
 
 // 取消指定申请，并刷新我的申请和计划列表。
@@ -445,7 +468,7 @@ async function cancelApplication(id) {
     await api(`/applications/${id}/cancel`, {method: "POST"});
     toast("申请已取消");
     await openMyApps();
-    await loadPlans();
+    if ($("planRows")) await loadPlans();
 }
 
 // 转义用户输入内容，避免咨询消息中的 HTML 被浏览器执行。
@@ -671,6 +694,78 @@ function setupDateAutoJump(fieldId) {
     syncHasValue();
 }
 
+function bindGlobalNavEvents() {
+    if (globalNavEventsBound) return;
+    globalNavEventsBound = true;
+
+    document.addEventListener("click", async (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.dataset.close !== undefined) closeDialog(button.closest("dialog"));
+        if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
+        if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
+    });
+
+    const logoutBtn = $("logoutBtn");
+    if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+            await api("/auth/logout", {method: "POST"});
+            go("index.jsp");
+        };
+    }
+
+    const myAppsBtn = $("myAppsBtn");
+    if (myAppsBtn) myAppsBtn.onclick = openMyApps;
+
+    const exportPdfBtn = $("exportPdfBtn");
+    if (exportPdfBtn) exportPdfBtn.onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
+
+    const addCompanionBtn = $("addCompanionBtn");
+    if (addCompanionBtn) addCompanionBtn.onclick = () => addCompanionRow();
+
+    const companionsForm = $("companionsForm");
+    if (companionsForm) companionsForm.addEventListener("submit", saveCompanions);
+
+    const passwordForm = $("passwordForm");
+    const passwordBtn = $("passwordBtn");
+    if (passwordForm && passwordBtn) {
+        const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
+        const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
+        const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
+
+        passwordBtn.onclick = () => {
+            hidePasswordMessage();
+            syncOldPasswordToggle();
+            syncNewPasswordToggle();
+            syncConfirmPasswordToggle();
+            $("passwordDialog").showModal();
+        };
+        passwordForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            hidePasswordMessage();
+            if (passwordForm.newPassword.value !== passwordForm.confirmPassword.value) {
+                showPasswordMessage("两次输入的新密码不一致");
+                return;
+            }
+            try {
+                await api("/auth/password", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        oldPassword: passwordForm.oldPassword.value,
+                        newPassword: passwordForm.newPassword.value,
+                        confirmPassword: passwordForm.confirmPassword.value
+                    })
+                });
+                showPasswordMessage("密码修改成功", true);
+                closeDialog($("passwordDialog"));
+                toast("密码修改成功");
+            } catch (error) {
+                showPasswordMessage(error.message || "密码修改失败");
+            }
+        });
+    }
+}
+
 // 绑定计划列表页按钮、弹窗和表单事件。
 function bindPlansPageEvents() {
     document.addEventListener("click", async (event) => {
@@ -681,7 +776,6 @@ function bindPlansPageEvents() {
             renderPlans();
             return;
         }
-        if (button.dataset.close !== undefined) closeDialog(button.closest("dialog"));
         const action = button.dataset.action;
         const id = Number(button.dataset.id);
         // 编辑和申请跳转到独立页面，通过 URL 参数传递计划 ID。
@@ -689,14 +783,7 @@ function bindPlansPageEvents() {
         if (action === "delete") await deletePlan(id);
         if (action === "apply") go("plan-apply.jsp?planId=" + id);
         if (action === "consult") await openConsultDialog(id);
-        if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
-        if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
     });
-
-    const passwordForm = $("passwordForm");
-    const syncOldPasswordToggle = setupPasswordToggle(passwordForm.oldPassword, $("oldPasswordToggle"), hidePasswordMessage);
-    const syncNewPasswordToggle = setupPasswordToggle(passwordForm.newPassword, $("newPasswordToggle"), hidePasswordMessage);
-    const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
 
     // 列头点击排序：升序 → 降序 → 取消，切换后重新请求后端。
     $("planHeader").addEventListener("click", async (e) => {
@@ -713,53 +800,21 @@ function bindPlansPageEvents() {
         await loadPlans();
     });
 
-    $("logoutBtn").onclick = async () => {
-        await api("/auth/logout", {method: "POST"});
-        go("index.jsp");
-    };
     $("searchBtn").onclick = loadPlans;
+    $("keywordInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            loadPlans();
+        }
+    });
+    $("statusFilter").addEventListener("change", () => loadPlans());
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("mailNotifyBtn").onclick = notifyApplicantsAndDelete;
-    $("addCompanionBtn").onclick = () => addCompanionRow();
-    $("companionsForm").addEventListener("submit", saveCompanions);
     $("consultForm").addEventListener("submit", sendConsult);
     $("consultDialog").addEventListener("close", stopConsultAutoRefresh);
     window.addEventListener("beforeunload", stopPlanListAutoRefresh);
-    $("myAppsBtn").onclick = openMyApps;
-    $("exportPdfBtn").onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
-    $("passwordBtn").onclick = () => {
-        hidePasswordMessage();
-        syncOldPasswordToggle();
-        syncNewPasswordToggle();
-        syncConfirmPasswordToggle();
-        $("passwordDialog").showModal();
-    };
-    passwordForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        hidePasswordMessage();
-        if (passwordForm.newPassword.value !== passwordForm.confirmPassword.value) {
-            showPasswordMessage("两次输入的新密码不一致");
-            return;
-        }
-        try {
-            await api("/auth/password", {
-                method: "POST",
-                body: JSON.stringify({
-                    oldPassword: passwordForm.oldPassword.value,
-                    newPassword: passwordForm.newPassword.value,
-                    confirmPassword: passwordForm.confirmPassword.value
-                })
-            });
-            showPasswordMessage("密码修改成功", true);
-            closeDialog($("passwordDialog"));
-            toast("密码修改成功");
-        } catch (error) {
-            showPasswordMessage(error.message || "密码修改失败");
-        }
-    });
-    $("myAppsRows").addEventListener("click", () => {});
 }
 
 // 初始化计划列表页：未登录跳回登录页，认证错误和加载错误分开处理防止循环跳转。
@@ -772,6 +827,7 @@ async function initPlansPage() {
         go("index.jsp");
         return false;
     }
+    bindGlobalNavEvents();
     showPlansPage();
     try {
         await loadPlans();
@@ -791,6 +847,8 @@ async function initPlanEditPage() {
         go("index.jsp");
         return false;
     }
+    bindGlobalNavEvents();
+    updateGlobalNav();
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -943,6 +1001,8 @@ async function initPlanApplyPage() {
         go("index.jsp");
         return false;
     }
+    bindGlobalNavEvents();
+    updateGlobalNav();
 
     const params = new URLSearchParams(window.location.search);
     const planId = params.get("planId");
@@ -1044,9 +1104,23 @@ async function initPlanApplyPage() {
     return true;
 }
 
+async function initGlobalNavPage() {
+    if (!$("logoutBtn") && !$("myAppsBtn") && !$("passwordBtn")) return false;
+    try {
+        currentUser = await api("/auth/me");
+    } catch {
+        go("index.jsp");
+        return false;
+    }
+    bindGlobalNavEvents();
+    updateGlobalNav();
+    return true;
+}
+
 // 页面入口：依次检测各页面根元素，匹配到对应页面后执行其初始化函数。
 initLoginPage()
     .then((started) => started || initPlanEditPage())
     .then((started) => started || initPlanApplyPage())
     .then((started) => started || initPlansPage())
+    .then((started) => started || initGlobalNavPage())
     .catch((error) => toast(error.message));

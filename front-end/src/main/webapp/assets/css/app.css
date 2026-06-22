@@ -218,7 +218,7 @@ table {
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    min-width: 1258px;
+    min-width: 100%;
 }
 
 th, td {
@@ -281,16 +281,78 @@ th.desc .arrow-down {
     color: var(--blue);
 }
 
-.col-status { width: 88px; }
+.col-status { width: 126px; }
 .col-plan-no { width: 150px; }
 .col-destination { width: 150px; }
-.col-date-range { width: 180px; }
+.col-date-range { width: 230px; }
 .col-price { width: 100px; }
 .col-capacity { width: 90px; }
 .col-applicant-total { width: 120px; }
 .col-my-applicant-count { width: 130px; }
-.col-published { width: 100px; }
+.col-published { width: 126px; }
 .col-actions { width: 150px; }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    min-height: 32px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+    vertical-align: middle;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 1px 2px rgba(15, 23, 42, .05);
+}
+
+.status-badge::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .72);
+}
+
+.status-plan-0 {
+    border-color: #b9dafc;
+    background: #f1f8ff;
+    color: #0071e3;
+}
+
+.status-plan-1,
+.status-application-0,
+.status-published {
+    border-color: #bfe8c9;
+    background: #f1fbf4;
+    color: #248a3d;
+}
+
+.status-plan-2 {
+    border-color: #ffdca8;
+    background: #fff8ec;
+    color: #c46f00;
+}
+
+.status-plan-3,
+.status-draft {
+    border-color: #d9dce3;
+    background: #f7f8fa;
+    color: #6e6e73;
+}
+
+.status-plan-4,
+.status-application-1 {
+    border-color: #ffc7c2;
+    background: #fff4f3;
+    color: #d70015;
+}
 
 th.col-actions,
 td.col-actions {
@@ -666,15 +728,15 @@ dialog::backdrop {
 /* 独立表单页面布局，标题与卡片纵向排列。 */
 .form-page {
     display: grid;
-    gap: 16px;
-    width: min(860px, 100%);
+    gap: 18px;
+    width: min(1040px, 100%);
     margin: 0 auto;
     align-self: start;
     justify-items: center;
 }
 
 .plan-apply-page {
-    width: min(1060px, 100%);
+    width: min(1180px, 100%);
 }
 
 /* 表单卡片容器，白色背景、圆角边框、水平居中对齐。 */
@@ -705,21 +767,26 @@ dialog::backdrop {
 }
 
 .plan-edit-card {
-    width: min(800px, 100%);
-    max-width: 800px;
+    width: min(980px, 100%);
+    max-width: 980px;
     margin: 0 auto;
-    padding: 24px;
-    box-shadow: 0 4px 14px rgba(31, 41, 55, .06);
+    padding: 30px 34px;
+    border-color: rgba(203, 213, 225, .9);
+    border-radius: var(--radius);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .94)),
+        var(--surface);
+    box-shadow: var(--shadow-lg);
 }
 
 .plan-apply-card {
-    width: min(1000px, 100%);
-    max-width: 1000px;
+    width: min(1120px, 100%);
+    max-width: 1120px;
 }
 
 .plan-edit-form {
     display: grid;
-    gap: 24px;
+    gap: 20px;
 }
 
 .plan-edit-form > input[type="hidden"] {
@@ -728,18 +795,24 @@ dialog::backdrop {
 
 .plan-edit-title {
     margin: 0;
-    padding: 0 0 12px;
-    color: var(--blue);
-    font-size: 22px;
-    font-weight: 700;
-    border-bottom: 2px solid var(--blue);
+    padding: 0 0 14px;
+    color: #111827;
+    font-size: 24px;
+    font-weight: 800;
+    border-bottom: 1px solid #e8edf5;
 }
 
 .plan-form-row {
     display: grid;
-    grid-template-columns: 152px minmax(0, 1fr);
-    gap: 24px;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 28px;
     align-items: start;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f3f8;
+}
+
+.plan-form-row:last-of-type {
+    border-bottom: 0;
 }
 
 .plan-row-label {
@@ -1176,9 +1249,9 @@ label {
 
 .shell {
     position: relative;
-    width: min(1440px, 100%);
+    width: min(1680px, calc(100vw - 24px));
     margin: 0 auto;
-    padding: 32px;
+    padding: 24px;
 }
 
 .login-panel {
@@ -1219,6 +1292,184 @@ label {
     width: 100%;
     gap: 18px;
     animation: panel-in .32s ease both;
+}
+
+.global-nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 60px;
+    padding: 0 max(38px, calc((100vw - 1560px) / 2 + 38px));
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0)),
+        linear-gradient(135deg, #0b5bd3 0%, #0071e3 52%, #2897ff 100%);
+    color: #fff;
+    box-shadow: none;
+}
+
+.global-nav::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -16px;
+    left: 0;
+    height: 16px;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 113, 227, .28), rgba(0, 113, 227, 0));
+}
+
+.global-brand {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.global-user {
+    min-width: 0;
+    margin-left: auto;
+    color: rgba(255, 255, 255, .86);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.global-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.global-actions button {
+    min-height: 38px;
+    border-color: rgba(255, 255, 255, .34);
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-weight: 700;
+    box-shadow: none;
+    backdrop-filter: blur(10px);
+}
+
+.global-actions button:hover {
+    border-color: rgba(255, 255, 255, .58);
+    background: rgba(255, 255, 255, .24);
+    transform: translateY(-1px);
+}
+
+.sub-nav {
+    position: sticky;
+    top: 60px;
+    z-index: 29;
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 max(38px, calc((100vw - 1560px) / 2 + 38px));
+    border-top: 1px solid rgba(255, 255, 255, .32);
+    border-bottom: 1px solid rgba(203, 213, 225, .54);
+    background:
+        linear-gradient(180deg, rgba(219, 236, 255, .88), rgba(248, 251, 255, .84) 54%, rgba(255, 255, 255, .78));
+    box-shadow: 0 18px 34px rgba(15, 23, 42, .038);
+    backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.sub-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: #5f6f86;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0;
+}
+
+.sub-nav a {
+    color: #5f6f86;
+    text-decoration: none;
+    transition: color .16s ease;
+}
+
+.sub-nav a:hover {
+    color: var(--blue);
+}
+
+.sub-nav strong {
+    color: #182b49;
+    font-weight: 750;
+}
+
+.sub-nav-separator {
+    color: #8fa3bd;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.plans-body {
+    overflow-y: hidden;
+}
+
+.plans-shell {
+    width: min(1560px, calc(100vw - 36px));
+    padding: 18px 18px 22px;
+}
+
+.plans-body .app {
+    gap: 18px;
+}
+
+.plans-titlebar {
+    min-height: 74px;
+    padding: 18px 20px;
+}
+
+.plans-titlebar h1 {
+    font-size: 23px;
+}
+
+.plans-titlebar .muted {
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.plans-body .toolbar {
+    padding: 14px;
+}
+
+.plans-body .toolbar input,
+.plans-body .toolbar select {
+    height: 40px;
+    min-height: 40px;
+}
+
+.plans-body th,
+.plans-body td {
+    padding: 16px 14px;
+}
+
+.plans-body .status-badge {
+    min-height: 34px;
+    padding: 7px 14px;
+    font-size: 15px;
+}
+
+.plans-body .pagination {
+    margin-top: 0;
+    padding: 13px 14px;
+}
+
+.form-body .form-shell {
+    padding-top: 38px;
+    padding-bottom: 44px;
+}
+
+.form-body .form-card {
+    animation: panel-in .34s ease both;
 }
 
 .topbar {
@@ -1610,6 +1861,34 @@ button.password-toggle:hover:not(:disabled) {
 }
 
 @media (max-width: 700px) {
+    .global-nav {
+        position: static;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 18px;
+    }
+
+    .global-user {
+        margin-left: 0;
+    }
+
+    .global-actions button {
+        flex: 1;
+    }
+
+    .sub-nav {
+        position: static;
+        min-height: 40px;
+        padding: 0 18px;
+    }
+
+    .sub-nav-inner {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     .shell {
         padding: 18px;
     }

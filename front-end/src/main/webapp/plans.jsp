@@ -5,25 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公司旅行管理系统 - 旅游计划一览</title>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/app.css?v=<%= System.currentTimeMillis() %>">
 </head>
-<body>
-<main class="shell">
+<body class="plans-body">
+<nav class="global-nav">
+    <div class="global-brand">公司旅行管理系统</div>
+    <div id="userInfo" class="global-user"></div>
+    <div class="global-actions">
+        <button id="myAppsBtn" type="button">我的申请</button>
+        <button id="passwordBtn" type="button">修改密码</button>
+        <button id="logoutBtn" type="button">退出</button>
+    </div>
+</nav>
+<nav class="sub-nav" aria-label="页面导览">
+    <div class="sub-nav-inner">
+        <span>旅游计划管理</span>
+        <span class="sub-nav-separator">›</span>
+        <strong>旅游计划一览</strong>
+    </div>
+</nav>
+<main class="shell plans-shell">
     <!-- 旅游计划一览页：已登录用户查看和操作旅行计划，未登录会跳回 index.jsp。 -->
     <section id="appView" class="app">
-        <header class="topbar">
+        <header class="topbar plans-titlebar">
             <div>
                 <h1>旅游计划一览</h1>
-                <p id="userInfo" class="muted"></p>
-            </div>
-            <div class="actions">
-                <button id="myAppsBtn">我的申请</button>
-                <button id="passwordBtn">修改密码</button>
-                <button id="logoutBtn">退出</button>
+                <p class="muted">查看旅行计划、提交申请并跟踪申请状态</p>
             </div>
         </header>
 
-        <!-- 筛选工具栏：按关键字、状态和排序方式查询旅行计划。 -->
+        <!-- 筛选工具栏：按关键字和状态查询旅行计划。 -->
         <section class="toolbar">
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
@@ -33,12 +44,6 @@
                 <option value="2">进行中</option>
                 <option value="3">已结束</option>
                 <option value="4">未成团</option>
-            </select>
-            <select id="sortSelect">
-                <option value="">默认排序</option>
-                <option value="startDate">按日期排序</option>
-                <option value="price">按价格排序</option>
-                <option value="capacity">按定员排序</option>
             </select>
             <button id="searchBtn" class="primary">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>
@@ -147,6 +152,6 @@
 
 <!-- Toast 提示容器：用于显示保存、删除、取消等操作反馈。 -->
 <div id="toast" class="toast hidden"></div>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/app.js?v=<%= System.currentTimeMillis() %>"></script>
 </body>
 </html>
