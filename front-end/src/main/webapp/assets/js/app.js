@@ -29,6 +29,11 @@ const formatPrice = (price) => {
     return `¥${value.toLocaleString("en-US", {maximumFractionDigits: 0})}`;
 };
 
+const parsePriceInput = (price) => {
+    const normalized = String(price || "").replace(/[¥￥,\s]/g, "");
+    return normalized === "" ? NaN : Number(normalized);
+};
+
 const MAX_PLAN_PRICE = 10000;
 
 // 将后端日期 YYYY-MM-DD 统一显示为 YYYY/MM/DD。
@@ -599,7 +604,7 @@ function setupDateAutoJump(fieldId) {
 
         if (m.value) {
             month = clamp(Number.isFinite(month) ? month : 1, 1, 12);
-            m.value = String(month);
+            m.value = String(month).padStart(2, "0");
         }
 
         if (d.value) {
@@ -607,7 +612,7 @@ function setupDateAutoJump(fieldId) {
             const effectiveMonth = m.value ? month : 1;
             const maxDay = daysInMonth(effectiveYear, effectiveMonth);
             day = clamp(Number.isFinite(day) ? day : 1, 1, maxDay);
-            d.value = String(day);
+            d.value = String(day).padStart(2, "0");
         }
 
         syncHasValue();
@@ -619,8 +624,8 @@ function setupDateAutoJump(fieldId) {
     const fillFromNativeDate = (value) => {
         const [year = "", month = "", day = ""] = value.split("-");
         y.value = year;
-        m.value = month ? String(parseInt(month, 10)) : "";
-        d.value = day ? String(parseInt(day, 10)) : "";
+        m.value = month || "";
+        d.value = day || "";
         syncHasValue();
     };
 
@@ -820,13 +825,13 @@ async function initPlanEditPage() {
             // 将 YYYY-MM-DD 拆分回三个输入格。
             const [sy = "", sm = "", sd = ""] = (plan.startDate || "").split("-");
             form.startYear.value = sy;
-            form.startMonth.value = sm ? parseInt(sm, 10) : "";
-            form.startDay.value = sd ? parseInt(sd, 10) : "";
+            form.startMonth.value = sm || "";
+            form.startDay.value = sd || "";
             const [ey = "", em = "", ed = ""] = (plan.endDate || "").split("-");
             form.endYear.value = ey;
-            form.endMonth.value = em ? parseInt(em, 10) : "";
-            form.endDay.value = ed ? parseInt(ed, 10) : "";
-            form.price.value = plan.price || "";
+            form.endMonth.value = em || "";
+            form.endDay.value = ed || "";
+            form.price.value = formatPrice(plan.price);
             form.capacity.value = plan.capacity || "";
             form.published.value = Boolean(plan.published) ? "true" : "false";
             updateFileDisplay(plan.fileName);
@@ -854,13 +859,18 @@ async function initPlanEditPage() {
     destInput.addEventListener("input", () => destInput.setCustomValidity(""));
 
     // 价格离焦校验：[0, 10000]。
+    form.price.addEventListener("focus", () => {
+        const value = parsePriceInput(form.price.value);
+        if (Number.isFinite(value)) form.price.value = String(value);
+    });
     form.price.addEventListener("blur", () => {
-        const v = Number(form.price.value);
-        if (form.price.value !== "" && (v < 0 || v > MAX_PLAN_PRICE)) {
-            form.price.setCustomValidity(v < 0 ? "价格不能为负数" : "单人价格上限为10000元");
+        const v = parsePriceInput(form.price.value);
+        if (form.price.value !== "" && (!Number.isFinite(v) || v < 0 || v > MAX_PLAN_PRICE)) {
+            form.price.setCustomValidity(!Number.isFinite(v) ? "请输入正确的价格" : (v < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
             form.price.reportValidity();
         } else {
             form.price.setCustomValidity("");
+            if (Number.isFinite(v)) form.price.value = formatPrice(v);
         }
     });
     form.price.addEventListener("input", () => form.price.setCustomValidity(""));
@@ -869,7 +879,7 @@ async function initPlanEditPage() {
     form.capacity.addEventListener("blur", () => {
         const v = Number(form.capacity.value);
         if (form.capacity.value !== "" && (v < 10 || v > 50)) {
-            form.capacity.setCustomValidity(v < 10 ? "定员数不能少于10人" : "人数上限为50人");
+            form.capacity.setCustomValidity(v < 10 ? "人数需大于等于10" : "人数上限为50人");
             form.capacity.reportValidity();
         } else {
             form.capacity.setCustomValidity("");
@@ -892,13 +902,21 @@ async function initPlanEditPage() {
         }
         destInput.setCustomValidity("");
 
-        const price = Number(form.price.value);
-        if (Number.isFinite(price) && (price < 0 || price > MAX_PLAN_PRICE)) {
-            form.price.setCustomValidity(price < 0 ? "价格不能为负数" : "单人价格上限为10000元");
+        const price = parsePriceInput(form.price.value);
+        if (!Number.isFinite(price) || price < 0 || price > MAX_PLAN_PRICE) {
+            form.price.setCustomValidity(!Number.isFinite(price) ? "请输入正确的价格" : (price < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
             form.price.reportValidity();
             return;
         }
         form.price.setCustomValidity("");
+
+        const capacity = Number(form.capacity.value);
+        if (!Number.isFinite(capacity) || capacity < 10 || capacity > 50) {
+            form.capacity.setCustomValidity(!Number.isFinite(capacity) ? "请填写定员数" : (capacity < 10 ? "人数需大于等于10" : "人数上限为50人"));
+            form.capacity.reportValidity();
+            return;
+        }
+        form.capacity.setCustomValidity("");
 
         const sy = form.startYear.value, sm = form.startMonth.value, sd = form.startDay.value;
         const ey = form.endYear.value, em = form.endMonth.value, ed = form.endDay.value;
@@ -918,6 +936,7 @@ async function initPlanEditPage() {
         const data = new FormData(form);
         data.set("startDate", startDate);
         data.set("endDate", endDate);
+        data.set("price", String(price));
         ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
         data.set("published", form.published.value === "true" ? "true" : "false");
         const planId = form.id.value;

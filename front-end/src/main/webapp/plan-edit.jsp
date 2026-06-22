@@ -71,10 +71,10 @@
                     </div>
                     <div class="plan-control-grid">
                         <label>价格（元）
-                            <input name="price" type="number" step="0.01" required>
+                            <input name="price" type="text" inputmode="decimal" required>
                         </label>
                         <label>定员数（人）
-                            <input name="capacity" type="number" required>
+                            <input name="capacity" type="number" required placeholder="人数需大于等于10">
                         </label>
                     </div>
                 </div>
