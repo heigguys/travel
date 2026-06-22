@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公司旅行管理系统 - 旅游计划一览</title>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/app.css?v=<%= System.currentTimeMillis() %>">
 </head>
 <body>
 <main class="shell">
@@ -141,6 +141,6 @@
 
 <!-- Toast 提示容器：用于显示保存、删除、取消等操作反馈。 -->
 <div id="toast" class="toast hidden"></div>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/app.js?v=<%= System.currentTimeMillis() %>"></script>
 </body>
 </html>

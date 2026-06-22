@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公司旅行管理系统 - 申请旅行计划</title>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/app.css?v=<%= System.currentTimeMillis() %>">
 </head>
 <body>
 <main class="shell form-shell">
@@ -76,6 +76,6 @@
     </section>
 </main>
 <div id="toast" class="toast hidden"></div>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/app.js?v=<%= System.currentTimeMillis() %>"></script>
 </body>
 </html>
