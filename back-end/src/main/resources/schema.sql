@@ -1,46 +1,80 @@
-insert ignore into users(id, employee_no, name, email, role, password_md5, enabled) values
-                                                                                        (1, '聂宁波', '聂宁波', '2190058893@qq.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
-                                                                                        (2, '唐笑松', '唐笑松', '2837069797@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
-                                                                                        (3, '史简', '史简', '1466648412@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
+create table if not exists users (
+    id bigint primary key auto_increment,
+    employee_no varchar(32) not null,
+    name varchar(80) not null,
+    email varchar(160) not null,
+    role tinyint not null,
+    password_md5 varchar(32) not null,
+    enabled boolean not null default true,
+    created_at timestamp not null default current_timestamp,
+    unique key uk_users_employee_no (employee_no)
+) engine=InnoDB default charset=utf8mb4;
 
-insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, price, capacity, published, status) values
-                                                                                                                        (1, 'TP20260615001', '敦煌莫高窟', '2026-09-18', '2026-09-24', 3280.00, 20, true, 0),
-                                                                                                                        (2, 'TP20260615002', '青海湖', '2026-08-06', '2026-08-10', 2980.00, 18, true, 0),
-                                                                                                                        (3, 'TP20260615003', '成都', '2026-07-20', '2026-07-25', 2680.00, 16, false, 0),
-                                                                                                                        (4, 'TP20260615004', '西安', '2026-11-01', '2026-11-05', 2380.00, 14, false, 0),
-                                                                                                                        (5, 'TP20260615005', '厦门', '2026-07-08', '2026-07-13', 3580.00, 5, true, 1),
-                                                                                                                        (6, 'TP20260615006', '桂林', '2026-08-15', '2026-08-20', 3180.00, 6, true, 1),
-                                                                                                                        (7, 'TP20260615007', '张家界', '2026-10-01', '2026-10-07', 4280.00, 8, true, 1),
-                                                                                                                        (8, 'TP20260615008', '长白山', '2026-12-20', '2026-12-25', 3880.00, 10, true, 1),
-                                                                                                                        (9, 'TP20260615009', '杭州西湖', '2026-06-10', '2026-06-14', 1980.00, 22, true, 2),
-                                                                                                                        (10, 'TP20260615010', '重庆', '2026-06-12', '2026-06-16', 2280.00, 20, true, 2),
-                                                                                                                        (11, 'TP20260615011', '三亚', '2026-06-08', '2026-06-15', 4680.00, 18, true, 2),
-                                                                                                                        (12, 'TP20260615012', '南京', '2026-06-01', '2026-06-12', 1880.00, 16, false, 2),
-                                                                                                                        (13, 'TP20260615013', '北京', '2026-04-10', '2026-04-15', 2680.00, 4, true, 3),
-                                                                                                                        (14, 'TP20260615014', '苏州', '2026-05-01', '2026-05-04', 1680.00, 5, true, 3),
-                                                                                                                        (15, 'TP20260615015', '哈尔滨', '2026-01-05', '2026-01-10', 3380.00, 6, true, 3),
-                                                                                                                        (16, 'TP20260615016', '大理', '2026-03-18', '2026-03-23', 3280.00, 8, false, 3),
-                                                                                                                        (17, 'TP20260615017', '呼伦贝尔', '2026-04-20', '2026-04-26', 4380.00, 20, true, 4),
-                                                                                                                        (18, 'TP20260615018', '武夷山', '2026-05-12', '2026-05-16', 2580.00, 15, true, 4),
-                                                                                                                        (19, 'TP20260615019', '丽江', '2026-02-14', '2026-02-20', 3680.00, 18, true, 4),
-                                                                                                                        (20, 'TP20260615020', '珠海', '2026-05-28', '2026-05-31', 2080.00, 12, false, 4);
+create table if not exists travel_plans (
+    id bigint primary key auto_increment,
+    plan_no varchar(40) not null,
+    destination varchar(120) not null,
+    start_date date not null,
+    end_date date not null,
+    price decimal(12, 2) not null,
+    capacity int not null,
+    published boolean not null default false,
+    file_path varchar(260) null,
+    file_name varchar(180) null,
+    status tinyint not null default 0,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp on update current_timestamp,
+    unique key uk_travel_plans_plan_no (plan_no),
+    key idx_travel_plans_status (status),
+    key idx_travel_plans_published (published)
+) engine=InnoDB default charset=utf8mb4;
 
-insert ignore into applications(id, plan_id, user_id, applicant_count, option_text, status) values
-                                                                                                (1, 1, 2, 3, '希望安排靠窗座位', 0),
-                                                                                                (2, 2, 3, 2, '无', 0),
-                                                                                                (3, 5, 2, 3, '希望安排双人间', 0),
-                                                                                                (4, 5, 3, 2, '无', 0),
-                                                                                                (5, 6, 2, 4, '希望靠前座位', 0),
-                                                                                                (6, 6, 3, 2, '无', 0),
-                                                                                                (7, 7, 2, 5, '需要素食餐', 0),
-                                                                                                (8, 7, 3, 3, '无', 0),
-                                                                                                (9, 8, 2, 6, '携带老人同行', 0),
-                                                                                                (10, 8, 3, 4, '无', 0),
-                                                                                                (11, 13, 2, 2, '希望安排讲解器', 0),
-                                                                                                (12, 13, 3, 2, '无', 0),
-                                                                                                (13, 14, 2, 3, '需要连住同一酒店', 0),
-                                                                                                (14, 14, 3, 2, '无', 0),
-                                                                                                (15, 15, 2, 4, '希望安排保暖用品提醒', 0),
-                                                                                                (16, 15, 3, 2, '无', 0),
-                                                                                                (17, 16, 2, 5, '希望安排靠窗座位', 0),
-                                                                                                (18, 16, 3, 3, '无', 0);
+create table if not exists applications (
+    id bigint primary key auto_increment,
+    plan_id bigint not null,
+    user_id bigint not null,
+    applicant_count int not null,
+    option_text varchar(500) null,
+    status tinyint not null default 0,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp on update current_timestamp,
+    key idx_applications_plan_status (plan_id, status),
+    key idx_applications_user (user_id)
+) engine=InnoDB default charset=utf8mb4;
+
+create table if not exists companions (
+    id bigint primary key auto_increment,
+    application_id bigint not null,
+    name varchar(80) not null,
+    gender varchar(20) not null,
+    id_card varchar(32) not null,
+    bed_needed boolean not null default true,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp on update current_timestamp,
+    key idx_companions_application (application_id)
+) engine=InnoDB default charset=utf8mb4;
+
+create table if not exists consultations (
+    id bigint primary key auto_increment,
+    plan_id bigint not null,
+    user_id bigint not null,
+    participant_user_id bigint not null,
+    sender_role tinyint not null,
+    content varchar(1000) not null,
+    status varchar(20) not null default 'OPEN',
+    created_at timestamp not null default current_timestamp,
+    key idx_consultations_plan_user (plan_id, participant_user_id),
+    key idx_consultations_user (user_id)
+) engine=InnoDB default charset=utf8mb4;
+
+create table if not exists consultation_admin_reads (
+    plan_id bigint primary key,
+    last_read_at timestamp not null default current_timestamp
+) engine=InnoDB default charset=utf8mb4;
+
+create table if not exists consultation_user_reads (
+    plan_id bigint not null,
+    user_id bigint not null,
+    last_read_at timestamp not null default current_timestamp,
+    primary key (plan_id, user_id)
+) engine=InnoDB default charset=utf8mb4;
