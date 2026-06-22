@@ -508,20 +508,60 @@ async function initLoginPage() {
     const loginForm = $("loginForm");
     if (!loginForm) return false;
 
-    setupPasswordToggle(loginForm.password, $("loginPasswordToggle"), () => $("loginError").classList.add("hidden"));
+    const loginError = $("loginError");
+    const employeeNoInput = loginForm.employeeNo;
+    const passwordInput = loginForm.password;
+    const clearLoginError = () => loginError.classList.add("hidden");
+    const clearLoginFieldError = (input) => input.setCustomValidity("");
+    const setLoginRequiredMessage = (input, message) => {
+        if (!input.value.trim()) {
+            input.setCustomValidity(message);
+        }
+    };
+
+    employeeNoInput.addEventListener("input", () => {
+        clearLoginFieldError(employeeNoInput);
+        clearLoginError();
+    });
+    employeeNoInput.addEventListener("invalid", () => setLoginRequiredMessage(employeeNoInput, "员工编号不能为空"));
+    passwordInput.addEventListener("input", () => {
+        clearLoginFieldError(passwordInput);
+        clearLoginError();
+    });
+    passwordInput.addEventListener("invalid", () => setLoginRequiredMessage(passwordInput, "密码不能为空"));
+
+    setupPasswordToggle(passwordInput, $("loginPasswordToggle"), clearLoginError);
     loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        $("loginError").classList.add("hidden");
+        clearLoginError();
+        clearLoginFieldError(employeeNoInput);
+        clearLoginFieldError(passwordInput);
+
+        if (!employeeNoInput.value.trim()) {
+            employeeNoInput.setCustomValidity("员工编号不能为空");
+            employeeNoInput.reportValidity();
+            return;
+        }
+        if (!passwordInput.value.trim()) {
+            passwordInput.setCustomValidity("密码不能为空");
+            passwordInput.reportValidity();
+            return;
+        }
+
         try {
             currentUser = await api("/auth/login", {
                 method: "POST",
-                body: JSON.stringify({employeeNo: loginForm.employeeNo.value, password: loginForm.password.value})
+                body: JSON.stringify({employeeNo: employeeNoInput.value.trim(), password: passwordInput.value})
             });
             go("plans.jsp");
         } catch (error) {
             const message = error.message || "";
-            $("loginError").textContent = message.includes("密码") ? "账号或密码错误" : "无法连接服务器，请检查后端地址或网络";
-            $("loginError").classList.remove("hidden");
+            loginError.textContent = error instanceof TypeError
+                ? "无法连接服务器，请检查后端地址或网络"
+                : (message === "该用户不存在"
+                    ? "账号不存在"
+                    : (message === "密码错误" ? "密码不正确，请重新输入" : (message || "无法连接服务器，请检查后端地址或网络")));
+            loginError.classList.remove("hidden");
         }
     });
 
