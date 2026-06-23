@@ -49,6 +49,13 @@ const formatDate = (date) => String(date || "").replaceAll("-", "/");
 
 const formatDateRange = (startDate, endDate) => `${formatDate(startDate)} - ${formatDate(endDate)}`;
 
+const formatDateInputValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
 const formatDateTime = (value) => {
     if (!value) return "";
     const normalized = String(value).replace("T", " ");
@@ -930,6 +937,7 @@ async function initPlanEditPage() {
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
+    const creating = !id;
     const form = $("planEditForm");
     const fileInput = $("planFileInput");
     const fileText = $("planFileText");
@@ -984,6 +992,13 @@ async function initPlanEditPage() {
     // 复用分段日期自动跳格逻辑。
     setupDateAutoJump("startDateField");
     setupDateAutoJump("endDateField");
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minStartDate = formatDateInputValue(tomorrow);
+    const startNativeDate = $("startDateField")?.querySelector(".date-native");
+    if (creating && startNativeDate) {
+        startNativeDate.min = minStartDate;
+    }
 
     // 目的地离焦校验。
     const destInput = form.destination;
@@ -1053,6 +1068,11 @@ async function initPlanEditPage() {
 
         const startDate = `${sy.padStart(4, "0")}-${sm.padStart(2, "0")}-${sd.padStart(2, "0")}`;
         const endDate = `${ey.padStart(4, "0")}-${em.padStart(2, "0")}-${ed.padStart(2, "0")}`;
+        if (creating && startDate < minStartDate) {
+            errorEl.textContent = "启程日最早可以选择明天";
+            errorEl.classList.remove("hidden");
+            return;
+        }
         const data = new FormData(form);
         data.set("startDate", startDate);
         data.set("endDate", endDate);

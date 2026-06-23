@@ -100,12 +100,19 @@ public class TravelPlanService {
      */
     public TravelPlan create(PlanRequest request, MultipartFile file) throws IOException {
         validatePlan(request);
+        validateCreateStartDate(request);
         TravelPlan plan = new TravelPlan();
         plan.setPlanNo(generatePlanNo());
         fillPlan(plan, request, file);
         plan.setStatus(computeInitialStatus(request.startDate(), request.endDate()));
         travelPlanMapper.insert(plan);
         return plan;
+    }
+
+    private void validateCreateStartDate(PlanRequest request) {
+        if (!request.startDate().isAfter(LocalDate.now())) {
+            throw new BusinessException("启程日最早可以选择明天");
+        }
     }
 
     private String generatePlanNo() {
