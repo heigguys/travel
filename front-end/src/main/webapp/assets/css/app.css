@@ -792,7 +792,7 @@ button.date-picker-btn:focus {
 
 .plan-edit-form {
     display: grid;
-    gap: 20px;
+    gap: 14px;
 }
 
 .plan-edit-form > input[type="hidden"] {
@@ -813,7 +813,7 @@ button.date-picker-btn:focus {
     grid-template-columns: 180px minmax(0, 1fr);
     gap: 28px;
     align-items: start;
-    padding: 16px 0;
+    padding: 10px 0;
     border-bottom: 1px solid #f0f3f8;
 }
 
@@ -823,7 +823,7 @@ button.date-picker-btn:focus {
 
 .plan-row-label {
     display: grid;
-    gap: 14px;
+    gap: 8px;
     padding-top: 2px;
 }
 
@@ -923,7 +923,7 @@ button.date-picker-btn:focus {
 }
 
 .upload-dropzone {
-    min-height: 100px;
+    min-height: 72px;
     border: 2px dashed #c7d7ee;
     border-radius: 8px;
     background: #fff;
@@ -933,10 +933,10 @@ button.date-picker-btn:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 10px;
     text-align: center;
     cursor: pointer;
-    padding: 18px;
+    padding: 12px;
     min-width: 0;
 }
 
@@ -953,7 +953,7 @@ button.date-picker-btn:focus {
 
 .upload-file-copy {
     display: grid;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
     text-align: center;
 }
@@ -972,7 +972,7 @@ button.date-picker-btn:focus {
 
 .upload-dropzone.has-file .upload-file-name {
     color: var(--blue);
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .upload-file-hint {
@@ -988,8 +988,8 @@ button.date-picker-btn:focus {
     display: flex;
     align-items: center;
     gap: 28px;
-    min-height: 46px;
-    padding: 10px 18px;
+    min-height: 38px;
+    padding: 7px 18px;
     border-radius: 6px;
     background: var(--bg);
 }
@@ -1011,8 +1011,8 @@ button.date-picker-btn:focus {
 
 .plan-note {
     grid-column: 2;
-    margin: -10px 0 0;
-    padding: 8px 10px;
+    margin: -6px 0 0;
+    padding: 6px 10px;
     border-radius: 4px;
     background: #eef5ff;
     color: var(--muted);
