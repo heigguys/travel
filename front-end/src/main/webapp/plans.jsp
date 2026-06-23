@@ -121,19 +121,19 @@
         <h2>修改密码</h2>
         <label>原密码
             <span class="password-field">
-                <input name="oldPassword" type="password" required>
+                <input name="oldPassword" type="password" autocomplete="current-password" required>
                 <button id="oldPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
             </span>
         </label>
         <label>新密码
             <span class="password-field">
-                <input name="newPassword" type="password" required minlength="6">
+                <input name="newPassword" type="password" autocomplete="new-password" required minlength="6">
                 <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
             </span>
         </label>
         <label>确认密码
             <span class="password-field">
-                <input name="confirmPassword" type="password" required minlength="6">
+                <input name="confirmPassword" type="password" autocomplete="new-password" required minlength="6">
                 <button id="confirmPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
             </span>
         </label>

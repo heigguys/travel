@@ -600,6 +600,13 @@ function hidePasswordMessage() {
     $("passwordMessage").classList.add("hidden");
 }
 
+function resetPasswordForm(passwordForm) {
+    passwordForm.reset();
+    [passwordForm.oldPassword, passwordForm.newPassword, passwordForm.confirmPassword].forEach((input) => {
+        input.type = "password";
+    });
+}
+
 // 初始化登录页：已登录自动进入计划页，登录成功后跳转 plans.jsp。
 async function initLoginPage() {
     const loginForm = $("loginForm");
@@ -808,6 +815,7 @@ function bindGlobalNavEvents() {
         const syncConfirmPasswordToggle = setupPasswordToggle(passwordForm.confirmPassword, $("confirmPasswordToggle"), hidePasswordMessage);
 
         passwordBtn.onclick = () => {
+            resetPasswordForm(passwordForm);
             hidePasswordMessage();
             syncOldPasswordToggle();
             syncNewPasswordToggle();
@@ -832,6 +840,7 @@ function bindGlobalNavEvents() {
                 });
                 showPasswordMessage("密码修改成功", true);
                 closeDialog($("passwordDialog"));
+                resetPasswordForm(passwordForm);
                 toast("密码修改成功");
             } catch (error) {
                 showPasswordMessage(error.message || "密码修改失败");
