@@ -632,7 +632,7 @@ function setupDateAutoJump(fieldId) {
 
         if (m.value) {
             month = clamp(Number.isFinite(month) ? month : 1, 1, 12);
-            m.value = String(month);
+            m.value = String(month).padStart(2, "0");
         }
 
         if (d.value) {
@@ -640,7 +640,7 @@ function setupDateAutoJump(fieldId) {
             const effectiveMonth = m.value ? month : 1;
             const maxDay = daysInMonth(effectiveYear, effectiveMonth);
             day = clamp(Number.isFinite(day) ? day : 1, 1, maxDay);
-            d.value = String(day);
+            d.value = String(day).padStart(2, "0");
         }
 
         syncHasValue();
@@ -652,8 +652,8 @@ function setupDateAutoJump(fieldId) {
     const fillFromNativeDate = (value) => {
         const [year = "", month = "", day = ""] = value.split("-");
         y.value = year;
-        m.value = month ? String(parseInt(month, 10)) : "";
-        d.value = day ? String(parseInt(day, 10)) : "";
+        m.value = month;
+        d.value = day;
         syncHasValue();
     };
 
@@ -932,12 +932,13 @@ async function initPlanEditPage() {
 
     // 价格离焦校验：[0, 10000]。
     form.price.addEventListener("blur", () => {
-        const v = Number(form.price.value);
-        if (form.price.value !== "" && (v < 0 || v > MAX_PLAN_PRICE)) {
-            form.price.setCustomValidity(v < 0 ? "价格不能为负数" : "单人价格上限为10000元");
+        const v = parsePriceInput(form.price.value);
+        if (form.price.value !== "" && (!Number.isFinite(v) || v < 0 || v > MAX_PLAN_PRICE)) {
+            form.price.setCustomValidity(!Number.isFinite(v) ? "请输入有效价格" : (v < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
             form.price.reportValidity();
         } else {
             form.price.setCustomValidity("");
+            if (Number.isFinite(v)) form.price.value = formatPrice(v);
         }
     });
     form.price.addEventListener("input", () => form.price.setCustomValidity(""));
@@ -966,9 +967,9 @@ async function initPlanEditPage() {
         }
         destInput.setCustomValidity("");
 
-        const price = Number(form.price.value);
-        if (Number.isFinite(price) && (price < 0 || price > MAX_PLAN_PRICE)) {
-            form.price.setCustomValidity(price < 0 ? "价格不能为负数" : "单人价格上限为10000元");
+        const price = parsePriceInput(form.price.value);
+        if (!Number.isFinite(price) || price < 0 || price > MAX_PLAN_PRICE) {
+            form.price.setCustomValidity(!Number.isFinite(price) ? "请输入有效价格" : (price < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
             form.price.reportValidity();
             return;
         }
@@ -992,6 +993,7 @@ async function initPlanEditPage() {
         const data = new FormData(form);
         data.set("startDate", startDate);
         data.set("endDate", endDate);
+        data.set("price", String(price));
         ["startYear", "startMonth", "startDay", "endYear", "endMonth", "endDay"].forEach(k => data.delete(k));
         data.set("published", form.published.value === "true" ? "true" : "false");
         const planId = form.id.value;

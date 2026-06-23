@@ -673,6 +673,7 @@ dialog::backdrop {
     right: 6px;
     width: 30px;
     height: 30px;
+    min-height: 30px;
     padding: 0;
     border-color: transparent;
     background: transparent;
@@ -682,8 +683,13 @@ dialog::backdrop {
     align-items: center;
     justify-content: center;
 }
-.date-picker-btn:hover {
+button.date-picker-btn:hover:not(:disabled) {
     background: #eef5ff;
+    transform: translateY(-50%);
+}
+button.date-picker-btn:active:not(:disabled),
+button.date-picker-btn:focus {
+    transform: translateY(-50%);
 }
 .date-picker-btn svg {
     width: 17px;
