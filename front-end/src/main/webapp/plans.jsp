@@ -76,14 +76,29 @@
 
 <!-- 咨询弹窗：展示计划咨询消息并发送新咨询。 -->
 <dialog id="consultDialog">
-    <form id="consultForm" method="dialog" class="stack">
-        <h2>咨询管理</h2>
-        <input type="hidden" name="planId">
-        <div id="messages" class="messages"></div>
-        <textarea name="content" rows="3" placeholder="输入咨询或回复内容" required></textarea>
-        <div class="dialog-actions">
+    <form id="consultForm" method="dialog" class="consult-panel">
+        <div class="consult-header">
+            <h2>咨询管理</h2>
             <button value="cancel" type="button" data-close>关闭</button>
-            <button class="primary" type="submit">发送</button>
+        </div>
+        <input type="hidden" name="planId">
+        <input type="hidden" name="participantUserId">
+        <div class="consult-layout">
+            <aside class="consult-sidebar">
+                <div class="consult-column-title">咨询员工</div>
+                <div id="consultSessions" class="consult-sessions"></div>
+            </aside>
+            <section class="consult-plan-panel">
+                <div class="consult-column-title">旅游计划编号</div>
+                <div id="consultPlanNo" class="consult-plan-no"></div>
+            </section>
+            <section class="consult-chat-panel">
+                <div id="messages" class="messages consult-messages"></div>
+                <div class="consult-input-row">
+                    <textarea name="content" rows="3" placeholder="输入咨询或回复内容" required></textarea>
+                    <button class="primary consult-send-btn" type="submit">发送</button>
+                </div>
+            </section>
         </div>
     </form>
 </dialog>

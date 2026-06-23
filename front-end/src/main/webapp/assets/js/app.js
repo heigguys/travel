@@ -11,6 +11,8 @@ let planListRefreshTimer = null;
 let planListRefreshInFlight = false;
 let globalNavEventsBound = false;
 let activeConsultPlanId = null;
+let activeConsultPlanNo = "";
+let activeConsultParticipantId = null;
 let consultRefreshTimer = null;
 let consultRefreshInFlight = false;
 
@@ -337,21 +339,54 @@ async function saveCompanions(event) {
 // 打开咨询弹窗并加载当前计划的历史消息。
 async function openConsultDialog(planId) {
     stopConsultAutoRefresh();
+    const plan = plans.find((item) => Number(item.id) === Number(planId)) || {};
     activeConsultPlanId = planId;
+    activeConsultPlanNo = plan.planNo || String(planId);
+    activeConsultParticipantId = null;
     $("consultForm").reset();
     $("consultForm").planId.value = planId;
-    await renderMessages(planId, {forceScroll: true});
+    $("consultPlanNo").textContent = activeConsultPlanNo;
+    await renderConsultSessions(planId, {forceScroll: true});
     $("consultDialog").showModal();
     startConsultAutoRefresh();
 }
 
+async function renderConsultSessions(planId, {forceScroll = false} = {}) {
+    const sessions = await api(`/plans/${planId}/consultations/sessions`);
+    const sessionsEl = $("consultSessions");
+    if (!sessions.length) {
+        activeConsultParticipantId = null;
+        $("consultForm").participantUserId.value = "";
+        sessionsEl.innerHTML = "<p class='muted'>暂无员工咨询</p>";
+        renderEmptyConsultMessages("请选择左侧员工会话");
+        return;
+    }
+    if (!activeConsultParticipantId || !sessions.some((session) => Number(session.participantUserId) === Number(activeConsultParticipantId))) {
+        activeConsultParticipantId = sessions[0].participantUserId;
+    }
+    $("consultForm").participantUserId.value = activeConsultParticipantId;
+    sessionsEl.innerHTML = sessions.map((session) => {
+        const active = Number(session.participantUserId) === Number(activeConsultParticipantId) ? " active" : "";
+        const label = consultSessionLabel(session);
+        return `<button class="consult-session${active}" type="button" data-consult-user="${session.participantUserId}" title="${label}">
+            <span>${label}</span>
+            <small>${formatDateTime(session.latestCreatedAt)}</small>
+        </button>`;
+    }).join("");
+    await renderMessages(planId, {forceScroll});
+}
+
 // 渲染咨询消息列表，并对消息正文做 HTML 转义。
 async function renderMessages(planId, {forceScroll = false} = {}) {
-    const messages = await api(`/plans/${planId}/consultations`);
+    if (!activeConsultParticipantId) {
+        renderEmptyConsultMessages("暂无员工咨询");
+        return;
+    }
+    const messages = await api(`/plans/${planId}/consultations?participantUserId=${encodeURIComponent(activeConsultParticipantId)}`);
     const messagesEl = $("messages");
     const shouldKeepAtBottom = forceScroll || isNearBottom(messagesEl);
     messagesEl.innerHTML = messages.map((msg) => `
-        <div class="message ${Number(msg.senderRole) === 0 ? "admin" : ""}">
+        <div class="message ${Number(msg.userId) === Number(currentUser.id) ? "mine" : ""}">
             <strong>${messageSenderName(msg)}</strong>
             <p>${escapeHtml(msg.content)}</p>
             <small>${formatDateTime(msg.createdAt)}</small>
@@ -364,6 +399,16 @@ async function renderMessages(planId, {forceScroll = false} = {}) {
     }
     plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
     renderPlans();
+}
+
+function renderEmptyConsultMessages(message) {
+    $("messages").innerHTML = `<p class='muted'>${escapeHtml(message)}</p>`;
+}
+
+function consultSessionLabel(session) {
+    const employeeNo = escapeHtml(session.employeeNo || "");
+    const userName = escapeHtml(session.userName || "员工");
+    return employeeNo ? `（${employeeNo}）${userName}` : userName;
 }
 
 function isNearBottom(element) {
@@ -380,6 +425,8 @@ function stopConsultAutoRefresh() {
         consultRefreshTimer = null;
     }
     activeConsultPlanId = null;
+    activeConsultPlanNo = "";
+    activeConsultParticipantId = null;
     consultRefreshInFlight = false;
 }
 
@@ -387,7 +434,7 @@ async function refreshActiveConsultMessages() {
     if (!activeConsultPlanId || consultRefreshInFlight || !$("consultDialog").open) return;
     consultRefreshInFlight = true;
     try {
-        await renderMessages(activeConsultPlanId);
+        await renderConsultSessions(activeConsultPlanId);
     } catch (error) {
         console.warn("刷新咨询消息失败", error);
     } finally {
@@ -405,9 +452,19 @@ function messageSenderName(msg) {
 async function sendConsult(event) {
     event.preventDefault();
     const form = $("consultForm");
-    await api(`/plans/${form.planId.value}/consultations`, {method: "POST", body: JSON.stringify({content: form.content.value})});
+    if (Number(currentUser.role) === 0 && !form.participantUserId.value) {
+        toast("请先选择咨询员工");
+        return;
+    }
+    await api(`/plans/${form.planId.value}/consultations`, {
+        method: "POST",
+        body: JSON.stringify({
+            content: form.content.value,
+            participantUserId: form.participantUserId.value ? Number(form.participantUserId.value) : null
+        })
+    });
     form.content.value = "";
-    await renderMessages(form.planId.value, {forceScroll: true});
+    await renderConsultSessions(form.planId.value, {forceScroll: true});
 }
 
 // 删除旅行计划前先加载申请人预览，打开确认弹窗。
@@ -784,6 +841,12 @@ function bindPlansPageEvents() {
         if (button.dataset.page) {
             currentPlanPage = Number(button.dataset.page);
             renderPlans();
+            return;
+        }
+        if (button.dataset.consultUser) {
+            activeConsultParticipantId = Number(button.dataset.consultUser);
+            $("consultForm").participantUserId.value = activeConsultParticipantId;
+            await renderConsultSessions(activeConsultPlanId, {forceScroll: true});
             return;
         }
         const action = button.dataset.action;

@@ -4,13 +4,30 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.two.backend.mapper.ConsultationMapper">
 
-    <select id="listByPlan" resultType="com.two.backend.model.Consultation">
+    <select id="listByPlanAndParticipant" resultType="com.two.backend.model.Consultation">
         select c.*, u.name user_name, u.employee_no, p.destination
         from consultations c
         join users u on u.id = c.user_id
         join travel_plans p on p.id = c.plan_id
         where c.plan_id = #{planId}
+          and c.participant_user_id = #{participantUserId}
         order by c.created_at, c.id
+    </select>
+
+    <select id="listSessions" resultType="com.two.backend.model.ConsultationSession">
+        select c.participant_user_id, u.employee_no, u.name user_name, max(c.created_at) latest_created_at
+        from consultations c
+        join users u on u.id = c.participant_user_id
+        where c.plan_id = #{planId}
+        group by c.participant_user_id, u.employee_no, u.name
+        order by max(c.created_at) desc, c.participant_user_id
+    </select>
+
+    <select id="countSession" resultType="int">
+        select count(*)
+        from consultations
+        where plan_id = #{planId}
+          and participant_user_id = #{participantUserId}
     </select>
 
     <insert id="insert" parameterType="com.two.backend.model.Consultation"

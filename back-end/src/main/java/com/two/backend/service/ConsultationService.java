@@ -4,6 +4,7 @@ import com.two.backend.dto.ConsultationRequest;
 import com.two.backend.mapper.ConsultationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Consultation;
+import com.two.backend.model.ConsultationSession;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
 import java.util.List;
@@ -29,15 +30,28 @@ public class ConsultationService {
      * @param user 当前用户
      * @return 咨询消息列表
      */
-    public List<Consultation> list(Long planId, User user) {
+    public List<Consultation> list(Long planId, User user, Long participantUserId) {
         ensurePlanVisible(planId, user);
-        List<Consultation> consultations = consultationMapper.listByPlan(planId);
+        Long visibleParticipantUserId = resolveParticipantUserId(planId, user, participantUserId);
+        List<Consultation> consultations = consultationMapper.listByPlanAndParticipant(planId, visibleParticipantUserId);
         if (isAdmin(user)) {
             consultationMapper.markAdminRead(planId);
         } else {
             consultationMapper.markUserRead(planId, user.getId());
         }
         return consultations;
+    }
+
+    public List<ConsultationSession> listSessions(Long planId, User user) {
+        ensurePlanVisible(planId, user);
+        if (isAdmin(user)) {
+            return consultationMapper.listSessions(planId);
+        }
+        ConsultationSession session = new ConsultationSession();
+        session.setParticipantUserId(user.getId());
+        session.setEmployeeNo(user.getEmployeeNo());
+        session.setUserName(user.getName());
+        return List.of(session);
     }
 
     /**
@@ -50,10 +64,11 @@ public class ConsultationService {
      */
     public Consultation send(Long planId, User user, ConsultationRequest request) {
         ensurePlanVisible(planId, user);
+        Long visibleParticipantUserId = resolveParticipantUserId(planId, user, request.participantUserId());
         Consultation consultation = new Consultation();
         consultation.setPlanId(planId);
         consultation.setUserId(user.getId());
-        consultation.setParticipantUserId(user.getId());
+        consultation.setParticipantUserId(visibleParticipantUserId);
         consultation.setSenderRole(user.getRole());
         consultation.setContent(request.content());
         consultation.setStatus("OPEN");
@@ -92,5 +107,18 @@ public class ConsultationService {
 
     private boolean isAdmin(User user) {
         return Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole());
+    }
+
+    private Long resolveParticipantUserId(Long planId, User user, Long participantUserId) {
+        if (!isAdmin(user)) {
+            return user.getId();
+        }
+        if (participantUserId == null) {
+            throw new BusinessException("请选择咨询员工");
+        }
+        if (consultationMapper.countSession(planId, participantUserId) == 0) {
+            throw new BusinessException("请选择已有咨询员工");
+        }
+        return participantUserId;
     }
 }

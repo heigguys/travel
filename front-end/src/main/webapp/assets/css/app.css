@@ -1644,6 +1644,142 @@ dialog h2 {
     font-size: 20px;
 }
 
+#consultDialog {
+    width: min(1120px, calc(100vw - 48px));
+    padding: 0;
+}
+
+.consult-panel {
+    display: grid;
+    gap: 0;
+}
+
+.consult-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(135deg, var(--blue), #2992f3);
+}
+
+.consult-header h2 {
+    color: #fff;
+}
+
+.consult-header button {
+    border-color: rgba(255, 255, 255, .45);
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+}
+
+.consult-layout {
+    display: grid;
+    grid-template-columns: 220px 190px minmax(0, 1fr);
+    min-height: 500px;
+    max-height: min(680px, calc(100vh - 140px));
+    background: #fff;
+}
+
+.consult-sidebar,
+.consult-plan-panel,
+.consult-chat-panel {
+    min-width: 0;
+    border-right: 1px solid var(--line);
+}
+
+.consult-chat-panel {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    border-right: 0;
+}
+
+.consult-column-title {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    background: #f8fafc;
+}
+
+.consult-sessions {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    max-height: 620px;
+    overflow: auto;
+}
+
+button.consult-session {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    min-height: 58px;
+    justify-items: start;
+    padding: 9px 10px;
+    border-color: var(--line);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    box-shadow: none;
+    text-align: left;
+}
+
+button.consult-session:hover:not(:disabled),
+button.consult-session.active {
+    border-color: rgba(21, 94, 239, .35);
+    background: var(--blue-soft);
+    transform: none;
+}
+
+.consult-session span {
+    max-width: 100%;
+    overflow: hidden;
+    color: #111827;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.consult-session small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.consult-plan-no {
+    padding: 18px 14px;
+    color: #111827;
+    font-weight: 700;
+    word-break: break-all;
+}
+
+.consult-messages {
+    max-height: none;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.consult-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 12px;
+    padding: 12px;
+    background: #fff;
+}
+
+.consult-input-row textarea {
+    min-height: 78px;
+    resize: vertical;
+}
+
+.consult-send-btn {
+    height: 78px;
+    min-height: 78px;
+}
+
 .messages {
     border-color: var(--line);
     border-radius: var(--radius);
@@ -1657,6 +1793,12 @@ dialog h2 {
 }
 
 .message.admin {
+    background: var(--blue-soft);
+}
+
+.message.mine {
+    align-self: flex-end;
+    margin-left: 0;
     background: var(--blue-soft);
 }
 

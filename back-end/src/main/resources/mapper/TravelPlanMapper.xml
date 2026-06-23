@@ -22,6 +22,7 @@
               from consultations c
               left join consultation_user_reads r on r.plan_id = c.plan_id and r.user_id = #{userId}
               where c.plan_id = p.id
+                and c.participant_user_id = #{userId}
                 and c.user_id != #{userId}
                 and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
             ) then true

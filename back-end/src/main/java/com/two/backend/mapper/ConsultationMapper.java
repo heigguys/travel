@@ -1,6 +1,7 @@
 package com.two.backend.mapper;
 
 import com.two.backend.model.Consultation;
+import com.two.backend.model.ConsultationSession;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -13,7 +14,11 @@ public interface ConsultationMapper {
     /**
      * 查询计划下全部公开咨询消息。
      */
-    List<Consultation> listByPlan(@Param("planId") Long planId);
+    List<Consultation> listByPlanAndParticipant(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId);
+
+    List<ConsultationSession> listSessions(@Param("planId") Long planId);
+
+    int countSession(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId);
 
     /**
      * 插入新的咨询消息，并回填自增 ID。

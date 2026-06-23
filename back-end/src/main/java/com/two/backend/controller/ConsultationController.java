@@ -3,6 +3,7 @@ package com.two.backend.controller;
 import com.two.backend.dto.ApiResponse;
 import com.two.backend.dto.ConsultationRequest;
 import com.two.backend.model.Consultation;
+import com.two.backend.model.ConsultationSession;
 import com.two.backend.service.AuthService;
 import com.two.backend.service.ConsultationService;
 import jakarta.servlet.http.HttpSession;
@@ -11,6 +12,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,8 +39,15 @@ public class ConsultationController {
      * @param session 当前 HTTP 会话
      * @return 咨询消息列表
      */
-    public ApiResponse<List<Consultation>> list(@PathVariable Long planId, HttpSession session) {
-        return ApiResponse.ok(consultationService.list(planId, authService.currentUser(session)));
+    public ApiResponse<List<Consultation>> list(@PathVariable Long planId,
+                                                @RequestParam(required = false) Long participantUserId,
+                                                HttpSession session) {
+        return ApiResponse.ok(consultationService.list(planId, authService.currentUser(session), participantUserId));
+    }
+
+    @GetMapping("/sessions")
+    public ApiResponse<List<ConsultationSession>> sessions(@PathVariable Long planId, HttpSession session) {
+        return ApiResponse.ok(consultationService.listSessions(planId, authService.currentUser(session)));
     }
 
     @PostMapping
