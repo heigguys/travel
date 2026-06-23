@@ -13,6 +13,8 @@ let globalNavEventsBound = false;
 let activeConsultPlanId = null;
 let activeConsultPlanNo = "";
 let activeConsultParticipantId = null;
+let activeConsultMode = "plan";
+let consultOverview = null;
 let consultRefreshTimer = null;
 let consultRefreshInFlight = false;
 
@@ -347,6 +349,7 @@ async function saveCompanions(event) {
 async function openConsultDialog(planId) {
     stopConsultAutoRefresh();
     const plan = plans.find((item) => Number(item.id) === Number(planId)) || {};
+    activeConsultMode = "plan";
     activeConsultPlanId = planId;
     activeConsultPlanNo = plan.planNo || String(planId);
     activeConsultParticipantId = null;
@@ -356,6 +359,111 @@ async function openConsultDialog(planId) {
     await renderConsultSessions(planId, {forceScroll: true});
     $("consultDialog").showModal();
     startConsultAutoRefresh();
+}
+
+async function openGlobalConsultDialog() {
+    if (!$("consultDialog")) {
+        go("plans.jsp?consult=1");
+        return;
+    }
+    stopConsultAutoRefresh();
+    activeConsultMode = "global";
+    $("consultForm").reset();
+    await renderGlobalConsultOverview({forceScroll: true});
+    $("consultDialog").showModal();
+    startConsultAutoRefresh();
+}
+
+async function loadConsultOverview() {
+    consultOverview = await api("/consultations/overview");
+    renderConsultNavBadge(consultOverview.unreadTotal || 0);
+    return consultOverview;
+}
+
+function renderConsultNavBadge(count) {
+    const badge = $("consultUnreadBadge");
+    if (!badge) return;
+    const value = Number(count || 0);
+    badge.textContent = value > 99 ? "99+" : String(value);
+    badge.classList.toggle("hidden", value <= 0);
+}
+
+async function refreshConsultNavBadge() {
+    if (!$("consultMessagesBtn") || !currentUser) return;
+    try {
+        await loadConsultOverview();
+    } catch (error) {
+        console.warn("刷新咨询未读数失败", error);
+    }
+}
+
+async function renderGlobalConsultOverview({forceScroll = false} = {}) {
+    const overview = await loadConsultOverview();
+    const employees = overview.employees || [];
+    const sessionsEl = $("consultSessions");
+    const plansEl = $("consultPlanNo");
+    if (!employees.length) {
+        activeConsultParticipantId = null;
+        activeConsultPlanId = null;
+        activeConsultPlanNo = "";
+        $("consultForm").planId.value = "";
+        $("consultForm").participantUserId.value = "";
+        sessionsEl.innerHTML = "<p class='muted'>暂无咨询员工</p>";
+        plansEl.innerHTML = "<p class='muted'>暂无旅游计划</p>";
+        renderEmptyConsultMessages("暂无咨询内容");
+        return;
+    }
+
+    if (!activeConsultParticipantId || !employees.some((employee) => Number(employee.participantUserId) === Number(activeConsultParticipantId))) {
+        activeConsultParticipantId = employees[0].participantUserId;
+    }
+    const activeEmployee = employees.find((employee) => Number(employee.participantUserId) === Number(activeConsultParticipantId)) || employees[0];
+    const employeePlans = activeEmployee.plans || [];
+    if (!activeConsultPlanId || !employeePlans.some((plan) => Number(plan.planId) === Number(activeConsultPlanId))) {
+        activeConsultPlanId = employeePlans[0]?.planId || null;
+    }
+    const activePlan = employeePlans.find((plan) => Number(plan.planId) === Number(activeConsultPlanId)) || employeePlans[0] || {};
+    activeConsultPlanNo = activePlan.planNo || "";
+    $("consultForm").planId.value = activeConsultPlanId || "";
+    $("consultForm").participantUserId.value = activeConsultParticipantId || "";
+
+    sessionsEl.innerHTML = employees.map((employee) => {
+        const active = Number(employee.participantUserId) === Number(activeConsultParticipantId) ? " active" : "";
+        const label = consultSessionLabel(employee);
+        const unreadCount = Number(employee.unreadCount || 0);
+        const unreadBadge = unreadCount > 0
+            ? `<span class="consult-session-badge" aria-label="${unreadCount} 条未读消息">${unreadCount > 99 ? "99+" : unreadCount}</span>`
+            : "";
+        return `<button class="consult-session${active}" type="button" data-consult-employee="${employee.participantUserId}" title="${label}">
+            <span class="consult-session-main">
+                <span>${label}</span>
+                <small>${employeePlansSummary(employee)}</small>
+            </span>
+            ${unreadBadge}
+        </button>`;
+    }).join("");
+
+    plansEl.innerHTML = employeePlans.length ? employeePlans.map((plan) => {
+        const active = Number(plan.planId) === Number(activeConsultPlanId) ? " active" : "";
+        const unreadCount = Number(plan.unreadCount || 0);
+        const unreadBadge = unreadCount > 0
+            ? `<span class="consult-session-badge" aria-label="${unreadCount} 条未读消息">${unreadCount > 99 ? "99+" : unreadCount}</span>`
+            : "";
+        const planNo = escapeHtml(plan.planNo || String(plan.planId || ""));
+        return `<button class="consult-session consult-plan-option${active}" type="button" data-consult-plan="${plan.planId}" title="${planNo}">
+            <span class="consult-session-main">
+                <span>${planNo}</span>
+                <small>${formatDateTime(plan.latestCreatedAt)}</small>
+            </span>
+            ${unreadBadge}
+        </button>`;
+    }).join("") : "<p class='muted'>暂无旅游计划</p>";
+
+    if (activeConsultPlanId) {
+        await renderMessages(activeConsultPlanId, {forceScroll});
+    } else {
+        renderEmptyConsultMessages("请选择旅游计划");
+    }
 }
 
 async function renderConsultSessions(planId, {forceScroll = false} = {}) {
@@ -396,6 +504,11 @@ async function renderConsultSessions(planId, {forceScroll = false} = {}) {
         ? {...plan, hasUnreadConsultation: hasRemainingUnread}
         : plan);
     renderPlans();
+}
+
+function employeePlansSummary(employee) {
+    const planCount = (employee.plans || []).length;
+    return planCount ? `${planCount} 个旅游计划` : "暂无旅游计划";
 }
 
 // 渲染咨询消息列表，并对消息正文做 HTML 转义。
@@ -447,14 +560,19 @@ function stopConsultAutoRefresh() {
     activeConsultPlanId = null;
     activeConsultPlanNo = "";
     activeConsultParticipantId = null;
+    activeConsultMode = "plan";
     consultRefreshInFlight = false;
 }
 
 async function refreshActiveConsultMessages() {
-    if (!activeConsultPlanId || consultRefreshInFlight || !$("consultDialog").open) return;
+    if (consultRefreshInFlight || !$("consultDialog").open) return;
     consultRefreshInFlight = true;
     try {
-        await renderConsultSessions(activeConsultPlanId);
+        if (activeConsultMode === "global") {
+            await renderGlobalConsultOverview();
+        } else if (activeConsultPlanId) {
+            await renderConsultSessions(activeConsultPlanId);
+        }
     } catch (error) {
         console.warn("刷新咨询消息失败", error);
     } finally {
@@ -473,6 +591,10 @@ async function sendConsult(event) {
     event.preventDefault();
     const form = $("consultForm");
     if (!form.content.value.trim()) return;
+    if (!form.planId.value) {
+        toast("请先选择旅游计划");
+        return;
+    }
     if (Number(currentUser.role) === 0 && !form.participantUserId.value) {
         toast("请先选择咨询员工");
         return;
@@ -485,7 +607,11 @@ async function sendConsult(event) {
         })
     });
     form.content.value = "";
-    await renderConsultSessions(form.planId.value, {forceScroll: true});
+    if (activeConsultMode === "global") {
+        await renderGlobalConsultOverview({forceScroll: true});
+    } else {
+        await renderConsultSessions(form.planId.value, {forceScroll: true});
+    }
 }
 
 function handleConsultInputKeydown(event) {
@@ -866,6 +992,9 @@ function bindGlobalNavEvents() {
     const myAppsBtn = $("myAppsBtn");
     if (myAppsBtn) myAppsBtn.onclick = openMyApps;
 
+    const consultMessagesBtn = $("consultMessagesBtn");
+    if (consultMessagesBtn) consultMessagesBtn.onclick = openGlobalConsultDialog;
+
     const exportPdfBtn = $("exportPdfBtn");
     if (exportPdfBtn) exportPdfBtn.onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
 
@@ -925,6 +1054,17 @@ function bindPlansPageEvents() {
         if (button.dataset.page) {
             currentPlanPage = Number(button.dataset.page);
             renderPlans();
+            return;
+        }
+        if (button.dataset.consultEmployee) {
+            activeConsultParticipantId = Number(button.dataset.consultEmployee);
+            activeConsultPlanId = null;
+            await renderGlobalConsultOverview({forceScroll: true});
+            return;
+        }
+        if (button.dataset.consultPlan) {
+            activeConsultPlanId = Number(button.dataset.consultPlan);
+            await renderGlobalConsultOverview({forceScroll: true});
             return;
         }
         if (button.dataset.consultUser) {
@@ -993,8 +1133,12 @@ async function initPlansPage() {
     bindGlobalNavEvents();
     showPlansPage();
     try {
+        await refreshConsultNavBadge();
         await loadPlans();
         startPlanListAutoRefresh();
+        if (new URLSearchParams(window.location.search).get("consult") === "1") {
+            await openGlobalConsultDialog();
+        }
     } catch (error) {
         toast(error.message || "加载计划失败");
     }
@@ -1012,6 +1156,7 @@ async function initPlanEditPage() {
     }
     bindGlobalNavEvents();
     updateGlobalNav();
+    await refreshConsultNavBadge();
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -1180,6 +1325,9 @@ async function initPlanApplyPage() {
         go("index.jsp");
         return false;
     }
+    bindGlobalNavEvents();
+    updateGlobalNav();
+    await refreshConsultNavBadge();
 
     const params = new URLSearchParams(window.location.search);
     const planId = params.get("planId");
@@ -1291,6 +1439,7 @@ async function initGlobalNavPage() {
     }
     bindGlobalNavEvents();
     updateGlobalNav();
+    await refreshConsultNavBadge();
     return true;
 }
 

@@ -1,6 +1,7 @@
 package com.two.backend.mapper;
 
 import com.two.backend.model.Consultation;
+import com.two.backend.model.ConsultationOverviewRow;
 import com.two.backend.model.ConsultationSession;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
@@ -18,6 +19,8 @@ public interface ConsultationMapper {
 
     List<ConsultationSession> listSessions(@Param("planId") Long planId);
 
+    List<ConsultationOverviewRow> listOverview(@Param("admin") boolean admin, @Param("userId") Long userId);
+
     int countSession(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId);
 
     /**
@@ -28,14 +31,8 @@ public interface ConsultationMapper {
     /**
      * 记录管理员已查看某个计划咨询消息。
      */
-    int markAdminRead(@Param("planId") Long planId);
-
-    int markAdminSessionRead(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId);
-
-    /**
-     * 记录普通用户已查看某个计划咨询消息。
-     */
-    int markUserRead(@Param("planId") Long planId, @Param("userId") Long userId);
+    int markRead(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId,
+                 @Param("readerRole") Integer readerRole, @Param("readerUserId") Long readerUserId);
 
     /**
      * 关闭指定用户在指定计划下的咨询会话。

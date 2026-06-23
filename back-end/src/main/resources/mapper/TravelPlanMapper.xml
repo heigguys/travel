@@ -12,18 +12,23 @@
             when #{admin} = true and exists (
               select 1
               from consultations c
-              left join consultation_admin_session_reads sr
-                on sr.plan_id = c.plan_id
-               and sr.participant_user_id = c.participant_user_id
-              left join consultation_admin_reads r on r.plan_id = c.plan_id
+              left join consultation_reads r
+                on r.plan_id = c.plan_id
+               and r.participant_user_id = c.participant_user_id
+               and r.reader_role = 0
+               and r.reader_user_id = 0
               where c.plan_id = p.id
                 and c.sender_role = 1
-                and c.created_at > coalesce(sr.last_read_at, r.last_read_at, '1970-01-01 00:00:00')
+                and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
             ) then true
             when #{admin} = false and exists (
               select 1
               from consultations c
-              left join consultation_user_reads r on r.plan_id = c.plan_id and r.user_id = #{userId}
+              left join consultation_reads r
+                on r.plan_id = c.plan_id
+               and r.participant_user_id = c.participant_user_id
+               and r.reader_role = 1
+               and r.reader_user_id = #{userId}
               where c.plan_id = p.id
                 and c.participant_user_id = #{userId}
                 and c.user_id != #{userId}

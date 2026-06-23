@@ -1397,6 +1397,30 @@ label {
     transform: translateY(-1px);
 }
 
+.consult-nav-btn {
+    position: relative;
+}
+
+.nav-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border: 2px solid rgba(255, 255, 255, .92);
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 6px 16px rgba(217, 45, 32, .28);
+}
+
 .sub-nav {
     position: sticky;
     top: 60px;
@@ -2357,12 +2381,19 @@ button.consult-session.active .consult-session-main span {
 }
 
 .consult-plan-no {
+    display: grid;
+    align-content: start;
+    gap: 8px;
     min-height: 0;
-    padding: 18px 14px;
+    padding: 12px;
     overflow: auto;
     color: #111827;
     font-weight: 750;
     word-break: break-all;
+}
+
+.consult-plan-option {
+    min-height: 58px;
 }
 
 .consult-messages {

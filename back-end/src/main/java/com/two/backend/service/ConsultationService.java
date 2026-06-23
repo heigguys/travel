@@ -1,13 +1,18 @@
 package com.two.backend.service;
 
+import com.two.backend.dto.ConsultationOverviewResponse;
 import com.two.backend.dto.ConsultationRequest;
 import com.two.backend.mapper.ConsultationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Consultation;
+import com.two.backend.model.ConsultationOverviewRow;
 import com.two.backend.model.ConsultationSession;
 import com.two.backend.model.TravelPlan;
 import com.two.backend.model.User;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,11 +39,7 @@ public class ConsultationService {
         ensurePlanVisible(planId, user);
         Long visibleParticipantUserId = resolveParticipantUserId(planId, user, participantUserId);
         List<Consultation> consultations = consultationMapper.listByPlanAndParticipant(planId, visibleParticipantUserId);
-        if (isAdmin(user)) {
-            consultationMapper.markAdminSessionRead(planId, visibleParticipantUserId);
-        } else {
-            consultationMapper.markUserRead(planId, user.getId());
-        }
+        markRead(planId, visibleParticipantUserId, user);
         return consultations;
     }
 
@@ -53,6 +54,30 @@ public class ConsultationService {
         session.setUserName(user.getName());
         session.setUnreadCount(0);
         return List.of(session);
+    }
+
+    public ConsultationOverviewResponse overview(User user) {
+        boolean admin = isAdmin(user);
+        List<ConsultationOverviewRow> rows = consultationMapper.listOverview(admin, user.getId());
+        Map<Long, EmployeeAccumulator> employees = new LinkedHashMap<>();
+        int unreadTotal = 0;
+        for (ConsultationOverviewRow row : rows) {
+            int unreadCount = row.getUnreadCount() == null ? 0 : row.getUnreadCount();
+            unreadTotal += unreadCount;
+            EmployeeAccumulator employee = employees.computeIfAbsent(row.getParticipantUserId(), ignored ->
+                    new EmployeeAccumulator(row.getParticipantUserId(), row.getEmployeeNo(), row.getUserName()));
+            employee.unreadCount += unreadCount;
+            employee.plans.add(new ConsultationOverviewResponse.PlanOverview(
+                    row.getPlanId(),
+                    row.getPlanNo(),
+                    row.getLatestCreatedAt(),
+                    unreadCount
+            ));
+        }
+        return new ConsultationOverviewResponse(
+                unreadTotal,
+                employees.values().stream().map(EmployeeAccumulator::toResponse).toList()
+        );
     }
 
     /**
@@ -74,11 +99,7 @@ public class ConsultationService {
         consultation.setContent(request.content());
         consultation.setStatus("OPEN");
         consultationMapper.insert(consultation);
-        if (isAdmin(user)) {
-            consultationMapper.markAdminSessionRead(planId, visibleParticipantUserId);
-        } else {
-            consultationMapper.markUserRead(planId, user.getId());
-        }
+        markRead(planId, visibleParticipantUserId, user);
         return consultation;
     }
 
@@ -110,6 +131,14 @@ public class ConsultationService {
         return Integer.valueOf(User.ROLE_ADMIN).equals(user.getRole());
     }
 
+    private void markRead(Long planId, Long participantUserId, User user) {
+        if (isAdmin(user)) {
+            consultationMapper.markRead(planId, participantUserId, User.ROLE_ADMIN, 0L);
+        } else {
+            consultationMapper.markRead(planId, participantUserId, User.ROLE_USER, user.getId());
+        }
+    }
+
     private Long resolveParticipantUserId(Long planId, User user, Long participantUserId) {
         if (!isAdmin(user)) {
             return user.getId();
@@ -121,5 +150,29 @@ public class ConsultationService {
             throw new BusinessException("请选择已有咨询员工");
         }
         return participantUserId;
+    }
+
+    private static class EmployeeAccumulator {
+        private final Long participantUserId;
+        private final String employeeNo;
+        private final String userName;
+        private final List<ConsultationOverviewResponse.PlanOverview> plans = new ArrayList<>();
+        private int unreadCount;
+
+        private EmployeeAccumulator(Long participantUserId, String employeeNo, String userName) {
+            this.participantUserId = participantUserId;
+            this.employeeNo = employeeNo;
+            this.userName = userName;
+        }
+
+        private ConsultationOverviewResponse.EmployeeOverview toResponse() {
+            return new ConsultationOverviewResponse.EmployeeOverview(
+                    participantUserId,
+                    employeeNo,
+                    userName,
+                    unreadCount,
+                    plans
+            );
+        }
     }
 }

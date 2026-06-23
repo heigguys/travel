@@ -1,4 +1,14 @@
-create table if not exists users (
+drop table if exists consultation_admin_session_reads;
+drop table if exists consultation_admin_reads;
+drop table if exists consultation_user_reads;
+drop table if exists consultation_reads;
+drop table if exists consultations;
+drop table if exists companions;
+drop table if exists applications;
+drop table if exists travel_plans;
+drop table if exists users;
+
+create table users (
     id bigint primary key auto_increment,
     employee_no varchar(32) not null,
     name varchar(80) not null,
@@ -10,7 +20,7 @@ create table if not exists users (
     unique key uk_users_employee_no (employee_no)
 ) engine=InnoDB default charset=utf8mb4;
 
-create table if not exists travel_plans (
+create table travel_plans (
     id bigint primary key auto_increment,
     plan_no varchar(40) not null,
     destination varchar(120) not null,
@@ -29,7 +39,7 @@ create table if not exists travel_plans (
     key idx_travel_plans_published (published)
 ) engine=InnoDB default charset=utf8mb4;
 
-create table if not exists applications (
+create table applications (
     id bigint primary key auto_increment,
     plan_id bigint not null,
     user_id bigint not null,
@@ -42,7 +52,7 @@ create table if not exists applications (
     key idx_applications_user (user_id)
 ) engine=InnoDB default charset=utf8mb4;
 
-create table if not exists companions (
+create table companions (
     id bigint primary key auto_increment,
     application_id bigint not null,
     name varchar(80) not null,
@@ -54,7 +64,7 @@ create table if not exists companions (
     key idx_companions_application (application_id)
 ) engine=InnoDB default charset=utf8mb4;
 
-create table if not exists consultations (
+create table consultations (
     id bigint primary key auto_increment,
     plan_id bigint not null,
     user_id bigint not null,
@@ -64,24 +74,18 @@ create table if not exists consultations (
     status varchar(20) not null default 'OPEN',
     created_at timestamp not null default current_timestamp,
     key idx_consultations_plan_user (plan_id, participant_user_id),
-    key idx_consultations_user (user_id)
+    key idx_consultations_user (user_id),
+    key idx_consultations_participant (participant_user_id),
+    key idx_consultations_created_at (created_at)
 ) engine=InnoDB default charset=utf8mb4;
 
-create table if not exists consultation_admin_reads (
-    plan_id bigint primary key,
-    last_read_at timestamp not null default current_timestamp
-) engine=InnoDB default charset=utf8mb4;
-
-create table if not exists consultation_admin_session_reads (
+create table consultation_reads (
     plan_id bigint not null,
     participant_user_id bigint not null,
+    reader_role tinyint not null,
+    reader_user_id bigint not null,
     last_read_at timestamp not null default current_timestamp,
-    primary key (plan_id, participant_user_id)
-) engine=InnoDB default charset=utf8mb4;
-
-create table if not exists consultation_user_reads (
-    plan_id bigint not null,
-    user_id bigint not null,
-    last_read_at timestamp not null default current_timestamp,
-    primary key (plan_id, user_id)
+    primary key (plan_id, participant_user_id, reader_role, reader_user_id),
+    key idx_consultation_reads_reader (reader_role, reader_user_id),
+    key idx_consultation_reads_participant (participant_user_id)
 ) engine=InnoDB default charset=utf8mb4;

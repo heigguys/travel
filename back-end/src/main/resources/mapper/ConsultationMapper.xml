@@ -21,19 +21,55 @@
                max(c.created_at) latest_created_at,
                coalesce(sum(case
                    when c.sender_role = 1
-                    and c.created_at > coalesce(sr.last_read_at, ar.last_read_at, '1970-01-01 00:00:00')
+                    and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
                    then 1
                    else 0
                end), 0) unread_count
         from consultations c
         join users u on u.id = c.participant_user_id
-        left join consultation_admin_session_reads sr
-          on sr.plan_id = c.plan_id
-         and sr.participant_user_id = c.participant_user_id
-        left join consultation_admin_reads ar on ar.plan_id = c.plan_id
+        left join consultation_reads r
+          on r.plan_id = c.plan_id
+         and r.participant_user_id = c.participant_user_id
+         and r.reader_role = 0
+         and r.reader_user_id = 0
         where c.plan_id = #{planId}
         group by c.participant_user_id, u.employee_no, u.name
         order by max(c.created_at) desc, c.participant_user_id
+    </select>
+
+    <select id="listOverview" resultType="com.two.backend.model.ConsultationOverviewRow">
+        select c.participant_user_id,
+               u.employee_no,
+               u.name user_name,
+               c.plan_id,
+               p.plan_no,
+               max(c.created_at) latest_created_at,
+               coalesce(sum(case
+                   when #{admin} = true
+                    and c.sender_role = 1
+                    and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+                   then 1
+                   when #{admin} = false
+                    and c.user_id != #{userId}
+                    and c.created_at > coalesce(r.last_read_at, '1970-01-01 00:00:00')
+                   then 1
+                   else 0
+               end), 0) unread_count
+        from consultations c
+        join users u on u.id = c.participant_user_id
+        join travel_plans p on p.id = c.plan_id
+        left join consultation_reads r
+          on r.plan_id = c.plan_id
+         and r.participant_user_id = c.participant_user_id
+         and r.reader_role = case when #{admin} = true then 0 else 1 end
+         and r.reader_user_id = case when #{admin} = true then 0 else #{userId} end
+        where 1 = 1
+        <if test="admin == false">
+            and c.participant_user_id = #{userId}
+            and p.published = true
+        </if>
+        group by c.participant_user_id, u.employee_no, u.name, c.plan_id, p.plan_no
+        order by max(c.created_at) desc, c.participant_user_id, c.plan_id
     </select>
 
     <select id="countSession" resultType="int">
@@ -49,21 +85,9 @@
         values(#{planId}, #{userId}, #{participantUserId}, #{senderRole}, #{content}, #{status})
     </insert>
 
-    <insert id="markAdminRead">
-        insert into consultation_admin_reads(plan_id, last_read_at)
-        values(#{planId}, current_timestamp)
-        on duplicate key update last_read_at = values(last_read_at)
-    </insert>
-
-    <insert id="markAdminSessionRead">
-        insert into consultation_admin_session_reads(plan_id, participant_user_id, last_read_at)
-        values(#{planId}, #{participantUserId}, current_timestamp)
-        on duplicate key update last_read_at = values(last_read_at)
-    </insert>
-
-    <insert id="markUserRead">
-        insert into consultation_user_reads(plan_id, user_id, last_read_at)
-        values(#{planId}, #{userId}, current_timestamp)
+    <insert id="markRead">
+        insert into consultation_reads(plan_id, participant_user_id, reader_role, reader_user_id, last_read_at)
+        values(#{planId}, #{participantUserId}, #{readerRole}, #{readerUserId}, current_timestamp)
         on duplicate key update last_read_at = values(last_read_at)
     </insert>
 
