@@ -1399,6 +1399,24 @@ label {
 
 .consult-nav-btn {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.consult-nav-btn svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.consult-nav-btn span:not(.nav-badge) {
+    line-height: 1;
 }
 
 .nav-badge {
@@ -2397,11 +2415,16 @@ button.consult-session.active .consult-session-main span {
 }
 
 .consult-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     max-height: none;
     min-height: 0;
     overflow: auto;
     border: 0;
     border-radius: 0;
+    padding: 18px 16px;
     border-bottom: 1px solid rgba(227, 232, 239, .86);
     background:
         radial-gradient(circle at 100% 0%, rgba(21, 94, 239, .05), transparent 34%),
@@ -2447,6 +2470,60 @@ button.consult-session.active .consult-session-main span {
     align-self: flex-end;
     margin-left: 0;
     background: var(--blue-soft);
+}
+
+.consult-messages .message-date-divider {
+    align-self: center;
+    margin: 6px 0 4px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.consult-messages .message {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    width: fit-content;
+    min-width: 0;
+    max-width: min(72%, 540px);
+    margin: 0;
+    border: 0;
+    border-radius: 24px;
+    padding: 9px 13px;
+    background: #edf2f7;
+    color: #111827;
+    box-shadow: none;
+    overflow-wrap: anywhere;
+}
+
+.consult-messages .message p {
+    margin: 0;
+    min-width: 0;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.consult-messages .message small {
+    display: inline-block;
+    flex: 0 0 auto;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: nowrap;
+}
+
+.consult-messages .message.mine {
+    align-self: flex-end;
+    border-bottom-right-radius: 8px;
+    background: #e8f1ff;
+}
+
+.consult-messages .message:not(.mine) {
+    border-bottom-left-radius: 8px;
 }
 
 .danger-note {

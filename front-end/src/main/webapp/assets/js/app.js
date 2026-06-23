@@ -65,6 +65,20 @@ const formatDateTime = (value) => {
     return `${formatDate(datePart)} ${timePart.slice(0, 5)}`.trim();
 };
 
+const formatMessageDate = (value) => {
+    if (!value) return "";
+    const normalized = String(value).replace("T", " ");
+    const [datePart = ""] = normalized.split(" ");
+    return formatDate(datePart);
+};
+
+const formatMessageTime = (value) => {
+    if (!value) return "";
+    const normalized = String(value).replace("T", " ");
+    const [, timePart = ""] = normalized.split(" ");
+    return timePart.slice(0, 5);
+};
+
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
     const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
@@ -520,13 +534,21 @@ async function renderMessages(planId, {forceScroll = false} = {}) {
     const messages = await api(`/plans/${planId}/consultations?participantUserId=${encodeURIComponent(activeConsultParticipantId)}`);
     const messagesEl = $("messages");
     const shouldKeepAtBottom = forceScroll || isNearBottom(messagesEl);
-    messagesEl.innerHTML = messages.map((msg) => `
-        <div class="message ${Number(msg.userId) === Number(currentUser.id) ? "mine" : ""}">
-            <strong>${messageSenderName(msg)}</strong>
-            <p>${escapeHtml(msg.content)}</p>
-            <small>${formatDateTime(msg.createdAt)}</small>
-        </div>
-    `).join("") || "<p class='muted'>暂无咨询内容</p>";
+    let currentDate = "";
+    messagesEl.innerHTML = messages.map((msg) => {
+        const messageDate = formatMessageDate(msg.createdAt);
+        const divider = messageDate && messageDate !== currentDate
+            ? `<div class="message-date-divider">${messageDate}</div>`
+            : "";
+        currentDate = messageDate || currentDate;
+        return `
+            ${divider}
+            <div class="message ${Number(msg.userId) === Number(currentUser.id) ? "mine" : ""}">
+                <p>${escapeHtml(msg.content)}</p>
+                <small>${formatMessageTime(msg.createdAt)}</small>
+            </div>
+        `;
+    }).join("") || "<p class='muted'>暂无咨询内容</p>";
     if (shouldKeepAtBottom) {
         requestAnimationFrame(() => {
             messagesEl.scrollTop = messagesEl.scrollHeight;

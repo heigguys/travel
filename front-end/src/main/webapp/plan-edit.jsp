@@ -12,7 +12,14 @@
     <div class="global-brand">公司旅行管理系统</div>
     <div id="userInfo" class="global-user"></div>
     <div class="global-actions">
-        <button id="consultMessagesBtn" class="consult-nav-btn" type="button">咨询消息<span id="consultUnreadBadge" class="nav-badge hidden"></span></button>
+        <button id="consultMessagesBtn" class="consult-nav-btn" type="button" title="咨询消息">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 9.2 9.2 0 0 1-3.2-.58L3 21l1.34-4.7A8.5 8.5 0 1 1 21 12Z"></path>
+                <path d="M8 11h8M8 15h5"></path>
+            </svg>
+            <span>咨询消息</span>
+            <span id="consultUnreadBadge" class="nav-badge hidden"></span>
+        </button>
         <button id="myAppsBtn" type="button">我的申请</button>
         <button id="passwordBtn" type="button">修改密码</button>
         <button id="logoutBtn" type="button">退出</button>
