@@ -19,7 +19,9 @@
 </nav>
 <nav class="sub-nav" aria-label="页面导览">
     <div class="sub-nav-inner">
-        <a href="plans.jsp">旅游计划管理</a>
+        <a href="index.jsp?showLogin=1">登录</a>
+        <span class="sub-nav-separator">›</span>
+        <a href="plans.jsp">旅游计划一览</a>
         <span class="sub-nav-separator">›</span>
         <strong>申请旅行计划</strong>
     </div>

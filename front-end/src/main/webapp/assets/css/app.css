@@ -1108,6 +1108,23 @@ button.date-picker-btn:focus {
     .form-page {
         width: 100%;
     }
+
+    .consult-layout {
+        grid-template-columns: 1fr;
+        max-height: min(760px, calc(100vh - 140px));
+        overflow: auto;
+    }
+
+    .consult-sidebar,
+    .consult-plan-panel,
+    .consult-chat-panel {
+        border-right: 0;
+        border-bottom: 1px solid rgba(227, 232, 239, .86);
+    }
+
+    .consult-chat-panel {
+        min-height: 420px;
+    }
 }
 
 /* Enterprise visual refresh. */
@@ -1308,7 +1325,7 @@ label {
     align-items: center;
     gap: 24px;
     min-height: 60px;
-    padding: 0 max(38px, calc((100vw - 1560px) / 2 + 38px));
+    padding: 0 18px;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0)),
         linear-gradient(135deg, #0b5bd3 0%, #0071e3 52%, #2897ff 100%);
@@ -1320,11 +1337,11 @@ label {
     content: "";
     position: absolute;
     right: 0;
-    bottom: -16px;
+    bottom: -8px;
     left: 0;
-    height: 16px;
+    height: 8px;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(0, 113, 227, .28), rgba(0, 113, 227, 0));
+    background: linear-gradient(180deg, rgba(0, 113, 227, .16), rgba(0, 113, 227, 0));
 }
 
 .global-brand {
@@ -1375,7 +1392,7 @@ label {
     display: flex;
     align-items: center;
     min-height: 42px;
-    padding: 0 max(14px, calc((100vw - 1680px) / 2 + 14px));
+    padding: 0 18px;
     border-top: 1px solid rgba(255, 255, 255, .32);
     border-bottom: 1px solid rgba(203, 213, 225, .54);
     background:
@@ -1606,10 +1623,23 @@ button.icon-btn.danger:hover:not(:disabled) {
     min-width: 38px;
 }
 
+.page-btn:hover:not(:disabled) {
+    border-color: #b9d3ff;
+    background: #eef5ff;
+    color: var(--blue);
+}
+
 .page-btn.active {
     border-color: var(--blue);
     background: var(--blue);
+    color: #fff;
     box-shadow: 0 8px 16px rgba(21, 94, 239, .16);
+}
+
+.page-btn.active:hover:not(:disabled) {
+    border-color: var(--blue-700);
+    background: var(--blue-700);
+    color: #fff;
 }
 
 dialog {
@@ -1644,9 +1674,262 @@ dialog h2 {
     font-size: 20px;
 }
 
+#myAppsDialog {
+    width: min(760px, calc(100vw - 36px));
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, .96)),
+        var(--surface);
+}
+
+#myAppsDialog > .stack {
+    gap: 0;
+}
+
+#myAppsDialog h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.my-app-dialog-header {
+    position: relative;
+    overflow: hidden;
+    padding: 22px 24px;
+    border-radius: var(--radius);
+    background:
+        radial-gradient(circle at 16% 0%, rgba(255, 255, 255, .28), transparent 34%),
+        linear-gradient(135deg, var(--blue), #2992f3);
+    color: #fff;
+}
+
+.my-app-dialog-header::after {
+    content: "";
+    position: absolute;
+    right: -42px;
+    bottom: -52px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
+}
+
+.my-app-dialog-header h3 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.my-app-dialog-header p {
+    position: relative;
+    z-index: 1;
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, .82);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#myAppsRows {
+    display: grid;
+    gap: 14px;
+    max-height: min(62vh, 560px);
+    overflow: auto;
+    padding: 18px 24px;
+    background:
+        radial-gradient(circle at 12% 0%, rgba(21, 94, 239, .06), transparent 32%),
+        linear-gradient(180deg, #fbfdff, #f7f9fc);
+}
+
+.my-apps-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.my-apps-summary span {
+    border: 1px solid #dce7f5;
+    border-radius: 999px;
+    padding: 6px 11px;
+    background: rgba(255, 255, 255, .82);
+    color: #475467;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.my-apps-list {
+    display: grid;
+    gap: 12px;
+}
+
+.my-app-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    border: 1px solid rgba(216, 226, 239, .96);
+    border-radius: var(--radius);
+    padding: 16px 16px 16px 18px;
+    background:
+        linear-gradient(90deg, rgba(239, 246, 255, .72), rgba(255, 255, 255, .96) 42%),
+        rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .045);
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.my-app-card::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: linear-gradient(180deg, #60a5fa, var(--blue));
+}
+
+.my-app-card:hover {
+    border-color: #bdd7ff;
+    box-shadow: 0 14px 28px rgba(21, 94, 239, .10);
+    transform: translateY(-1px);
+}
+
+.my-app-main {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.my-app-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+
+.my-app-title strong {
+    color: #111827;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.my-app-title span {
+    min-width: 0;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.my-app-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: #53657d;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.my-app-note {
+    margin: 0;
+    color: #667b94;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.my-app-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.my-app-actions button {
+    border-color: #c7dcff;
+    background: linear-gradient(180deg, #f4f8ff, var(--blue-soft));
+    color: var(--blue);
+    white-space: nowrap;
+}
+
+.my-app-actions button:hover:not(:disabled) {
+    border-color: #9fc2ff;
+    background: #e8f1ff;
+    color: var(--blue-700);
+}
+
+.my-app-actions button.danger {
+    border-color: #f3c3bf;
+    background: linear-gradient(180deg, #fff8f7, var(--danger-soft));
+    color: var(--danger);
+}
+
+.my-app-actions button.danger:hover:not(:disabled) {
+    border-color: var(--danger);
+    background: #ffe8e5;
+    color: var(--danger);
+}
+
+.my-apps-empty {
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    min-height: 180px;
+    border: 1px solid #b8d4ff;
+    border-radius: var(--radius);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(21, 94, 239, .10), transparent 38%),
+        linear-gradient(180deg, rgba(244, 248, 255, .92), rgba(238, 244, 255, .70));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72);
+    color: #667085;
+    text-align: center;
+}
+
+.my-apps-empty strong {
+    color: #111827;
+    font-size: 18px;
+}
+
+#myAppsDialog .dialog-actions {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #edf1f7;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background:
+        linear-gradient(180deg, rgba(248, 251, 255, .94), rgba(238, 244, 255, .86));
+}
+
+#myAppsDialog .dialog-actions button:not(.primary):not(.danger) {
+    border-color: #c7dcff;
+    background: var(--blue-soft);
+    color: var(--blue);
+}
+
+#myAppsDialog .dialog-actions button:not(.primary):not(.danger):hover:not(:disabled) {
+    border-color: #9fc2ff;
+    background: #e8f1ff;
+    color: var(--blue-700);
+}
+
 #consultDialog {
     width: min(1120px, calc(100vw - 48px));
     padding: 0;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, .96)),
+        var(--surface);
 }
 
 .consult-panel {
@@ -1655,20 +1938,42 @@ dialog h2 {
 }
 
 .consult-header {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--line);
-    background: linear-gradient(135deg, var(--blue), #2992f3);
+    padding: 20px 22px;
+    border-bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background:
+        radial-gradient(circle at 14% 0%, rgba(255, 255, 255, .28), transparent 34%),
+        linear-gradient(135deg, var(--blue), #2992f3);
+}
+
+.consult-header::after {
+    content: "";
+    position: absolute;
+    right: -46px;
+    bottom: -58px;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
 }
 
 .consult-header h2 {
+    position: relative;
+    z-index: 1;
     color: #fff;
+    font-size: 22px;
+    font-weight: 800;
 }
 
 .consult-header button {
+    position: relative;
+    z-index: 1;
     border-color: rgba(255, 255, 255, .45);
     color: #fff;
     background: rgba(255, 255, 255, .12);
@@ -1679,14 +1984,16 @@ dialog h2 {
     grid-template-columns: 220px 190px minmax(0, 1fr);
     min-height: 500px;
     max-height: min(680px, calc(100vh - 140px));
-    background: #fff;
+    background:
+        radial-gradient(circle at 8% 0%, rgba(21, 94, 239, .06), transparent 32%),
+        linear-gradient(180deg, #fbfdff, #f7f9fc);
 }
 
 .consult-sidebar,
 .consult-plan-panel,
 .consult-chat-panel {
     min-width: 0;
-    border-right: 1px solid var(--line);
+    border-right: 1px solid rgba(227, 232, 239, .86);
 }
 
 .consult-chat-panel {
@@ -1696,12 +2003,13 @@ dialog h2 {
 }
 
 .consult-column-title {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--line);
-    color: var(--muted);
+    padding: 13px 14px;
+    border-bottom: 1px solid rgba(227, 232, 239, .86);
+    color: #53657d;
     font-size: 13px;
-    font-weight: 700;
-    background: #f8fafc;
+    font-weight: 750;
+    background: rgba(255, 255, 255, .72);
+    backdrop-filter: blur(10px);
 }
 
 .consult-sessions {
@@ -1718,19 +2026,21 @@ button.consult-session {
     width: 100%;
     min-height: 58px;
     justify-items: start;
-    padding: 9px 10px;
-    border-color: var(--line);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    box-shadow: none;
+    padding: 10px 11px;
+    border-color: rgba(216, 226, 239, .96);
+    border-radius: var(--radius);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(248, 251, 255, .88));
+    box-shadow: var(--shadow-sm);
     text-align: left;
 }
 
 button.consult-session:hover:not(:disabled),
 button.consult-session.active {
-    border-color: rgba(21, 94, 239, .35);
-    background: var(--blue-soft);
-    transform: none;
+    border-color: #bdd7ff;
+    background:
+        linear-gradient(180deg, rgba(244, 248, 255, .98), rgba(238, 244, 255, .94));
+    transform: translateY(-1px);
 }
 
 .consult-session span {
@@ -1750,7 +2060,7 @@ button.consult-session.active {
 .consult-plan-no {
     padding: 18px 14px;
     color: #111827;
-    font-weight: 700;
+    font-weight: 750;
     word-break: break-all;
 }
 
@@ -1759,15 +2069,18 @@ button.consult-session.active {
     min-height: 0;
     border: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid rgba(227, 232, 239, .86);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(21, 94, 239, .05), transparent 34%),
+        #f8fbff;
 }
 
 .consult-input-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 96px;
     gap: 12px;
-    padding: 12px;
-    background: #fff;
+    padding: 14px;
+    background: rgba(255, 255, 255, .88);
 }
 
 .consult-input-row textarea {
@@ -2044,6 +2357,18 @@ button.password-toggle:hover:not(:disabled) {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    .my-app-card {
+        grid-template-columns: 1fr;
+    }
+
+    .my-app-actions {
+        justify-content: flex-start;
+    }
+
+    .my-app-actions button {
+        flex: 1;
     }
 
     .shell {
