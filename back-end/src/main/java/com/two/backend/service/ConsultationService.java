@@ -35,7 +35,7 @@ public class ConsultationService {
         Long visibleParticipantUserId = resolveParticipantUserId(planId, user, participantUserId);
         List<Consultation> consultations = consultationMapper.listByPlanAndParticipant(planId, visibleParticipantUserId);
         if (isAdmin(user)) {
-            consultationMapper.markAdminRead(planId);
+            consultationMapper.markAdminSessionRead(planId, visibleParticipantUserId);
         } else {
             consultationMapper.markUserRead(planId, user.getId());
         }
@@ -51,6 +51,7 @@ public class ConsultationService {
         session.setParticipantUserId(user.getId());
         session.setEmployeeNo(user.getEmployeeNo());
         session.setUserName(user.getName());
+        session.setUnreadCount(0);
         return List.of(session);
     }
 
@@ -74,7 +75,7 @@ public class ConsultationService {
         consultation.setStatus("OPEN");
         consultationMapper.insert(consultation);
         if (isAdmin(user)) {
-            consultationMapper.markAdminRead(planId);
+            consultationMapper.markAdminSessionRead(planId, visibleParticipantUserId);
         } else {
             consultationMapper.markUserRead(planId, user.getId());
         }

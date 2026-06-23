@@ -72,6 +72,13 @@ create table if not exists consultation_admin_reads (
     last_read_at timestamp not null default current_timestamp
 ) engine=InnoDB default charset=utf8mb4;
 
+create table if not exists consultation_admin_session_reads (
+    plan_id bigint not null,
+    participant_user_id bigint not null,
+    last_read_at timestamp not null default current_timestamp,
+    primary key (plan_id, participant_user_id)
+) engine=InnoDB default charset=utf8mb4;
+
 create table if not exists consultation_user_reads (
     plan_id bigint not null,
     user_id bigint not null,

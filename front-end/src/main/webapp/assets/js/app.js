@@ -375,12 +375,27 @@ async function renderConsultSessions(planId, {forceScroll = false} = {}) {
     sessionsEl.innerHTML = sessions.map((session) => {
         const active = Number(session.participantUserId) === Number(activeConsultParticipantId) ? " active" : "";
         const label = consultSessionLabel(session);
+        const unreadCount = Number(session.unreadCount || 0);
+        const unreadBadge = unreadCount > 0
+            ? `<span class="consult-session-badge" aria-label="${unreadCount} 条未读消息">${unreadCount > 99 ? "99+" : unreadCount}</span>`
+            : "";
         return `<button class="consult-session${active}" type="button" data-consult-user="${session.participantUserId}" title="${label}">
-            <span>${label}</span>
-            <small>${formatDateTime(session.latestCreatedAt)}</small>
+            <span class="consult-session-main">
+                <span>${label}</span>
+                <small>${formatDateTime(session.latestCreatedAt)}</small>
+            </span>
+            ${unreadBadge}
         </button>`;
     }).join("");
     await renderMessages(planId, {forceScroll});
+    const hasRemainingUnread = Number(currentUser.role) === 0
+        ? sessions.some((session) => Number(session.participantUserId) !== Number(activeConsultParticipantId)
+            && Number(session.unreadCount || 0) > 0)
+        : false;
+    plans = plans.map((plan) => Number(plan.id) === Number(planId)
+        ? {...plan, hasUnreadConsultation: hasRemainingUnread}
+        : plan);
+    renderPlans();
 }
 
 // 渲染咨询消息列表，并对消息正文做 HTML 转义。
@@ -404,8 +419,6 @@ async function renderMessages(planId, {forceScroll = false} = {}) {
             messagesEl.scrollTop = messagesEl.scrollHeight;
         });
     }
-    plans = plans.map((plan) => Number(plan.id) === Number(planId) ? {...plan, hasUnreadConsultation: false} : plan);
-    renderPlans();
 }
 
 function renderEmptyConsultMessages(message) {
@@ -459,6 +472,7 @@ function messageSenderName(msg) {
 async function sendConsult(event) {
     event.preventDefault();
     const form = $("consultForm");
+    if (!form.content.value.trim()) return;
     if (Number(currentUser.role) === 0 && !form.participantUserId.value) {
         toast("请先选择咨询员工");
         return;
@@ -472,6 +486,12 @@ async function sendConsult(event) {
     });
     form.content.value = "";
     await renderConsultSessions(form.planId.value, {forceScroll: true});
+}
+
+function handleConsultInputKeydown(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    event.currentTarget.form.requestSubmit();
 }
 
 // 删除旅行计划前先加载申请人预览，打开确认弹窗。
@@ -955,6 +975,7 @@ function bindPlansPageEvents() {
     $("deleteForm").addEventListener("submit", confirmDeletePlan);
     $("mailNotifyBtn").onclick = notifyApplicantsAndDelete;
     $("consultForm").addEventListener("submit", sendConsult);
+    $("consultForm").content.addEventListener("keydown", handleConsultInputKeydown);
     $("consultDialog").addEventListener("close", stopConsultAutoRefresh);
     window.addEventListener("beforeunload", stopPlanListAutoRefresh);
 }

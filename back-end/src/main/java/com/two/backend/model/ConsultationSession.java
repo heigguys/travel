@@ -9,4 +9,5 @@ public class ConsultationSession {
     private String employeeNo;
     private String userName;
     private LocalDateTime latestCreatedAt;
+    private Integer unreadCount;
 }

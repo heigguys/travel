@@ -15,9 +15,22 @@
     </select>
 
     <select id="listSessions" resultType="com.two.backend.model.ConsultationSession">
-        select c.participant_user_id, u.employee_no, u.name user_name, max(c.created_at) latest_created_at
+        select c.participant_user_id,
+               u.employee_no,
+               u.name user_name,
+               max(c.created_at) latest_created_at,
+               coalesce(sum(case
+                   when c.sender_role = 1
+                    and c.created_at > coalesce(sr.last_read_at, ar.last_read_at, '1970-01-01 00:00:00')
+                   then 1
+                   else 0
+               end), 0) unread_count
         from consultations c
         join users u on u.id = c.participant_user_id
+        left join consultation_admin_session_reads sr
+          on sr.plan_id = c.plan_id
+         and sr.participant_user_id = c.participant_user_id
+        left join consultation_admin_reads ar on ar.plan_id = c.plan_id
         where c.plan_id = #{planId}
         group by c.participant_user_id, u.employee_no, u.name
         order by max(c.created_at) desc, c.participant_user_id
@@ -39,6 +52,12 @@
     <insert id="markAdminRead">
         insert into consultation_admin_reads(plan_id, last_read_at)
         values(#{planId}, current_timestamp)
+        on duplicate key update last_read_at = values(last_read_at)
+    </insert>
+
+    <insert id="markAdminSessionRead">
+        insert into consultation_admin_session_reads(plan_id, participant_user_id, last_read_at)
+        values(#{planId}, #{participantUserId}, current_timestamp)
         on duplicate key update last_read_at = values(last_read_at)
     </insert>
 

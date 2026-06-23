@@ -30,6 +30,8 @@ public interface ConsultationMapper {
      */
     int markAdminRead(@Param("planId") Long planId);
 
+    int markAdminSessionRead(@Param("planId") Long planId, @Param("participantUserId") Long participantUserId);
+
     /**
      * 记录普通用户已查看某个计划咨询消息。
      */
