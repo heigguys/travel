@@ -1470,8 +1470,9 @@ label {
 }
 
 .form-body .form-shell {
+    min-height: calc(100vh - 102px);
     padding-top: 38px;
-    padding-bottom: 44px;
+    padding-bottom: 24px;
 }
 
 .form-body .form-card {
