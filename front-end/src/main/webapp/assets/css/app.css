@@ -1422,11 +1422,19 @@ label {
 
 .plans-shell {
     width: min(1680px, calc(100vw - 28px));
-    padding: 14px 14px 14px;
+    min-height: calc(100vh - 102px);
+    padding: 14px 14px 36px;
 }
 
 .plans-body .app {
+    display: grid;
+    grid-template-rows: none;
+    min-height: auto;
     gap: 12px;
+}
+
+.plans-body .table-wrap {
+    min-height: 0;
 }
 
 .plans-titlebar {
