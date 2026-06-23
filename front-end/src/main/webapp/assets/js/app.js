@@ -5,7 +5,7 @@ let plans = [];
 // 当前排序状态：col 为后端字段名，dir 为 asc/desc，null 表示未排序。
 let sortState = { col: null, dir: null };
 let currentPlanPage = 1;
-const PLAN_PAGE_SIZE = 7;
+const PLAN_PAGE_SIZE = 10;
 const PLAN_LIST_REFRESH_MS = 10000;
 let planListRefreshTimer = null;
 let planListRefreshInFlight = false;

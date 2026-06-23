@@ -27,13 +27,6 @@
 <main class="shell plans-shell">
     <!-- 旅游计划一览页：已登录用户查看和操作旅行计划，未登录会跳回 index.jsp。 -->
     <section id="appView" class="app">
-        <header class="topbar plans-titlebar">
-            <div>
-                <h1>旅游计划一览</h1>
-                <p class="muted">查看旅行计划、提交申请并跟踪申请状态</p>
-            </div>
-        </header>
-
         <!-- 筛选工具栏：按关键字和状态查询旅行计划。 -->
         <section class="toolbar">
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">

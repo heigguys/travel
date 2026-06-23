@@ -1375,7 +1375,7 @@ label {
     display: flex;
     align-items: center;
     min-height: 42px;
-    padding: 0 max(38px, calc((100vw - 1560px) / 2 + 38px));
+    padding: 0 max(14px, calc((100vw - 1680px) / 2 + 14px));
     border-top: 1px solid rgba(255, 255, 255, .32);
     border-bottom: 1px solid rgba(203, 213, 225, .54);
     background:
@@ -1421,12 +1421,12 @@ label {
 }
 
 .plans-shell {
-    width: min(1560px, calc(100vw - 36px));
-    padding: 18px 18px 22px;
+    width: min(1680px, calc(100vw - 28px));
+    padding: 14px 14px 14px;
 }
 
 .plans-body .app {
-    gap: 18px;
+    gap: 12px;
 }
 
 .plans-titlebar {
@@ -1444,7 +1444,7 @@ label {
 }
 
 .plans-body .toolbar {
-    padding: 14px;
+    padding: 12px;
 }
 
 .plans-body .toolbar input,
@@ -1455,18 +1455,18 @@ label {
 
 .plans-body th,
 .plans-body td {
-    padding: 16px 14px;
+    padding: 12px 12px;
 }
 
 .plans-body .status-badge {
-    min-height: 34px;
-    padding: 7px 14px;
-    font-size: 15px;
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 14px;
 }
 
 .plans-body .pagination {
     margin-top: 0;
-    padding: 13px 14px;
+    padding: 10px 12px;
 }
 
 .form-body .form-shell {
