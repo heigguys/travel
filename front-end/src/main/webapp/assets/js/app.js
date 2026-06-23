@@ -482,14 +482,25 @@ async function deletePlan(planId) {
     $("deleteMessage").textContent = hasApplicants
         ? "已经有员工申请本计划。如需删除本计划，请先发送邮件通知员工。"
         : "确认删除该旅行计划？删除后将无法恢复。";
+    $("deleteApplicantSummary").textContent = hasApplicants
+        ? `${applicants.length} 位员工已申请`
+        : "暂无员工申请";
     $("deleteApplicants").innerHTML = applicants.length
         ? applicants.map((a) => `
-            <div class="message">
-                <strong>${escapeHtml(a.userName || "")}</strong>
-                <p>${escapeHtml(a.email || "")}</p>
+            <div class="delete-applicant-card">
+                <div class="delete-applicant-avatar" aria-hidden="true">${escapeHtml((a.userName || "?").slice(0, 1))}</div>
+                <div class="delete-applicant-info">
+                    <strong>${escapeHtml(a.userName || "未命名员工")}</strong>
+                    <p>${escapeHtml(a.email || "暂无邮箱")}</p>
+                </div>
             </div>
         `).join("")
-        : "<p class='muted'>暂无员工申请</p>";
+        : `
+            <div class="delete-empty-state">
+                <strong>暂无员工申请</strong>
+                <p>可以直接确认删除该旅行计划。</p>
+            </div>
+        `;
     $("mailNotifyBtn").classList.toggle("hidden", !hasApplicants);
     $("confirmDeleteBtn").classList.toggle("hidden", hasApplicants);
     $("deleteDialog").showModal();

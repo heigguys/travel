@@ -119,15 +119,28 @@
 
 <!-- 删除确认弹窗：管理员删除计划前确认，并展示已有申请员工。 -->
 <dialog id="deleteDialog">
-    <form id="deleteForm" method="dialog" class="stack">
-        <h2>删除旅行计划</h2>
-        <input type="hidden" name="planId">
-        <p id="deleteMessage" class="danger-note">确认删除该旅行计划？删除后将无法恢复。</p>
-        <div>
-            <strong>已有员工申请</strong>
-            <div id="deleteApplicants" class="delete-preview-list"></div>
+    <form id="deleteForm" method="dialog" class="delete-dialog-panel">
+        <div class="delete-dialog-header">
+            <div>
+                <h2>删除旅行计划</h2>
+                <p>删除前请确认申请情况。该操作完成后不可恢复。</p>
+            </div>
         </div>
-        <div class="dialog-actions">
+        <input type="hidden" name="planId">
+        <div class="delete-dialog-body">
+            <div class="delete-warning-card">
+                <strong>删除提醒</strong>
+                <p id="deleteMessage">确认删除该旅行计划？删除后将无法恢复。</p>
+            </div>
+            <div class="delete-applicants-panel">
+                <div class="delete-section-title">
+                    <strong>已有员工申请</strong>
+                    <span id="deleteApplicantSummary">暂无员工申请</span>
+                </div>
+                <div id="deleteApplicants" class="delete-preview-list"></div>
+            </div>
+        </div>
+        <div class="dialog-actions delete-dialog-actions">
             <button value="cancel" type="button" data-close>取消</button>
             <button id="mailNotifyBtn" class="primary hidden" type="button">邮件通知</button>
             <button id="confirmDeleteBtn" class="danger" type="submit">确认删除</button>

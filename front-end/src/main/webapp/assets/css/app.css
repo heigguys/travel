@@ -1923,6 +1923,232 @@ dialog h2 {
     color: var(--blue-700);
 }
 
+#deleteDialog {
+    width: min(760px, calc(100vw - 36px));
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, .96)),
+        var(--surface);
+}
+
+.delete-dialog-panel {
+    display: grid;
+    gap: 0;
+}
+
+.delete-dialog-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 22px 24px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background:
+        radial-gradient(circle at 16% 0%, rgba(255, 255, 255, .28), transparent 34%),
+        linear-gradient(135deg, var(--blue), #2992f3);
+    color: #fff;
+}
+
+.delete-dialog-header::after {
+    content: "";
+    position: absolute;
+    right: -42px;
+    bottom: -52px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
+}
+
+.delete-dialog-header > div {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.delete-dialog-header h2 {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.delete-dialog-header p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, .84);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.delete-dialog-body {
+    display: grid;
+    gap: 16px;
+    padding: 18px 24px 20px;
+    background:
+        radial-gradient(circle at 12% 0%, rgba(21, 94, 239, .06), transparent 32%),
+        linear-gradient(180deg, #fbfdff, #f7f9fc);
+}
+
+.delete-warning-card {
+    display: grid;
+    gap: 6px;
+    border: 1px solid #ffc9c4;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background:
+        linear-gradient(90deg, rgba(255, 241, 240, .96), rgba(255, 255, 255, .92));
+    color: var(--danger);
+    box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.delete-warning-card strong {
+    color: var(--danger);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.delete-warning-card p {
+    margin: 0;
+    color: #b42318;
+    font-weight: 650;
+    line-height: 1.6;
+}
+
+.delete-applicants-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.delete-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.delete-section-title strong {
+    color: #111827;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.delete-section-title span {
+    border: 1px solid #dce7f5;
+    border-radius: 999px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, .84);
+    color: #475467;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#deleteDialog .delete-preview-list {
+    display: grid;
+    gap: 10px;
+    max-height: min(34vh, 300px);
+    overflow: auto;
+    margin: 0;
+    padding-right: 2px;
+}
+
+.delete-applicant-card {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(216, 226, 239, .96);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    background:
+        linear-gradient(90deg, rgba(239, 246, 255, .72), rgba(255, 255, 255, .96) 42%),
+        rgba(255, 255, 255, .94);
+    box-shadow: var(--shadow-sm);
+}
+
+.delete-applicant-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-weight: 800;
+}
+
+.delete-applicant-info {
+    min-width: 0;
+}
+
+.delete-applicant-info strong {
+    display: block;
+    color: #172033;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.delete-applicant-info p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.delete-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 118px;
+    padding: 18px;
+    border: 1px dashed #b8d4ff;
+    border-radius: var(--radius);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(21, 94, 239, .10), transparent 38%),
+        linear-gradient(180deg, rgba(244, 248, 255, .92), rgba(238, 244, 255, .70));
+    color: var(--muted);
+    text-align: center;
+}
+
+.delete-empty-state strong {
+    color: #111827;
+    font-size: 16px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.delete-empty-state p {
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
+}
+
+#deleteDialog .delete-dialog-actions {
+    justify-content: flex-end;
+    padding: 16px 24px 20px;
+    border-top: 1px solid #edf1f7;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background:
+        linear-gradient(180deg, rgba(248, 251, 255, .94), rgba(238, 244, 255, .86));
+}
+
+#deleteDialog .delete-dialog-actions button:not(.primary):not(.danger) {
+    border-color: #c7dcff;
+    background: var(--blue-soft);
+    color: var(--blue);
+}
+
+#deleteDialog .delete-dialog-actions button:not(.primary):not(.danger):hover:not(:disabled) {
+    border-color: #9fc2ff;
+    background: #e8f1ff;
+    color: var(--blue-700);
+}
+
 #consultDialog {
     width: min(1120px, calc(100vw - 48px));
     padding: 0;
@@ -2389,6 +2615,33 @@ button.password-toggle:hover:not(:disabled) {
     .actions button,
     .dialog-actions button {
         flex: 1;
+    }
+
+    .delete-dialog-header {
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .delete-dialog-body {
+        padding: 16px 18px 18px;
+    }
+
+    .delete-section-title {
+        align-items: flex-start;
+    }
+
+    .delete-applicant-card {
+        grid-template-columns: 34px minmax(0, 1fr);
+        padding: 11px 12px;
+    }
+
+    .delete-applicant-avatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    #deleteDialog .delete-dialog-actions {
+        padding: 14px 18px 18px;
     }
 
     .login-panel {
