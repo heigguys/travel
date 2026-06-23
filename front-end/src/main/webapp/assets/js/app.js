@@ -23,6 +23,11 @@ const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 // 将申请状态整数转换为显示文字（0=申请成功，1=取消）。
 const applicationStatusLabel = (status) => Number(status) === 0 ? "申请成功" : "取消";
 
+const applicationStatusBadge = (status) => {
+    const value = Number(status);
+    return `<span class="status-badge application-status status-application-${value}">${applicationStatusLabel(value)}</span>`;
+};
+
 // 将价格统一显示为人民币格式，例如 ¥2,280。
 const formatPrice = (price) => {
     const value = Number(price);
@@ -202,7 +207,7 @@ function renderPlans() {
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
             : planNo;
-        const adminCells = admin ? `<td class="col-published">${plan.published ? "已公开" : "未公开"}</td>` : "";
+        const adminCells = admin ? `<td class="col-published">${publishStatusBadge(plan.published)}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
             : actionButton("edit", plan.id, "编辑");
@@ -211,7 +216,7 @@ function renderPlans() {
             : "";
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
-            <td class="col-status">${planStatusLabel(plan.status)}</td>
+            <td class="col-status">${planStatusBadge(plan.status)}</td>
             <td class="col-plan-no" title="${planNo}">${fileLink}</td>
             <td class="col-destination" title="${destination}">${destination}</td>
             <td class="col-date-range">${formatDateRange(plan.startDate, plan.endDate)}</td>
