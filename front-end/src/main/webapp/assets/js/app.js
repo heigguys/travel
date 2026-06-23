@@ -128,10 +128,17 @@ function closeDialog(dialog) {
 
 // 根据当前用户信息刷新计划页顶部状态，并按角色控制管理员入口。
 function showPlansPage() {
-    $("userInfo").textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
+    updateGlobalNav();
     const admin = Number(currentUser.role) === 0;
     $("newPlanBtn").classList.toggle("hidden", !admin);
     $("publishedFilter").classList.toggle("hidden", !admin);
+}
+
+function updateGlobalNav() {
+    const userInfo = $("userInfo");
+    if (userInfo && currentUser) {
+        userInfo.textContent = `${currentUser.name}（${roleLabel(currentUser.role)}）`;
+    }
 }
 
 // 根据筛选条件加载旅行计划列表。

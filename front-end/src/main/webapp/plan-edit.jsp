@@ -51,7 +51,7 @@
                     <div class="plan-control-grid">
                         <label>启程日
                             <div class="date-field" id="startDateField">
-                                <span class="date-placeholder">YYYY/MM/DD</span>
+                                <span class="date-placeholder">yyyy/mm/dd</span>
                                 <input name="startYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
                                 <span class="date-sep">/</span>
                                 <input name="startMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
@@ -65,7 +65,7 @@
                         </label>
                         <label>返回日
                             <div class="date-field" id="endDateField">
-                                <span class="date-placeholder">YYYY/MM/DD</span>
+                                <span class="date-placeholder">yyyy/mm/dd</span>
                                 <input name="endYear" data-date-part="year" type="text" inputmode="numeric" maxlength="4">
                                 <span class="date-sep">/</span>
                                 <input name="endMonth" data-date-part="month" type="text" inputmode="numeric" maxlength="2">
@@ -87,7 +87,7 @@
                     </div>
                     <div class="plan-control-grid">
                         <label>价格（元）
-                            <input name="price" type="text" inputmode="decimal" required>
+                            <input name="price" type="text" inputmode="decimal" required placeholder="¥人均费用">
                         </label>
                         <label>定员数（人）
                             <input name="capacity" type="number" required placeholder="人数需大于等于10">
