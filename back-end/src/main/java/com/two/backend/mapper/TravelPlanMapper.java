@@ -23,6 +23,8 @@ public interface TravelPlanMapper {
      */
     TravelPlan findById(@Param("id") Long id);
 
+    String findMaxPlanNoByPrefix(@Param("prefix") String prefix);
+
     /**
      * 插入旅行计划，并回填自增 ID。
      */

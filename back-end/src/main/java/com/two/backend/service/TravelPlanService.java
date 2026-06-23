@@ -9,6 +9,7 @@ import com.two.backend.model.User;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +26,7 @@ public class TravelPlanService {
     private static final BigDecimal MAX_PLAN_PRICE = new BigDecimal("10000");
     private static final int MIN_CAPACITY = 10;
     private static final int MAX_CAPACITY = 50;
+    private static final DateTimeFormatter PLAN_NO_DATE_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
 
     private final TravelPlanMapper travelPlanMapper;
     private final ApplicationMapper applicationMapper;
@@ -99,11 +101,21 @@ public class TravelPlanService {
     public TravelPlan create(PlanRequest request, MultipartFile file) throws IOException {
         validatePlan(request);
         TravelPlan plan = new TravelPlan();
-        plan.setPlanNo("TP" + System.currentTimeMillis());
+        plan.setPlanNo(generatePlanNo());
         fillPlan(plan, request, file);
         plan.setStatus(computeInitialStatus(request.startDate(), request.endDate()));
         travelPlanMapper.insert(plan);
         return plan;
+    }
+
+    private String generatePlanNo() {
+        String prefix = "TP" + LocalDate.now().format(PLAN_NO_DATE_FORMATTER);
+        String maxPlanNo = travelPlanMapper.findMaxPlanNoByPrefix(prefix);
+        int nextSequence = 1;
+        if (maxPlanNo != null && maxPlanNo.length() > prefix.length()) {
+            nextSequence = Integer.parseInt(maxPlanNo.substring(prefix.length())) + 1;
+        }
+        return prefix + String.format("%03d", nextSequence);
     }
 
     /**

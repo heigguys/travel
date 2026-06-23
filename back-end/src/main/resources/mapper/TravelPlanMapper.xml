@@ -64,6 +64,12 @@
         where id = #{id}
     </select>
 
+    <select id="findMaxPlanNoByPrefix" resultType="string">
+        select max(plan_no)
+        from travel_plans
+        where plan_no like concat(#{prefix}, '%')
+    </select>
+
     <insert id="insert" parameterType="com.two.backend.model.TravelPlan"
             useGeneratedKeys="true" keyProperty="id">
         insert into travel_plans(plan_no, destination, start_date, end_date, price, capacity, published, file_path, file_name, status)
