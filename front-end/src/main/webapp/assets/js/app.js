@@ -520,13 +520,47 @@ async function notifyApplicantsAndDelete() {
 // 打开"我的申请"弹窗，展示当前用户申请及可执行操作。
 async function openMyApps() {
     const apps = await api("/my-applications");
-    $("myAppsRows").innerHTML = apps.map((app) => `
-        <div class="message">
-            <strong>${app.planNo} ${app.destination}</strong>
-            <p>人数：${app.applicantCount}，状态：${applicationStatusBadge(app.status)}，备注：${app.optionText || ""}</p>
-            <button data-app="${app.id}" data-count="${app.applicantCount}">修改人员信息</button>
-            ${Number(app.status) === 0 ? `<button class="danger" data-cancel="${app.id}">取消申请</button>` : ""}
-        </div>`).join("") || "<p class='muted'>暂无申请</p>";
+    $("myAppsRows").innerHTML = apps.length ? `
+        <div class="my-app-dialog-header">
+            <div>
+                <h3>我的申请</h3>
+                <p>查看申请状态并维护同行人员信息</p>
+            </div>
+        </div>
+        <div class="my-apps-summary">
+            <span>共 ${apps.length} 条申请</span>
+            <span>${apps.filter((app) => Number(app.status) === 0).length} 条生效中</span>
+        </div>
+        <div class="my-apps-list">
+            ${apps.map((app) => `
+                <article class="my-app-card">
+                    <div class="my-app-main">
+                        <div class="my-app-title">
+                            <strong>${escapeHtml(app.destination || "")}</strong>
+                            <span>${escapeHtml(app.planNo || "")}</span>
+                        </div>
+                        <div class="my-app-meta">
+                            <span>申请人数 ${app.applicantCount}</span>
+                            ${applicationStatusBadge(app.status)}
+                        </div>
+                        ${app.optionText ? `<p class="my-app-note">${escapeHtml(app.optionText)}</p>` : ""}
+                    </div>
+                    <div class="my-app-actions">
+                        <button data-app="${app.id}" data-count="${app.applicantCount}" type="button">修改人员</button>
+                        ${Number(app.status) === 0 ? `<button class="danger" data-cancel="${app.id}" type="button">取消申请</button>` : ""}
+                    </div>
+                </article>`).join("")}
+        </div>
+    ` : `<div class="my-app-dialog-header">
+        <div>
+            <h3>我的申请</h3>
+            <p>查看申请状态并维护同行人员信息</p>
+        </div>
+    </div>
+    <div class="my-apps-empty">
+        <strong>暂无申请</strong>
+        <span>提交旅行计划申请后，会在这里显示申请状态和人员信息。</span>
+    </div>`;
     if (!$("myAppsDialog").open) $("myAppsDialog").showModal();
 }
 
@@ -597,6 +631,7 @@ function hidePasswordMessage() {
 async function initLoginPage() {
     const loginForm = $("loginForm");
     if (!loginForm) return false;
+    const forceShowLogin = new URLSearchParams(window.location.search).get("showLogin") === "1";
 
     const loginError = $("loginError");
     const employeeNoInput = loginForm.employeeNo;
@@ -655,11 +690,13 @@ async function initLoginPage() {
         }
     });
 
-    try {
-        currentUser = await api("/auth/me");
-        go("plans.jsp");
-    } catch {
-        return true;
+    if (!forceShowLogin) {
+        try {
+            currentUser = await api("/auth/me");
+            go("plans.jsp");
+        } catch {
+            return true;
+        }
     }
     return true;
 }
