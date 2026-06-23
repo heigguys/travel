@@ -8,14 +8,6 @@
     <link rel="stylesheet" href="assets/css/app.css?v=<%= System.currentTimeMillis() %>">
 </head>
 <body>
-<nav class="global-nav">
-    <div class="global-brand">公司旅行管理系统</div>
-</nav>
-<nav class="sub-nav" aria-label="页面导览">
-    <div class="sub-nav-inner">
-        <strong>登录</strong>
-    </div>
-</nav>
 <main class="shell">
     <!-- 登录页：未登录用户通过员工编号和密码进入系统；已登录用户会自动跳转到 plans.jsp。 -->
     <section id="loginView" class="login-panel">
