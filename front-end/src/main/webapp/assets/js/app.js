@@ -865,6 +865,10 @@ async function initPlanEditPage() {
     const fileText = $("planFileText");
     const fileHint = $("planFileHint");
     const fileDropzone = $("planFileDropzone");
+    const backBtn = $("planEditBackBtn");
+    const cancelBtn = $("planEditCancelBtn");
+    if (backBtn) backBtn.onclick = () => go("plans.jsp");
+    if (cancelBtn) cancelBtn.onclick = () => go("plans.jsp");
     const updateFileDisplay = (fileName) => {
         const hasFile = Boolean(fileName);
         if (fileText) fileText.textContent = hasFile ? fileName : "点击上传PDF文件";
@@ -942,9 +946,6 @@ async function initPlanEditPage() {
         }
     });
     form.capacity.addEventListener("input", () => form.capacity.setCustomValidity(""));
-
-    $("planEditBackBtn").onclick = () => go("plans.jsp");
-    $("planEditCancelBtn").onclick = () => go("plans.jsp");
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();

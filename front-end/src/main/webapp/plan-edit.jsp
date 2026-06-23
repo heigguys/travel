@@ -130,10 +130,10 @@
                     <span>所有带 <span class="required">*</span> 为必填项</span>
                     <div class="dialog-actions">
                         <button class="primary" type="submit">保存</button>
-                        <button type="button" id="planEditCancelBtn">取消</button>
+                        <button type="button" id="planEditCancelBtn" onclick="window.location.href='plans.jsp'">取消</button>
                     </div>
                 </div>
-                <button id="planEditBackBtn" class="hidden" type="button">返回列表</button>
+                <button id="planEditBackBtn" class="hidden" type="button" onclick="window.location.href='plans.jsp'">返回列表</button>
             </form>
         </div>
     </section>
