@@ -138,34 +138,7 @@
     </div>
 </dialog>
 
-<dialog id="passwordDialog">
-    <form id="passwordForm" method="dialog" class="stack">
-        <h2>修改密码</h2>
-        <label>原密码
-            <span class="password-field">
-                <input name="oldPassword" type="password" required>
-                <button id="oldPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
-            </span>
-        </label>
-        <label>新密码
-            <span class="password-field">
-                <input name="newPassword" type="password" required minlength="6">
-                <button id="newPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
-            </span>
-        </label>
-        <label>确认密码
-            <span class="password-field">
-                <input name="confirmPassword" type="password" required minlength="6">
-                <button id="confirmPasswordToggle" class="password-toggle hidden" type="button" aria-label="显示密码"></button>
-            </span>
-        </label>
-        <p id="passwordMessage" class="form-error hidden"></p>
-        <div class="dialog-actions">
-            <button value="cancel" type="button" data-close>取消</button>
-            <button class="primary" type="submit">保存</button>
-        </div>
-    </form>
-</dialog>
+<%@ include file="WEB-INF/jsp/fragments/password-dialog.jspf" %>
 
 <div id="toast" class="toast hidden"></div>
 <script src="assets/js/app.js"></script>
