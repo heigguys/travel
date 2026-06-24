@@ -19,6 +19,7 @@ public record ConsultationOverviewResponse(
     public record PlanOverview(
             Long planId,
             String planNo,
+            String destination,
             LocalDateTime latestCreatedAt,
             int unreadCount
     ) {

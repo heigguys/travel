@@ -70,6 +70,7 @@ public class ConsultationService {
             employee.plans.add(new ConsultationOverviewResponse.PlanOverview(
                     row.getPlanId(),
                     row.getPlanNo(),
+                    row.getDestination(),
                     row.getLatestCreatedAt(),
                     unreadCount
             ));

@@ -386,7 +386,7 @@ async function openConsultDialog(planId) {
     activeConsultParticipantId = null;
     $("consultForm").reset();
     $("consultForm").planId.value = planId;
-    $("consultPlanNo").textContent = activeConsultPlanNo;
+    $("consultPlanNo").innerHTML = renderConsultPlanSummary({...plan, id: plan.id || planId, planId});
     await renderConsultSessions(planId, {forceScroll: true});
     $("consultDialog").showModal();
     startConsultAutoRefresh();
@@ -502,11 +502,9 @@ async function renderGlobalConsultOverview({forceScroll = false} = {}) {
             ? `<span class="consult-session-badge" aria-label="${unreadCount} 条未读消息">${unreadCount > 99 ? "99+" : unreadCount}</span>`
             : "";
         const planNo = escapeHtml(plan.planNo || String(plan.planId || ""));
-        return `<button class="consult-session consult-plan-option${active}" type="button" data-consult-plan="${plan.planId}" title="${planNo}">
-            <span class="consult-session-main">
-                <span>${planNo}</span>
-                <small>${formatDateTime(plan.latestCreatedAt)}</small>
-            </span>
+        const destination = escapeHtml(plan.destination || plan.planNo || String(plan.planId || ""));
+        return `<button class="consult-session consult-plan-option${active}" type="button" data-consult-plan="${plan.planId}" title="${destination} ${planNo}">
+            ${consultPlanContent(plan)}
             ${unreadBadge}
         </button>`;
     }).join("") : "<p class='muted'>暂无旅游计划</p>";
@@ -561,6 +559,21 @@ async function renderConsultSessions(planId, {forceScroll = false} = {}) {
 function employeePlansSummary(employee) {
     const planCount = (employee.plans || []).length;
     return planCount ? `${planCount} 个旅游计划` : "暂无旅游计划";
+}
+
+function consultPlanContent(plan) {
+    const planNo = escapeHtml(plan.planNo || String(plan.planId || ""));
+    const destination = escapeHtml(plan.destination || plan.planNo || String(plan.planId || ""));
+    return `<span class="consult-session-main consult-plan-main">
+        <span>${destination}</span>
+        <small>${planNo}</small>
+    </span>`;
+}
+
+function renderConsultPlanSummary(plan) {
+    return `<div class="consult-plan-summary" title="${escapeHtml(plan.destination || plan.planNo || String(plan.id || plan.planId || ""))}">
+        ${consultPlanContent({...plan, planId: plan.planId || plan.id})}
+    </div>`;
 }
 
 // 渲染咨询消息列表，并对消息正文做 HTML 转义。

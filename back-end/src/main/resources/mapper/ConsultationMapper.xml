@@ -43,6 +43,7 @@
                u.name user_name,
                c.plan_id,
                p.plan_no,
+               p.destination,
                max(c.created_at) latest_created_at,
                coalesce(sum(case
                    when #{admin} = true
@@ -68,7 +69,7 @@
             and c.participant_user_id = #{userId}
             and p.published = true
         </if>
-        group by c.participant_user_id, u.employee_no, u.name, c.plan_id, p.plan_no
+        group by c.participant_user_id, u.employee_no, u.name, c.plan_id, p.plan_no, p.destination
         order by max(c.created_at) desc, c.participant_user_id, c.plan_id
     </select>
 

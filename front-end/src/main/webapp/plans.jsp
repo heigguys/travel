@@ -97,7 +97,7 @@
                 <div id="consultSessions" class="consult-sessions"></div>
             </aside>
             <section class="consult-plan-panel">
-                <div class="consult-column-title">旅游计划编号</div>
+                <div class="consult-column-title">旅游计划</div>
                 <div id="consultPlanNo" class="consult-plan-no"></div>
             </section>
             <section class="consult-chat-panel">

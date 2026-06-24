@@ -2430,6 +2430,27 @@ button.consult-session.active .consult-session-main span {
     min-height: 58px;
 }
 
+.consult-plan-main span {
+    font-weight: 800;
+}
+
+.consult-plan-main small {
+    font-weight: 650;
+}
+
+.consult-plan-summary {
+    min-height: 58px;
+    padding: 10px 11px;
+    border: 1px solid #6aa7ff;
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, rgba(229, 240, 255, .98), rgba(246, 250, 255, .98));
+    box-shadow: 0 12px 26px rgba(21, 94, 239, .16), inset 0 0 0 1px rgba(21, 94, 239, .18);
+}
+
+.consult-plan-summary .consult-plan-main span {
+    color: var(--blue-700);
+}
+
 .consult-messages {
     display: flex;
     flex-direction: column;

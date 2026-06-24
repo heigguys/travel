@@ -10,6 +10,7 @@ public class ConsultationOverviewRow {
     private String userName;
     private Long planId;
     private String planNo;
+    private String destination;
     private LocalDateTime latestCreatedAt;
     private Integer unreadCount;
 }
