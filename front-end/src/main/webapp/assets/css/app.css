@@ -1625,12 +1625,28 @@ th {
 }
 
 tbody tr {
+    height: 60px;
     transition: background-color .14s ease, box-shadow .14s ease;
 }
 
 tbody tr:hover {
     background: #f8fbff;
     box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.plan-placeholder-row td {
+    height: 60px;
+    padding: 0;
+}
+
+.plan-placeholder-row:hover {
+    background: var(--surface);
+    box-shadow: none;
+}
+
+.plan-empty-row td {
+    color: var(--muted);
+    font-weight: 600;
 }
 
 a {

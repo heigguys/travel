@@ -234,7 +234,7 @@ function renderPlans() {
     const totalPages = Math.max(Math.ceil(plans.length / PLAN_PAGE_SIZE), 1);
     currentPlanPage = Math.min(Math.max(currentPlanPage, 1), totalPages);
     const pagePlans = plans.slice((currentPlanPage - 1) * PLAN_PAGE_SIZE, currentPlanPage * PLAN_PAGE_SIZE);
-    $("planRows").innerHTML = pagePlans.map((plan) => {
+    const dataRows = pagePlans.map((plan) => {
         const pdfViewerUrl = `pdf-viewer.jsp?id=${encodeURIComponent(plan.id)}&planNo=${encodeURIComponent(plan.planNo)}`;
         const planNo = escapeHtml(plan.planNo || "");
         const destination = escapeHtml(plan.destination || "");
@@ -271,6 +271,18 @@ function renderPlans() {
             </td>
         </tr>`;
     }).join("");
+    const placeholderCount = PLAN_PAGE_SIZE - pagePlans.length;
+    const placeholderRows = Array.from({length: placeholderCount}, (_, index) => {
+        if (!plans.length && index === 0) {
+            return `<tr class="plan-placeholder-row plan-empty-row">
+                <td colspan="${columns.length}">暂无旅游计划</td>
+            </tr>`;
+        }
+        return `<tr class="plan-placeholder-row" aria-hidden="true">
+            <td colspan="${columns.length}">&nbsp;</td>
+        </tr>`;
+    }).join("");
+    $("planRows").innerHTML = dataRows + placeholderRows;
     renderPlanPagination();
 }
 
