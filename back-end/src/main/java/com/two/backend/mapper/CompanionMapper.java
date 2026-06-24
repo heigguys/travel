@@ -24,4 +24,9 @@ public interface CompanionMapper {
      * 删除某条申请下的全部随行人员。
      */
     int deleteByApplication(@Param("applicationId") Long applicationId);
+
+    /**
+     * 删除指定计划下全部申请对应的随行人员。
+     */
+    int deleteByPlan(@Param("planId") Long planId);
 }

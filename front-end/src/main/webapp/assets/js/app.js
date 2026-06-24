@@ -741,14 +741,15 @@ async function notifyApplicantsAndDelete() {
     const button = $("mailNotifyBtn");
     button.disabled = true;
     button.textContent = "发送中...";
+    closeDialog($("deleteDialog"));
+    toast("邮件通知已提交，旅行计划删除中");
     try {
         await api(`/plans/${planId}/notify-cancel-and-delete`, {method: "POST"});
-        closeDialog($("deleteDialog"));
-        toast("邮件通知已发送，旅行计划已删除");
-        await loadPlans();
+        toast("旅行计划已删除");
     } catch (error) {
-        toast(error.message || "邮件通知发送失败");
+        console.warn("邮件通知或删除请求失败", error);
     } finally {
+        await loadPlans();
         button.disabled = false;
         button.textContent = "邮件通知";
     }

@@ -2,6 +2,8 @@ package com.two.backend.service;
 
 import com.two.backend.dto.PlanRequest;
 import com.two.backend.mapper.ApplicationMapper;
+import com.two.backend.mapper.CompanionMapper;
+import com.two.backend.mapper.ConsultationMapper;
 import com.two.backend.mapper.TravelPlanMapper;
 import com.two.backend.model.Application;
 import com.two.backend.model.TravelPlan;
@@ -30,13 +32,18 @@ public class TravelPlanService {
 
     private final TravelPlanMapper travelPlanMapper;
     private final ApplicationMapper applicationMapper;
+    private final CompanionMapper companionMapper;
+    private final ConsultationMapper consultationMapper;
     private final StorageService storageService;
     private final MailNotificationService mailNotificationService;
 
     public TravelPlanService(TravelPlanMapper travelPlanMapper, ApplicationMapper applicationMapper,
+                             CompanionMapper companionMapper, ConsultationMapper consultationMapper,
                              StorageService storageService, MailNotificationService mailNotificationService) {
         this.travelPlanMapper = travelPlanMapper;
         this.applicationMapper = applicationMapper;
+        this.companionMapper = companionMapper;
+        this.consultationMapper = consultationMapper;
         this.storageService = storageService;
         this.mailNotificationService = mailNotificationService;
     }
@@ -173,8 +180,7 @@ public class TravelPlanService {
         if (!applicants.isEmpty()) {
             throw new BusinessException("已经有员工申请本计划。如需删除本计划，请先发送邮件通知员工。");
         }
-        applicationMapper.deleteByPlan(id);
-        travelPlanMapper.delete(id);
+        deletePlanCascade(id);
     }
 
     @Transactional
@@ -190,11 +196,25 @@ public class TravelPlanService {
         }
         List<Application> applicants = applicationMapper.listActiveByPlan(id);
         if (applicants.isEmpty()) {
-            applicationMapper.deleteByPlan(id);
-            travelPlanMapper.delete(id);
+            deletePlanCascade(id);
             return;
         }
-        mailNotificationService.sendPlanCancelNotice(plan, applicants);
+        deletePlanCascade(id);
+        try {
+            mailNotificationService.sendPlanCancelNotice(plan, applicants);
+        } catch (RuntimeException ignored) {
+            // 邮件发送失败不阻断计划删除，前端不再要求等待邮件发送结果。
+        }
+    }
+
+    private void deletePlanCascade(Long id) {
+        companionMapper.deleteByPlan(id);
+        try {
+            consultationMapper.deleteReadsByPlan(id);
+            consultationMapper.deleteByPlan(id);
+        } catch (RuntimeException ignored) {
+            // 咨询辅助数据清理失败不应阻断计划和申请删除。
+        }
         applicationMapper.deleteByPlan(id);
         travelPlanMapper.delete(id);
     }

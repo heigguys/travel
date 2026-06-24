@@ -99,4 +99,14 @@
           and participant_user_id = #{userId}
     </update>
 
+    <delete id="deleteReadsByPlan">
+        delete from consultation_reads
+        where plan_id = #{planId}
+    </delete>
+
+    <delete id="deleteByPlan">
+        delete from consultations
+        where plan_id = #{planId}
+    </delete>
+
 </mapper>

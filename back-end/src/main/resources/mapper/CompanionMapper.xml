@@ -22,4 +22,13 @@
         where application_id = #{applicationId}
     </delete>
 
+    <delete id="deleteByPlan">
+        delete from companions
+        where application_id in (
+            select id
+            from applications
+            where plan_id = #{planId}
+        )
+    </delete>
+
 </mapper>

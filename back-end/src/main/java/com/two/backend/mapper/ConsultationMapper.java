@@ -38,4 +38,14 @@ public interface ConsultationMapper {
      * 关闭指定用户在指定计划下的咨询会话。
      */
     int close(@Param("planId") Long planId, @Param("userId") Long userId);
+
+    /**
+     * 删除指定计划下的咨询已读记录。
+     */
+    int deleteReadsByPlan(@Param("planId") Long planId);
+
+    /**
+     * 删除指定计划下的咨询消息。
+     */
+    int deleteByPlan(@Param("planId") Long planId);
 }
