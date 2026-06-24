@@ -43,6 +43,11 @@ public class ApplicationService {
         if (plan == null || !Boolean.TRUE.equals(plan.getPublished())) {
             throw new BusinessException("旅行计划不存在或未公开");
         }
+        if (Integer.valueOf(TravelPlan.STATUS_IN_PROGRESS).equals(plan.getStatus())
+                || Integer.valueOf(TravelPlan.STATUS_ENDED).equals(plan.getStatus())
+                || Integer.valueOf(TravelPlan.STATUS_DISBANDED).equals(plan.getStatus())) {
+            throw new BusinessException("当前计划状态不可申请");
+        }
         Application active = applicationMapper.findActive(planId, user.getId());
         int current = applicationMapper.activeCount(planId);
         int oldCount = active == null ? 0 : active.getApplicantCount();

@@ -1,12 +1,3 @@
-drop table if exists consultation_admin_session_reads;
-drop table if exists consultation_admin_reads;
-drop table if exists consultation_user_reads;
-drop table if exists consultation_reads;
-drop table if exists consultations;
-drop table if exists companions;
-drop table if exists applications;
-drop table if exists travel_plans;
-drop table if exists users;
 
 create table users (
     id bigint primary key auto_increment,

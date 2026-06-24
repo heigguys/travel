@@ -246,6 +246,9 @@ function renderPlans() {
         const adminActions = admin
             ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
+        const applyAction = [2, 3, 4].includes(Number(plan.status))
+            ? disabledActionButton("apply", "当前计划状态不可申请")
+            : actionButton("apply", plan.id, "申请");
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
             <td class="col-status">${planStatusBadge(plan.status)}</td>
@@ -260,7 +263,7 @@ function renderPlans() {
             <td class="col-actions">
                 <div class="plan-actions">
                     ${adminActions}
-                    ${actionButton("apply", plan.id, "申请")}
+                    ${applyAction}
                     ${actionButton("consult", plan.id, "咨询", consultClass)}
                 </div>
             </td>
