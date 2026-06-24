@@ -1,7 +1,7 @@
 insert ignore into users(id, employee_no, name, email, role, password_md5, enabled) values
-(1, 'S0763', '聂宁波', '2190058893@qq.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
-(2, 'S0765', '唐笑松', '2837069797@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
-(3, 'S0759', '史简', '1466648412@qq.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
+(1, 'S0763', '聂宁波', 'nie-ningbo@zhimingsoft.com', 0, 'e10adc3949ba59abbe56e057f20f883e', true),
+(2, 'S0765', '唐笑松', 'tang-xiaosong@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true),
+(3, 'S0759', '史简', 'shi-jian@zhimingsoft.com', 1, 'e10adc3949ba59abbe56e057f20f883e', true);
 
 -- 日期使用 current_date 相对计算，登录时重新计算状态后仍能稳定覆盖五种计划状态。
 insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, price, capacity, published, status) values

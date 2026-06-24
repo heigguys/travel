@@ -783,7 +783,7 @@ async function openMyApps() {
                         ${app.optionText ? `<p class="my-app-note">${escapeHtml(app.optionText)}</p>` : ""}
                     </div>
                     <div class="my-app-actions">
-                        <button data-app="${app.id}" data-count="${app.applicantCount}" type="button">修改人员</button>
+                        <button data-apply-plan="${app.planId}" type="button">修改人员</button>
                         ${Number(app.status) === 0 ? `<button class="danger" data-cancel="${app.id}" type="button">取消申请</button>` : ""}
                     </div>
                 </article>`).join("")}
@@ -1050,7 +1050,7 @@ function bindGlobalNavEvents() {
         const button = event.target.closest("button");
         if (!button) return;
         if (button.dataset.close !== undefined) closeDialog(button.closest("dialog"));
-        if (button.dataset.app) await openCompanionsDialog(Number(button.dataset.app), Number(button.dataset.count));
+        if (button.dataset.applyPlan) go("plan-apply.jsp?planId=" + encodeURIComponent(button.dataset.applyPlan));
         if (button.dataset.cancel) await cancelApplication(Number(button.dataset.cancel));
     });
 

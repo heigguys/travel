@@ -1746,6 +1746,7 @@ dialog h2 {
 
 #myAppsDialog {
     width: min(760px, calc(100vw - 36px));
+    height: min(760px, calc(100vh - 48px));
     padding: 0;
     overflow: hidden;
     border-radius: var(--radius);
@@ -1755,7 +1756,12 @@ dialog h2 {
 }
 
 #myAppsDialog > .stack {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
     gap: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 #myAppsDialog h2 {
@@ -1810,13 +1816,17 @@ dialog h2 {
 
 #myAppsRows {
     display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
     gap: 14px;
-    max-height: min(62vh, 560px);
-    overflow: auto;
-    padding: 18px 24px;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    padding: 18px 24px 20px;
     background:
         radial-gradient(circle at 12% 0%, rgba(21, 94, 239, .06), transparent 32%),
         linear-gradient(180deg, #fbfdff, #f7f9fc);
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .my-apps-summary {
@@ -1839,6 +1849,13 @@ dialog h2 {
 .my-apps-list {
     display: grid;
     gap: 12px;
+    align-content: start;
+    grid-auto-rows: max-content;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 2px;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .my-app-card {
@@ -2338,7 +2355,7 @@ button.consult-session {
     border-radius: var(--radius);
     background:
         linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(248, 251, 255, .88));
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .035);
     text-align: left;
 }
 
@@ -2358,6 +2375,7 @@ button.consult-session:hover:not(:disabled) {
     border-color: #bdd7ff;
     background:
         linear-gradient(180deg, rgba(244, 248, 255, .98), rgba(238, 244, 255, .94));
+    box-shadow: 0 4px 10px rgba(21, 94, 239, .06);
     transform: translateY(-1px);
 }
 
@@ -2365,7 +2383,7 @@ button.consult-session.active {
     border-color: #6aa7ff;
     background:
         linear-gradient(90deg, rgba(229, 240, 255, .98), rgba(246, 250, 255, .98));
-    box-shadow: 0 12px 26px rgba(21, 94, 239, .16), inset 0 0 0 1px rgba(21, 94, 239, .18);
+    box-shadow: 0 4px 12px rgba(21, 94, 239, .075), inset 0 0 0 1px rgba(21, 94, 239, .14);
     transform: translateY(-1px);
 }
 
@@ -2411,7 +2429,7 @@ button.consult-session.active .consult-session-main span {
     font-size: 12px;
     font-weight: 800;
     line-height: 1;
-    box-shadow: 0 6px 14px rgba(217, 45, 32, .22);
+    box-shadow: 0 3px 8px rgba(217, 45, 32, .16);
 }
 
 .consult-plan-no {
@@ -2444,7 +2462,7 @@ button.consult-session.active .consult-session-main span {
     border: 1px solid #6aa7ff;
     border-radius: var(--radius);
     background: linear-gradient(90deg, rgba(229, 240, 255, .98), rgba(246, 250, 255, .98));
-    box-shadow: 0 12px 26px rgba(21, 94, 239, .16), inset 0 0 0 1px rgba(21, 94, 239, .18);
+    box-shadow: 0 4px 12px rgba(21, 94, 239, .075), inset 0 0 0 1px rgba(21, 94, 239, .14);
 }
 
 .consult-plan-summary .consult-plan-main span {
