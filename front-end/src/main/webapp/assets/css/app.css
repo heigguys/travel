@@ -2535,7 +2535,12 @@ button.consult-session.active .consult-session-main span {
 .consult-messages .message.mine {
     align-self: flex-end;
     border-bottom-right-radius: 8px;
-    background: #e8f1ff;
+    background: var(--blue);
+    color: #fff;
+}
+
+.consult-messages .message.mine small {
+    color: rgba(255, 255, 255, .76);
 }
 
 .consult-messages .message:not(.mine) {
