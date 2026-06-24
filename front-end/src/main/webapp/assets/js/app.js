@@ -9,6 +9,8 @@ const PLAN_PAGE_SIZE = 10;
 const PLAN_LIST_REFRESH_MS = 10000;
 let planListRefreshTimer = null;
 let planListRefreshInFlight = false;
+let consultNavRefreshTimer = null;
+let consultNavRefreshInFlight = false;
 let globalNavEventsBound = false;
 let activeConsultPlanId = null;
 let activeConsultPlanNo = "";
@@ -406,12 +408,33 @@ function renderConsultNavBadge(count) {
 }
 
 async function refreshConsultNavBadge() {
-    if (!$("consultMessagesBtn") || !currentUser) return;
+    if (!$("consultMessagesBtn") || !currentUser || consultNavRefreshInFlight || document.hidden) return;
+    consultNavRefreshInFlight = true;
     try {
         await loadConsultOverview();
     } catch (error) {
         console.warn("刷新咨询未读数失败", error);
+    } finally {
+        consultNavRefreshInFlight = false;
     }
+}
+
+function startConsultNavAutoRefresh() {
+    stopConsultNavAutoRefresh();
+    consultNavRefreshTimer = setInterval(refreshConsultNavBadge, PLAN_LIST_REFRESH_MS);
+}
+
+function stopConsultNavAutoRefresh() {
+    if (consultNavRefreshTimer) {
+        clearInterval(consultNavRefreshTimer);
+        consultNavRefreshTimer = null;
+    }
+    consultNavRefreshInFlight = false;
+}
+
+async function initializeConsultNavAutoRefresh() {
+    await refreshConsultNavBadge();
+    startConsultNavAutoRefresh();
 }
 
 async function renderGlobalConsultOverview({forceScroll = false} = {}) {
@@ -1019,6 +1042,7 @@ function bindGlobalNavEvents() {
 
     const consultMessagesBtn = $("consultMessagesBtn");
     if (consultMessagesBtn) consultMessagesBtn.onclick = openGlobalConsultDialog;
+    window.addEventListener("beforeunload", stopConsultNavAutoRefresh);
 
     const exportPdfBtn = $("exportPdfBtn");
     if (exportPdfBtn) exportPdfBtn.onclick = () => window.open(API_BASE + "/my-applications/export.pdf", "_blank");
@@ -1158,7 +1182,7 @@ async function initPlansPage() {
     bindGlobalNavEvents();
     showPlansPage();
     try {
-        await refreshConsultNavBadge();
+        await initializeConsultNavAutoRefresh();
         await loadPlans();
         startPlanListAutoRefresh();
         if (new URLSearchParams(window.location.search).get("consult") === "1") {
@@ -1181,7 +1205,7 @@ async function initPlanEditPage() {
     }
     bindGlobalNavEvents();
     updateGlobalNav();
-    await refreshConsultNavBadge();
+    await initializeConsultNavAutoRefresh();
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -1352,7 +1376,7 @@ async function initPlanApplyPage() {
     }
     bindGlobalNavEvents();
     updateGlobalNav();
-    await refreshConsultNavBadge();
+    await initializeConsultNavAutoRefresh();
 
     const params = new URLSearchParams(window.location.search);
     const planId = params.get("planId");
@@ -1464,7 +1488,7 @@ async function initGlobalNavPage() {
     }
     bindGlobalNavEvents();
     updateGlobalNav();
-    await refreshConsultNavBadge();
+    await initializeConsultNavAutoRefresh();
     return true;
 }
 
