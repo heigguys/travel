@@ -23,6 +23,70 @@ let consultRefreshInFlight = false;
 // 简化 DOM 查询写法，所有调用都按元素 id 获取节点。
 const $ = (id) => document.getElementById(id);
 
+let chineseValidationBound = false;
+
+function fieldLabel(control) {
+    const hiddenText = control.closest("label")?.querySelector(".visually-hidden")?.textContent?.trim();
+    if (hiddenText) return hiddenText;
+    const label = control.closest("label");
+    if (label) {
+        const clone = label.cloneNode(true);
+        clone.querySelectorAll("input, select, textarea, button, svg").forEach((node) => node.remove());
+        const text = clone.textContent.replace("*", "").trim();
+        if (text) return text;
+    }
+    const rowLabel = control.closest(".plan-form-row")?.querySelector(".plan-row-label strong")?.textContent
+        ?.replace("*", "")
+        .trim();
+    if (rowLabel) return rowLabel;
+    if (control.placeholder) return control.placeholder.replace(/[：:，,。].*$/, "").trim();
+    return control.name || "该项";
+}
+
+function nativeValidationMessage(control) {
+    const validity = control.validity;
+    const label = fieldLabel(control);
+    if (validity.valueMissing) {
+        if (control.type === "file") return `请上传${label}`;
+        return control.tagName === "SELECT" ? `请选择${label}` : `${label}不能为空`;
+    }
+    if (validity.tooShort) return `${label}至少需要${control.minLength}个字符`;
+    if (validity.tooLong) return `${label}不能超过${control.maxLength}个字符`;
+    if (validity.typeMismatch) return control.type === "email" ? "请输入正确的邮箱地址" : `请输入正确的${label}`;
+    if (validity.badInput) return `请输入有效的${label}`;
+    if (validity.rangeUnderflow) return `${label}不能小于${control.min}`;
+    if (validity.rangeOverflow) return `${label}不能大于${control.max}`;
+    if (validity.stepMismatch) return `请输入有效的${label}`;
+    if (validity.patternMismatch) return `请输入符合要求的${label}`;
+    return `请检查${label}`;
+}
+
+function bindChineseNativeValidation() {
+    if (chineseValidationBound) return;
+    chineseValidationBound = true;
+    document.addEventListener("invalid", (event) => {
+        const control = event.target;
+        if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement)) return;
+        if (control.validity.customError && control.dataset.nativeValidationMessage !== "true") return;
+        control.setCustomValidity(nativeValidationMessage(control));
+        control.dataset.nativeValidationMessage = "true";
+    }, true);
+    document.addEventListener("input", (event) => {
+        const control = event.target;
+        if (control?.dataset?.nativeValidationMessage === "true") {
+            control.setCustomValidity("");
+            delete control.dataset.nativeValidationMessage;
+        }
+    }, true);
+    document.addEventListener("change", (event) => {
+        const control = event.target;
+        if (control?.dataset?.nativeValidationMessage === "true") {
+            control.setCustomValidity("");
+            delete control.dataset.nativeValidationMessage;
+        }
+    }, true);
+}
+
 // 将用户角色整数转换为显示文字（0=管理员，1=普通员工）。
 const roleLabel = (role) => Number(role) === 0 ? "管理员" : "普通员工";
 
@@ -1241,15 +1305,19 @@ async function initPlanEditPage() {
     const fileText = $("planFileText");
     const fileHint = $("planFileHint");
     const fileDropzone = $("planFileDropzone");
+    const fileRemoveBtn = $("planFileRemoveBtn");
     const backBtn = $("planEditBackBtn");
     const cancelBtn = $("planEditCancelBtn");
     if (backBtn) backBtn.onclick = () => go("plans.jsp");
     if (cancelBtn) cancelBtn.onclick = () => go("plans.jsp");
+    let currentFileName = "";
     const updateFileDisplay = (fileName) => {
+        currentFileName = fileName || "";
         const hasFile = Boolean(fileName);
         if (fileText) fileText.textContent = hasFile ? fileName : "点击上传PDF文件";
         if (fileHint) fileHint.textContent = hasFile ? "已选择 PDF，点击可重新选择" : "仅支持 PDF";
         if (fileDropzone) fileDropzone.classList.toggle("has-file", hasFile);
+        if (fileRemoveBtn) fileRemoveBtn.classList.toggle("hidden", !hasFile);
     };
     $("planEditTitle").textContent = id ? "旅游计划修改" : "旅游计划添加";
 
@@ -1283,7 +1351,17 @@ async function initPlanEditPage() {
 
     if (fileInput) {
         fileInput.addEventListener("change", () => {
-            updateFileDisplay(fileInput.files.length ? fileInput.files[0].name : "");
+            if (fileInput.files.length) {
+                updateFileDisplay(fileInput.files[0].name);
+            } else {
+                updateFileDisplay(currentFileName);
+            }
+        });
+    }
+    if (fileRemoveBtn) {
+        fileRemoveBtn.addEventListener("click", () => {
+            if (fileInput) fileInput.value = "";
+            updateFileDisplay("");
         });
     }
 
@@ -1519,6 +1597,7 @@ async function initGlobalNavPage() {
 }
 
 // 页面入口：依次检测各页面根元素，匹配到对应页面后执行其初始化函数。
+bindChineseNativeValidation();
 initLoginPage()
     .then((started) => started || initPlanEditPage())
     .then((started) => started || initPlanApplyPage())

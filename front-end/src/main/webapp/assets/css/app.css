@@ -922,6 +922,13 @@ button.date-picker-btn:focus {
     display: block;
 }
 
+.upload-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: stretch;
+}
+
 .upload-dropzone {
     min-height: 72px;
     border: 2px dashed #c7d7ee;
@@ -938,6 +945,23 @@ button.date-picker-btn:focus {
     cursor: pointer;
     padding: 12px;
     min-width: 0;
+}
+
+.upload-remove-btn {
+    align-self: stretch;
+    min-width: 104px;
+    border-color: #f3c3bf;
+    background: linear-gradient(180deg, #fffafa, var(--danger-soft));
+    color: var(--danger);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(217, 45, 32, .06);
+}
+
+.upload-remove-btn:hover:not(:disabled) {
+    border-color: var(--danger);
+    background: #ffecea;
+    color: var(--danger);
+    transform: translateY(-1px);
 }
 
 .upload-dropzone:hover {
@@ -1066,6 +1090,14 @@ button.date-picker-btn:focus {
     .plan-form-row {
         grid-template-columns: 1fr;
         gap: 10px;
+    }
+
+    .upload-control {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-remove-btn {
+        min-height: 40px;
     }
 
     .plan-row-label {
