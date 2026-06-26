@@ -37,7 +37,6 @@
     <section id="appView" class="app">
         <!-- 筛选工具栏：按关键字和状态查询旅行计划。 -->
         <section class="toolbar">
-            <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <select id="statusFilter">
                 <option value="">全部状态</option>
                 <option value="0">可申请</option>
@@ -51,6 +50,7 @@
                 <option value="true">已公开</option>
                 <option value="false">未公开</option>
             </select>
+            <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <button id="searchBtn" class="primary">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>
         </section>
