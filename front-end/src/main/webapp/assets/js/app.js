@@ -92,8 +92,10 @@ const planStatusBadge = (status) => {
     return `<span class="status-badge plan-status status-plan-${value}">${planStatusLabel(value)}</span>`;
 };
 
+const isPlanPublished = (published) => published === true || Number(published) === 1 || String(published).toLowerCase() === "true";
+
 const publishStatusBadge = (published) => {
-    const isPublished = published === true || Number(published) === 1 || String(published).toLowerCase() === "true";
+    const isPublished = isPlanPublished(published);
     return `<span class="status-badge publish-status ${isPublished ? "status-published" : "status-draft"}">${isPublished ? "已公开" : "未公开"}</span>`;
 };
 
@@ -241,6 +243,7 @@ function renderPlans() {
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
             : planNo;
+        const statusCell = isPlanPublished(plan.published) ? planStatusBadge(plan.status) : "";
         const adminCells = admin ? `<td class="col-published">${publishStatusBadge(plan.published)}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
@@ -253,7 +256,7 @@ function renderPlans() {
             : actionButton("apply", plan.id, "申请");
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
-            <td class="col-status">${planStatusBadge(plan.status)}</td>
+            <td class="col-status">${statusCell}</td>
             <td class="col-plan-no" title="${planNo}">${fileLink}</td>
             <td class="col-destination" title="${destination}">${destination}</td>
             <td class="col-date-range">${formatDateRange(plan.startDate, plan.endDate)}</td>
