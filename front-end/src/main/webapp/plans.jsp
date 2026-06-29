@@ -44,7 +44,6 @@
                 <option value="2">进行中</option>
                 <option value="3">已结束</option>
                 <option value="4">未成团</option>
-                <option value="5">未公开</option>
             </select>
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <button id="searchBtn" class="primary">搜索</button>

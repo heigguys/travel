@@ -153,6 +153,12 @@ function showPlansPage() {
     updateGlobalNav();
     const admin = Number(currentUser.role) === 0;
     $("newPlanBtn").classList.toggle("hidden", !admin);
+    const unpublishedOption = $("statusFilter").querySelector("option[value='5']");
+    if (admin && !unpublishedOption) {
+        $("statusFilter").insertAdjacentHTML("beforeend", `<option value="5">未公开</option>`);
+    } else if (!admin && unpublishedOption) {
+        unpublishedOption.remove();
+    }
 }
 
 function updateGlobalNav() {
