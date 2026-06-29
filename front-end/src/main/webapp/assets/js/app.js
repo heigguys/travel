@@ -240,7 +240,9 @@ function renderPlans() {
         const applyAction = [2, 3, 4, 5].includes(Number(plan.status))
             ? disabledActionButton("apply", "当前计划状态不可申请")
             : actionButton("apply", plan.id, "申请");
-        const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
+        const consultAction = Number(plan.status) === 5
+            ? disabledActionButton("consult", "未公开计划不可咨询")
+            : actionButton("consult", plan.id, "咨询", plan.hasUnreadConsultation ? "has-unread" : "");
         return `<tr>
             <td class="col-status">${planStatusBadge(plan.status)}</td>
             <td class="col-plan-no" title="${planNo}">${fileLink}</td>
@@ -254,7 +256,7 @@ function renderPlans() {
                 <div class="plan-actions">
                     ${adminActions}
                     ${applyAction}
-                    ${actionButton("consult", plan.id, "咨询", consultClass)}
+                    ${consultAction}
                 </div>
             </td>
         </tr>`;
