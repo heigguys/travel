@@ -251,8 +251,8 @@ public class TravelPlanService {
         if (request.destination().length() > 10) {
             throw new BusinessException("目的地不能超过10个字符");
         }
-        if (request.price().compareTo(MIN_PLAN_PRICE) < 0) {
-            throw new BusinessException("价格不能为负数");
+        if (request.price().compareTo(MIN_PLAN_PRICE) <= 0) {
+            throw new BusinessException("价格必须大于0");
         }
         if (request.price().compareTo(MAX_PLAN_PRICE) > 0) {
             throw new BusinessException("单人价格上限为 10000 元");

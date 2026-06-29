@@ -680,6 +680,8 @@ async function sendConsult(event) {
         await renderGlobalConsultOverview({forceScroll: true});
     } else {
         await renderConsultSessions(form.planId.value, {forceScroll: true});
+
+        
     }
 }
 
@@ -1301,11 +1303,11 @@ async function initPlanEditPage() {
     });
     destInput.addEventListener("input", () => destInput.setCustomValidity(""));
 
-    // 价格离焦校验：[0, 10000]。
+    // 价格离焦校验：(0, 10000]。
     form.price.addEventListener("blur", () => {
         const v = parsePriceInput(form.price.value);
-        if (form.price.value !== "" && (!Number.isFinite(v) || v < 0 || v > MAX_PLAN_PRICE)) {
-            form.price.setCustomValidity(!Number.isFinite(v) ? "请输入有效价格" : (v < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
+        if (form.price.value !== "" && (!Number.isFinite(v) || v <= 0 || v > MAX_PLAN_PRICE)) {
+            form.price.setCustomValidity(!Number.isFinite(v) ? "请输入有效价格" : (v <= 0 ? "价格必须大于0" : "单人价格上限为10000元"));
             form.price.reportValidity();
         } else {
             form.price.setCustomValidity("");
@@ -1339,8 +1341,8 @@ async function initPlanEditPage() {
         destInput.setCustomValidity("");
 
         const price = parsePriceInput(form.price.value);
-        if (!Number.isFinite(price) || price < 0 || price > MAX_PLAN_PRICE) {
-            form.price.setCustomValidity(!Number.isFinite(price) ? "请输入有效价格" : (price < 0 ? "价格不能为负数" : "单人价格上限为10000元"));
+        if (!Number.isFinite(price) || price <= 0 || price > MAX_PLAN_PRICE) {
+            form.price.setCustomValidity(!Number.isFinite(price) ? "请输入有效价格" : (price <= 0 ? "价格必须大于0" : "单人价格上限为10000元"));
             form.price.reportValidity();
             return;
         }
