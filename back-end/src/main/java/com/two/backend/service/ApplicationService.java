@@ -146,6 +146,9 @@ public class ApplicationService {
      * 根据计划日期和当前申请总人数计算整数状态值。
      */
     private int computeStatus(TravelPlan plan, int total) {
+        if (!Boolean.TRUE.equals(plan.getPublished())) {
+            return TravelPlan.STATUS_UNPUBLISHED;
+        }
         LocalDate today = LocalDate.now();
         if (plan.getEndDate().isBefore(today)) {
             return total >= plan.getCapacity() ? TravelPlan.STATUS_ENDED : TravelPlan.STATUS_DISBANDED;

@@ -83,7 +83,7 @@ const formatMessageTime = (value) => {
 
 // 将旅行计划状态整数转换为显示文字。
 const planStatusLabel = (status) => {
-    const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团"};
+    const map = {0: "可申请", 1: "已成团", 2: "进行中", 3: "已结束", 4: "未成团", 5: "未公开"};
     return map[Number(status)] ?? "";
 };
 
@@ -243,7 +243,6 @@ function renderPlans() {
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
             : planNo;
-        const statusCell = isPlanPublished(plan.published) ? planStatusBadge(plan.status) : "";
         const adminCells = admin ? `<td class="col-published">${publishStatusBadge(plan.published)}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
@@ -251,12 +250,12 @@ function renderPlans() {
         const adminActions = admin
             ? `${editAction}${actionButton("delete", plan.id, "删除", "danger")}`
             : "";
-        const applyAction = [2, 3, 4].includes(Number(plan.status))
+        const applyAction = [2, 3, 4, 5].includes(Number(plan.status))
             ? disabledActionButton("apply", "当前计划状态不可申请")
             : actionButton("apply", plan.id, "申请");
         const consultClass = plan.hasUnreadConsultation ? "has-unread" : "";
         return `<tr>
-            <td class="col-status">${statusCell}</td>
+            <td class="col-status">${planStatusBadge(plan.status)}</td>
             <td class="col-plan-no" title="${planNo}">${fileLink}</td>
             <td class="col-destination" title="${destination}">${destination}</td>
             <td class="col-date-range">${formatDateRange(plan.startDate, plan.endDate)}</td>

@@ -65,7 +65,10 @@ public class TravelPlanService {
     /**
      * 根据日期计算新计划的初始状态（新计划申请人数为 0）。
      */
-    private int computeInitialStatus(LocalDate startDate, LocalDate endDate) {
+    private int computeInitialStatus(LocalDate startDate, LocalDate endDate, Boolean published) {
+        if (!Boolean.TRUE.equals(published)) {
+            return TravelPlan.STATUS_UNPUBLISHED;
+        }
         LocalDate today = LocalDate.now();
         if (endDate.isBefore(today))       return TravelPlan.STATUS_DISBANDED;
         if (!startDate.isAfter(today))     return TravelPlan.STATUS_DISBANDED;
@@ -111,7 +114,7 @@ public class TravelPlanService {
         TravelPlan plan = new TravelPlan();
         plan.setPlanNo(generatePlanNo());
         fillPlan(plan, request, file);
-        plan.setStatus(computeInitialStatus(request.startDate(), request.endDate()));
+        plan.setStatus(computeInitialStatus(request.startDate(), request.endDate(), plan.getPublished()));
         travelPlanMapper.insert(plan);
         return plan;
     }

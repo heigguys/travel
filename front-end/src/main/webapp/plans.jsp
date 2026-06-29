@@ -44,6 +44,7 @@
                 <option value="2">进行中</option>
                 <option value="3">已结束</option>
                 <option value="4">未成团</option>
+                <option value="5">未公开</option>
             </select>
             <select id="publishedFilter" class="hidden">
                 <option value="">公开状态</option>

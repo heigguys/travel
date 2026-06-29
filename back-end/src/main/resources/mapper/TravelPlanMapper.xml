@@ -115,6 +115,7 @@
           group by plan_id
         ) agg on agg.plan_id = p.id
         set p.status = case
+          when p.published = false then 5
           when p.end_date &lt; current_date and coalesce(agg.total, 0) >= p.capacity then 3
           when p.end_date &lt; current_date then 4
           when p.start_date &lt;= current_date and coalesce(agg.total, 0) >= p.capacity then 2

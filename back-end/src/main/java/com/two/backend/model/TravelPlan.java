@@ -16,6 +16,7 @@ public class TravelPlan {
     public static final int STATUS_IN_PROGRESS  = 2; // 进行中：行程中
     public static final int STATUS_ENDED        = 3; // 已结束：结束且满员出行
     public static final int STATUS_DISBANDED    = 4; // 未成团：结束时人数不足
+    public static final int STATUS_UNPUBLISHED  = 5; // 未公开
 
     private Long id;
     private String planNo;

@@ -8,8 +8,8 @@ insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, 
 -- 可申请：未出发且申请总人数未达到定员。
 (1, 'TP20260615001', '敦煌莫高窟', date_add(current_date, interval 90 day), date_add(current_date, interval 96 day), 3280.00, 20, true, 0),
 (2, 'TP20260615002', '青海湖', date_add(current_date, interval 60 day), date_add(current_date, interval 64 day), 2980.00, 18, true, 0),
-(3, 'TP20260615003', '成都', date_add(current_date, interval 30 day), date_add(current_date, interval 35 day), 2680.00, 16, false, 0),
-(4, 'TP20260615004', '西安', date_add(current_date, interval 120 day), date_add(current_date, interval 124 day), 2380.00, 14, false, 0),
+(3, 'TP20260615003', '成都', date_add(current_date, interval 30 day), date_add(current_date, interval 35 day), 2680.00, 16, false, 5),
+(4, 'TP20260615004', '西安', date_add(current_date, interval 120 day), date_add(current_date, interval 124 day), 2380.00, 14, false, 5),
 -- 已成团：未出发且申请总人数等于定员。
 (8, 'TP20260615008', '长白山', date_add(current_date, interval 150 day), date_add(current_date, interval 155 day), 3880.00, 10, true, 1),
 -- 进行中：当前日期处于行程日期内，且申请总人数等于定员。
@@ -17,13 +17,13 @@ insert ignore into travel_plans(id, plan_no, destination, start_date, end_date, 
 (10, 'TP20260615010', '重庆', date_sub(current_date, interval 1 day), date_add(current_date, interval 3 day), 2280.00, 20, true, 2),
 (11, 'TP20260615011', '三亚', current_date, date_add(current_date, interval 5 day), 4680.00, 18, true, 2),
 -- 未成团：已经开始或结束，但申请总人数未达到定员。
-(12, 'TP20260615012', '南京', date_sub(current_date, interval 20 day), date_sub(current_date, interval 10 day), 1880.00, 16, false, 4),
+(12, 'TP20260615012', '南京', date_sub(current_date, interval 20 day), date_sub(current_date, interval 10 day), 1880.00, 16, false, 5),
 -- 已结束：行程已结束，且申请总人数等于定员。
 (17, 'TP20260615017', '呼伦贝尔', date_sub(current_date, interval 60 day), date_sub(current_date, interval 54 day), 4380.00, 20, true, 3),
 (18, 'TP20260615018', '武夷山', date_sub(current_date, interval 40 day), date_sub(current_date, interval 35 day), 2580.00, 15, true, 3),
 -- 未成团：行程已结束且申请人数不足；未公开计划不生成申请。
 (19, 'TP20260615019', '丽江', date_sub(current_date, interval 30 day), date_sub(current_date, interval 24 day), 3680.00, 18, true, 4),
-(20, 'TP20260615020', '珠海', date_sub(current_date, interval 15 day), date_sub(current_date, interval 10 day), 2080.00, 12, false, 4);
+(20, 'TP20260615020', '珠海', date_sub(current_date, interval 15 day), date_sub(current_date, interval 10 day), 2080.00, 12, false, 5);
 
 -- 所有已公开计划均由三个指定账户提交真实申请，未公开计划不生成申请。
 insert ignore into applications(id, plan_id, user_id, applicant_count, option_text, status) values
