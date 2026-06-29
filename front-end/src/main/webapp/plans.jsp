@@ -46,11 +46,6 @@
                 <option value="4">未成团</option>
                 <option value="5">未公开</option>
             </select>
-            <select id="publishedFilter" class="hidden">
-                <option value="">公开状态</option>
-                <option value="true">已公开</option>
-                <option value="false">未公开</option>
-            </select>
             <input id="keywordInput" placeholder="搜索目的地 / 计划编号">
             <button id="searchBtn" class="primary">搜索</button>
             <button id="newPlanBtn" class="primary hidden">添加旅游计划</button>

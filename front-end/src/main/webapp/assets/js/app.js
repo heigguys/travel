@@ -92,13 +92,6 @@ const planStatusBadge = (status) => {
     return `<span class="status-badge plan-status status-plan-${value}">${planStatusLabel(value)}</span>`;
 };
 
-const isPlanPublished = (published) => published === true || Number(published) === 1 || String(published).toLowerCase() === "true";
-
-const publishStatusBadge = (published) => {
-    const isPublished = isPlanPublished(published);
-    return `<span class="status-badge publish-status ${isPublished ? "status-published" : "status-draft"}">${isPublished ? "已公开" : "未公开"}</span>`;
-};
-
 const actionIcons = {
     edit: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
     delete: `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
@@ -160,7 +153,6 @@ function showPlansPage() {
     updateGlobalNav();
     const admin = Number(currentUser.role) === 0;
     $("newPlanBtn").classList.toggle("hidden", !admin);
-    $("publishedFilter").classList.toggle("hidden", !admin);
 }
 
 function updateGlobalNav() {
@@ -175,9 +167,6 @@ async function loadPlans({resetPage = true} = {}) {
     const params = new URLSearchParams();
     if ($("keywordInput").value) params.set("keyword", $("keywordInput").value);
     if ($("statusFilter").value) params.set("status", $("statusFilter").value);
-    if (!$("publishedFilter").classList.contains("hidden") && $("publishedFilter").value) {
-        params.set("published", $("publishedFilter").value);
-    }
     if (sortState.col) {
         params.set("sort", sortState.col);
         params.set("sortDir", sortState.dir);
@@ -212,7 +201,7 @@ async function refreshPlanListInBackground() {
     }
 }
 
-// 渲染旅行计划表格，管理员会额外看到公开状态和编辑/删除操作。
+// 渲染旅行计划表格，管理员会额外看到编辑/删除操作。
 function renderPlans() {
     const admin = Number(currentUser.role) === 0;
     const columns = [
@@ -225,7 +214,6 @@ function renderPlans() {
         {label: "申请总人数", sort: "applicantTotal", className: "col-applicant-total"},
         {label: "我的申请人数", sort: "myApplicantCount", className: "col-my-applicant-count"}
     ];
-    if (admin) columns.push({label: "公开状态", className: "col-published"});
     columns.push({label: "操作", className: "col-actions"});
     const arrows = `<div class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></div>`;
     $("planHeader").innerHTML = columns.map((column) => {
@@ -243,7 +231,6 @@ function renderPlans() {
         const fileLink = plan.filePath
             ? `<a href="${pdfViewerUrl}" target="_blank" rel="noopener" title="${planNo}">${planNo}</a>`
             : planNo;
-        const adminCells = admin ? `<td class="col-published">${publishStatusBadge(plan.published)}</td>` : "";
         const editAction = plan.published
             ? disabledActionButton("edit", "已公开的计划不可编辑")
             : actionButton("edit", plan.id, "编辑");
@@ -263,7 +250,6 @@ function renderPlans() {
             <td class="col-capacity">${plan.capacity}</td>
             <td class="col-applicant-total">${plan.applicantTotal || 0}</td>
             <td class="col-my-applicant-count">${plan.myApplicantCount || 0}</td>
-            ${adminCells}
             <td class="col-actions">
                 <div class="plan-actions">
                     ${adminActions}
@@ -1186,7 +1172,6 @@ function bindPlansPageEvents() {
         }
     });
     $("statusFilter").addEventListener("change", () => loadPlans());
-    $("publishedFilter").addEventListener("change", () => loadPlans());
     // 新增计划跳转到编辑页（无 id 参数 = 新增模式）。
     $("newPlanBtn").onclick = () => go("plan-edit.jsp");
     $("deleteForm").addEventListener("submit", confirmDeletePlan);

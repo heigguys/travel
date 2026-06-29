@@ -289,7 +289,6 @@ th.desc .arrow-down {
 .col-capacity { width: 90px; }
 .col-applicant-total { width: 120px; }
 .col-my-applicant-count { width: 130px; }
-.col-published { width: 126px; }
 .col-actions { width: 150px; }
 
 .status-badge {
@@ -327,8 +326,7 @@ th.desc .arrow-down {
 }
 
 .status-plan-1,
-.status-application-0,
-.status-published {
+.status-application-0 {
     border-color: #bfe8c9;
     background: #f1fbf4;
     color: #248a3d;
@@ -340,12 +338,16 @@ th.desc .arrow-down {
     color: #c46f00;
 }
 
-.status-plan-3,
-.status-plan-5,
-.status-draft {
+.status-plan-3 {
     border-color: #d9dce3;
     background: #f7f8fa;
     color: #6e6e73;
+}
+
+.status-plan-5 {
+    border-color: #d7ccff;
+    background: #f7f3ff;
+    color: #6b46c1;
 }
 
 .status-plan-4,
