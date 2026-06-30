@@ -53,7 +53,7 @@
         order by
         <choose>
             <when test="sort == 'planNo'">p.plan_no</when>
-            <when test="sort == 'destination'">p.destination</when>
+            <when test="sort == 'destination'">CONVERT(p.destination USING gbk)</when>
             <when test="sort == 'startDate'">p.start_date</when>
             <when test="sort == 'price'">p.price</when>
             <when test="sort == 'capacity'">p.capacity</when>
